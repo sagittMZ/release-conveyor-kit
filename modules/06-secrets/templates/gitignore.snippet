@@ -1,0 +1,30 @@
+# Release Conveyor Kit - module 06-secrets
+# Merge these rules into the target project's .gitignore (skip duplicates).
+# Origin: proven the donor project .gitignore, secrets-related subset.
+
+# Secrets
+.env
+.env.*
+!.env.example
+!**/.env.test.example
+*.local
+
+# Keystores and signing material
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+
+# Supabase local state
+supabase/.temp
+supabase/.env
+
+# Platform credentials (downloaded from Firebase console, never committed)
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
+
+# Build artifacts that may embed env values
+dist
+ios/App/build/
+ios/DerivedData/

@@ -1,0 +1,13 @@
+# Release Conveyor Kit - module 06-secrets
+# Gitleaks config: defaults + allowlist for template files with placeholders.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Template and example files contain placeholders, not secrets"
+paths = [
+  '''\.env\.example$''',
+  '''\.env\.test\.example$''',
+  '''conveyor\.config\.example\.json$''',
+]

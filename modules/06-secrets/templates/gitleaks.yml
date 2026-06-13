@@ -1,0 +1,29 @@
+# Release Conveyor Kit - module 06-secrets
+# Secret leak scan on every push/PR. KIT ADDITION - the donor had no leak
+# scanning in CI (gap found in audit).
+#
+# gitleaks/gitleaks-action is free for personal/org repos under MIT terms for
+# individuals; organizations may need GITLEAKS_LICENSE (see action README).
+
+name: Secret Scan
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: gitleaks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # scan full history so old leaks are caught too
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
