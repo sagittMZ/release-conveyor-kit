@@ -1,0 +1,49 @@
+# Release Conveyor Kit - module 05-monitoring
+# Scheduled production health check. KIT ADDITION - not present in the donor.
+# Pings the web app and the Supabase REST endpoint; a red run = GitHub
+# notification (add the Telegram step below for instant alerts).
+#
+# conveyor: web.productionUrl
+
+name: Health Check
+
+on:
+  schedule:
+    - cron: '17 */6 * * *' # every 6 hours; GitHub may delay scheduled runs
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check web app
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+            "https://your-app.vercel.app/") # conveyor: web.productionUrl
+          echo "web: HTTP $code"
+          [ "$code" = "200" ] || exit 1
+
+      - name: Check Supabase REST
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+            -H "apikey: $VITE_SUPABASE_ANON_KEY" \
+            "$VITE_SUPABASE_URL/rest/v1/")
+          echo "supabase: HTTP $code"
+          [ "$code" = "200" ] || exit 1
+
+      # Optional instant alert. Requires TELEGRAM_BOT_TOKEN_REPORTS and
+      # TELEGRAM_CHAT_ID_REPORTS secrets (pattern proven in donor's e2e workflow).
+      - name: Telegram alert on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_REPORTS }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_REPORTS }}
+        run: |
+          [ -n "$TELEGRAM_BOT_TOKEN" ] || exit 0
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -F "chat_id=${TELEGRAM_CHAT_ID}" \
+            -F "text=🔴 Health check FAILED: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > /dev/null
