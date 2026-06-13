@@ -1,0 +1,38 @@
+# Release Conveyor Kit - module 04-staging (variant B)
+# CI job that wipes QA account data BEFORE the e2e suite runs.
+# Origin: "prepare" job of the proven the donor project playwright.yml.
+# Use as the first job in the e2e workflow (module 07 wires it via needs:).
+#
+# Auth model: QA user's own credentials + anon key. No service role in CI.
+
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: QA database cleanup
+        env:
+          TEST_EMAIL: ${{ secrets.QA_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.QA_TEST_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          node -e "
+            async function clean(email, password, deleteGroups) {
+              const url = process.env.VITE_SUPABASE_URL;
+              const key = process.env.VITE_SUPABASE_ANON_KEY;
+              const auth = await fetch(url+'/auth/v1/token?grant_type=password', {
+                method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+              if (!auth.ok) return console.log('Auth failed for', email);
+              const { access_token } = await auth.json();
+              const rpc = await fetch(url+'/rest/v1/rpc/cleanup_e2e_data', {
+                method: 'POST',
+                headers: { apikey: key, Authorization: 'Bearer '+access_token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_prefix: 'E2E', delete_created_groups: deleteGroups })
+              });
+              console.log('Cleanup for', email, rpc.status);
+            }
+            clean(process.env.TEST_EMAIL, process.env.TEST_PASSWORD, false)
+              .then(() => process.exit(0)).catch(console.error);
+          "
