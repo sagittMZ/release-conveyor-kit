@@ -1,0 +1,75 @@
+{
+  "_comment": "Release Conveyor Kit - single parameterization config. Copy to the target project root as conveyor.config.json and fill in. Placeholders only - never commit real secrets here (secrets live in GitHub Secrets / Codemagic env groups).",
+  "project": {
+    "name": "your-app",
+    "displayName": "Your App",
+    "webDir": "dist",
+    "nodeVersion": "24",
+    "packageManager": "npm"
+  },
+  "stack": {
+    "framework": "react-vite",
+    "language": "typescript",
+    "capacitor": true,
+    "supabase": true
+  },
+  "web": {
+    "host": "vercel",
+    "productionUrl": "https://your-app.vercel.app"
+  },
+  "mobile": {
+    "android": {
+      "enabled": true,
+      "appId": "com.example.yourapp",
+      "keystoreFileName": "release.jks",
+      "firebaseDistribution": {
+        "enabled": false,
+        "testerGroup": "qa-internal"
+      },
+      "playUpload": {
+        "enabled": false,
+        "track": "internal"
+      }
+    },
+    "ios": {
+      "enabled": false,
+      "bundleId": "com.example.yourapp",
+      "xcodeProject": "ios/App/App.xcodeproj",
+      "scheme": "App",
+      "codemagicEnvGroup": "ios"
+    }
+  },
+  "ci": {
+    "provider": "github-actions",
+    "mainBranch": "main",
+    "developBranch": "develop",
+    "unitTestRunner": "vitest",
+    "lintCommand": "npm run lint",
+    "buildCommand": "npm run build",
+    "e2e": {
+      "enabled": true,
+      "shards": 1,
+      "autoTrigger": false,
+      "baseUrl": "http://localhost:5173"
+    }
+  },
+  "monitoring": {
+    "sentry": {
+      "enabled": true,
+      "org": "your-sentry-org",
+      "project": "your-sentry-project"
+    },
+    "healthCheck": {
+      "enabled": false
+    }
+  },
+  "staging": {
+    "variant": "B",
+    "_comment": "A = second Supabase project or branch (paid), B = tagged QA accounts on the prod project (free tier)"
+  },
+  "notifications": {
+    "telegram": {
+      "enabled": false
+    }
+  }
+}
