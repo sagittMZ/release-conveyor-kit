@@ -15,6 +15,14 @@ concurrency:
   group: gitleaks-${{ github.ref }}
   cancel-in-progress: true
 
+# gitleaks-action reads PR commits and comments findings on the PR -
+# the default restricted GITHUB_TOKEN fails with "Resource not accessible
+# by integration" (found during kit self-test).
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
