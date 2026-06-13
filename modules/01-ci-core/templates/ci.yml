@@ -1,0 +1,129 @@
+# Release Conveyor Kit - module 01-ci-core
+# Jobs: lint -> unit -> build, triggered on push/PR to the main branches.
+# Origin: "unit" job is extracted from a proven the donor project workflow (unit-tests.yml);
+# "lint" and "build" jobs are added by the kit (the donor ran them only locally).
+#
+# Parameterization (edit values, markers reference conveyor.config.json keys):
+#   conveyor: ci.mainBranch, ci.developBranch, project.nodeVersion,
+#             ci.lintCommand, ci.buildCommand
+
+name: CI
+
+on:
+  push:
+    branches: [develop, main] # conveyor: ci.developBranch, ci.mainBranch
+    paths:
+      - 'src/**'
+      - 'supabase/functions/**'
+      - 'package*.json'
+      - 'vite.config.*'
+      - 'tsconfig*.json'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [develop, main] # conveyor: ci.developBranch, ci.mainBranch
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # conveyor: project.nodeVersion
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: ESLint
+        run: npm run lint # conveyor: ci.lintCommand
+
+  unit:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # conveyor: project.nodeVersion
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        id: tests
+        # Secrets are optional: only needed when unit tests import the supabase
+        # client. Remove the env block if your tests are fully isolated.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npx vitest run --reporter=verbose --reporter=github-actions --reporter=json --outputFile=test-results.json
+        continue-on-error: true
+
+      - name: Generate summary
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+            let r;
+            try {
+              r = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
+            } catch (e) {
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, 'Could not parse test results\n');
+              process.exit(0);
+            }
+            const passed = r.numPassedTests ?? 0;
+            const failed = r.numFailedTests ?? 0;
+            const total  = r.numTotalTests ?? 0;
+            const icon   = failed === 0 ? '✅' : '❌';
+            let md = '\`\`\`\n';
+            md += icon + ' ' + passed + '/' + total + ' tests passed';
+            if (failed > 0) md += '   (' + failed + ' failed)';
+            md += '\n\`\`\`\n\n';
+            if (failed > 0) {
+              md += '### Failed tests\n\n';
+              (r.testResults || []).forEach(f => {
+                (f.testResults || []).filter(t => t.status === 'failed').forEach(t => {
+                  md += '- **' + t.fullName + '**\n';
+                  md += '  \`' + (t.failureMessages || []).join(' | ').replace(/\n/g,' ').slice(0,200) + '\`\n';
+                });
+              });
+            }
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          "
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: test-results.json
+          retention-days: 14
+
+      - name: Fail job if tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # conveyor: project.nodeVersion
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (includes typecheck via tsc -b)
+        # Secrets are optional: Vite inlines VITE_* at build time; an empty
+        # value still builds, the app just cannot reach the backend.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build # conveyor: ci.buildCommand
