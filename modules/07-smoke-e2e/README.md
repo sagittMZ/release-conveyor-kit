@@ -36,16 +36,22 @@ create/edit/delete основной сущности, logout) как шабло�
 ## Применение (для агента)
 
 1. Создать tests/e2e/ как самостоятельный пакет, `npm i` внутри,
-   `npx playwright install chromium`.
-2. Пройти ВСЕ TODO(kit) в auth.setup.ts и smoke.spec.ts: главный
+   `npx playwright install chromium` (Playwright 1.5x также требует
+   chromium-headless-shell - ставится тем же вызовом в CI через --with-deps).
+2. ОБЯЗАТЕЛЬНО исключить tests/e2e из vitest, иначе unit-job CI падает на
+   playwright-спеках (урок самопроверки кита): в vite.config.ts -
+   `import { defineConfig } from 'vitest/config'` и
+   `test: { exclude: ['node_modules', 'dist', 'tests/e2e/**/*'] }`
+   (паттерн донора).
+3. Пройти ВСЕ TODO(kit) в auth.setup.ts и smoke.spec.ts: главный
    авторизованный роут, публичный элемент лендинга, 2-4 навигационных роута,
    селекторы CRUD главной сущности. Детект: роуты из react-router конфига,
    сущность - главная пользовательская таблица.
-3. Если в UI нет data-testid - добавить их точечно (create/delete кнопки,
+4. Если в UI нет data-testid - добавить их точечно (create/delete кнопки,
    title input) - это инфраструктурная правка, разрешена с согласия владельца.
-4. Mobile-first приложение: переключить проект на Pixel 5 (закомментированный
+5. Mobile-first приложение: переключить проект на Pixel 5 (закомментированный
    блок в конфиге - паттерн донора).
-5. Локальный прогон: `cd tests/e2e && npx playwright test` (dev-сервер
+6. Локальный прогон: `cd tests/e2e && npx playwright test` (dev-сервер
    поднимется сам через webServer).
 
 ## Чек-лист верификации
