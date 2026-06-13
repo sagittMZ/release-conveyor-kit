@@ -6,6 +6,8 @@ Vercel + GitHub Actions + Codemagic. Применяется AI-агентом в
 
 ТЗ: [TZ.md](TZ.md). Опись донора: [AUDIT.md](AUDIT.md).
 Состояние: [PROGRESS.md](PROGRESS.md).
+Объяснения "что/как/зачем" на разных уровнях + сценарий "есть только идея":
+[docs/EXPLAIN.md](docs/EXPLAIN.md).
 
 ## Модули
 
