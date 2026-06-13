@@ -1,0 +1,21 @@
+// Release Conveyor Kit - module 02-mobile-build
+// Versioning snippet for android/app/build.gradle (proven in the donor project).
+// Place near the top of the file, then use the two vars in defaultConfig.
+
+// Read versionName from package.json using regex (avoids JsonSlurper issues)
+def appVersionName = "0.1.0"
+def packageJsonFile = file('../../package.json')
+if (packageJsonFile.exists()) {
+    def match = packageJsonFile.text =~ /"version"\s*:\s*"([^"]+)"/
+    if (match) {
+        appVersionName = match[0][1]
+    }
+}
+
+// versionCode: CI-injected property (-PVERSION_CODE=<github.run_number>)
+// or fall back to 1 for local builds
+def appVersionCode = project.hasProperty('VERSION_CODE') ? project.property('VERSION_CODE').toInteger() : 1
+
+// In android { defaultConfig { ... } }:
+//     versionCode appVersionCode
+//     versionName appVersionName

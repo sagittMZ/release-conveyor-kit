@@ -1,0 +1,110 @@
+# Release Conveyor Kit - module 02-mobile-build (iOS via Codemagic)
+# Origin: extracted from the donor project codemagic.yaml.
+#   ios-bootstrap  - PROVEN in the donor: generates ios/ (Capacitor 8 = SPM,
+#                    no CocoaPods, no xcworkspace) + unsigned compile check.
+#   ios-testflight - SKELETON: signing and publishing were still TODO in the
+#                    donor; follow modules/03-store-deploy/app-store.md to finish.
+#
+# Env vars live in Codemagic UI -> app -> Environment variables,
+# group name: conveyor: mobile.ios.codemagicEnvGroup (default "ios"):
+#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY - same values as Android/web
+#   (plus any other VITE_* your app needs at build time)
+#
+# Parameterization:
+#   conveyor: mobile.ios.bundleId, mobile.ios.xcodeProject, mobile.ios.scheme
+
+workflows:
+  ios-bootstrap:
+    name: iOS Bootstrap
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - ios # conveyor: mobile.ios.codemagicEnvGroup
+      node: 24 # conveyor: project.nodeVersion
+      xcode: latest
+      vars:
+        BUNDLE_ID: com.example.yourapp # conveyor: mobile.ios.bundleId
+    triggering:
+      events: []
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci
+      - name: Build web assets
+        script: npm run build
+      - name: Generate iOS project (first run only, until ios/ is committed)
+        script: |
+          if [ ! -d ios ]; then
+            npx cap add ios
+          fi
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+      - name: Generate iOS icons and splash screens
+        script: npx @capacitor/assets generate --ios
+      - name: Unsigned compile check (simulator, no signing required)
+        script: |
+          # Capacitor 8 generates an SPM-based project: App.xcodeproj only,
+          # there is no App.xcworkspace (that was the CocoaPods layout).
+          xcodebuild build \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Pack ios/ as artifact (download and commit it like android/)
+        script: |
+          zip -q -r ios-project.zip ios \
+            -x "ios/App/build/*" -x "ios/DerivedData/*" -x "*/.DS_Store"
+    artifacts:
+      - ios-project.zip
+
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - ios # conveyor: mobile.ios.codemagicEnvGroup
+      node: 24 # conveyor: project.nodeVersion
+      xcode: latest
+      vars:
+        # SPM layout (Capacitor 8): build the project, not a Pods workspace
+        XCODE_PROJECT: ios/App/App.xcodeproj # conveyor: mobile.ios.xcodeProject
+        XCODE_SCHEME: App # conveyor: mobile.ios.scheme
+        BUNDLE_ID: com.example.yourapp # conveyor: mobile.ios.bundleId
+    triggering:
+      events: []
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci
+      - name: Build web assets
+        script: npm run build
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+      - name: Set up code signing
+        script: |
+          # TODO(kit): requires Apple Developer enrollment + App Store Connect
+          # integration in Codemagic (Teams -> Integrations -> Developer Portal).
+          # Then: keychain initialize; app-store-connect fetch-signing-files
+          # "$BUNDLE_ID" --type IOS_APP_STORE --create; keychain add-certificates;
+          # xcode-project use-profiles
+          echo "TODO: ios signing - see modules/03-store-deploy/app-store.md"
+      - name: Build IPA
+        script: |
+          # TODO(kit): after signing is set up:
+          # xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+          echo "TODO: xcodebuild archive + export - see modules/03-store-deploy/app-store.md"
+    artifacts:
+      - ios/build/**/*.ipa
+    # Uncomment after the App Store Connect integration is connected in
+    # Codemagic UI. `auth: integration` is only valid together with the
+    # integrations block.
+    #
+    # integrations:
+    #   app_store_connect: codemagic
+    # publishing:
+    #   app_store_connect:
+    #     auth: integration
+    #     submit_to_testflight: true
+    #     beta_groups:
+    #       - qa-internal
