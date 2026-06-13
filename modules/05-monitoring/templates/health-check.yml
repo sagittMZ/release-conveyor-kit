@@ -24,15 +24,17 @@ jobs:
           echo "web: HTTP $code"
           [ "$code" = "200" ] || exit 1
 
-      - name: Check Supabase REST
+      - name: Check Supabase (auth health endpoint)
+        # /auth/v1/health returns 200 with just the anon key; /rest/v1/ may
+        # answer 401 on newer projects (found during kit self-test).
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
             -H "apikey: $VITE_SUPABASE_ANON_KEY" \
-            "$VITE_SUPABASE_URL/rest/v1/")
-          echo "supabase: HTTP $code"
+            "$VITE_SUPABASE_URL/auth/v1/health")
+          echo "supabase auth health: HTTP $code"
           [ "$code" = "200" ] || exit 1
 
       # Optional instant alert. Requires TELEGRAM_BOT_TOKEN_REPORTS and
