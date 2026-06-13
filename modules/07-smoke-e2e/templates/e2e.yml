@@ -1,0 +1,112 @@
+# Release Conveyor Kit - module 07-smoke-e2e
+# E2E smoke workflow. Origin: proven the donor project playwright.yml, simplified:
+# 1 shard (smoke is small), html report straight to artifact - the donor's
+# blob-merge machinery is only needed with sharding.
+# Auto-trigger is commented out to save Actions minutes (donor practice);
+# uncomment push/pull_request to run automatically.
+#
+# The "prepare" job is module 04-staging's qa-cleanup-job (kept in sync).
+
+name: E2E Smoke (Playwright)
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main, develop] # conveyor: ci.mainBranch, ci.developBranch
+  # pull_request:
+  #   branches: [main]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: QA database cleanup
+        env:
+          TEST_EMAIL: ${{ secrets.QA_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.QA_TEST_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          node -e "
+            async function clean(email, password, deleteGroups) {
+              const url = process.env.VITE_SUPABASE_URL;
+              const key = process.env.VITE_SUPABASE_ANON_KEY;
+              const auth = await fetch(url+'/auth/v1/token?grant_type=password', {
+                method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+              if (!auth.ok) return console.log('Auth failed for', email);
+              const { access_token } = await auth.json();
+              const rpc = await fetch(url+'/rest/v1/rpc/cleanup_e2e_data', {
+                method: 'POST',
+                headers: { apikey: key, Authorization: 'Bearer '+access_token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_prefix: 'E2E', delete_created_groups: deleteGroups })
+              });
+              console.log('Cleanup for', email, rpc.status);
+            }
+            clean(process.env.TEST_EMAIL, process.env.TEST_PASSWORD, false)
+              .then(() => process.exit(0)).catch(console.error);
+          "
+
+  e2e:
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24' # conveyor: project.nodeVersion
+          cache: 'npm'
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright dependencies
+        working-directory: tests/e2e
+        run: npm ci
+
+      - name: Get Playwright version for cache key
+        id: pw-version
+        working-directory: tests/e2e
+        run: echo "version=$(node -e "console.log(require('./node_modules/@playwright/test/package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.pw-version.outputs.version }}-chromium
+
+      - name: Install Playwright browser (cache miss only)
+        working-directory: tests/e2e
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke suite
+        working-directory: tests/e2e
+        env:
+          CI: true
+          BASE_URL: http://localhost:5173 # conveyor: ci.e2e.baseUrl
+          TEST_EMAIL: ${{ secrets.QA_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.QA_TEST_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_CI: true
+        run: npx playwright test
+
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report/
+          retention-days: 30
