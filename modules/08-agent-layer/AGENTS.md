@@ -42,10 +42,15 @@ shows a different stack (Next.js, Flutter, RN, other CI), STOP and report
 ## Module order
 
 01-ci-core -> 06-secrets -> 04-staging -> 07-smoke-e2e -> 05-monitoring ->
-02-mobile-build -> 03-store-deploy. Rationale: CI and secret hygiene first
-(everything else rides on them), mobile/store last (longest owner-side loops).
+02-mobile-build -> 03-store-deploy -> 09-prompt-library. Rationale: CI and
+secret hygiene first (everything else rides on them), mobile/store last
+(longest owner-side loops), prompt library at the end (pure copy, no gating).
 Modules disabled in conveyor.config (e.g. mobile.ios.enabled=false) are skipped
 with a note in the report.
+
+Exception to the scope guard: 09-prompt-library is stack-agnostic. If the
+target stack is out of scope v0, still offer to apply module 09 alone before
+stopping.
 
 ## Where things are
 
