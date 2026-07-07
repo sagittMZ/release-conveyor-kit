@@ -43,10 +43,12 @@ Order and gating per AGENTS.md. For each module:
 4. Commit `kit: apply module <NN-name>` (one commit per module).
 5. Append the module outcome to the report draft.
 
-Module 09 (prompt-library) has no templates to merge: copy the kit's
-`modules/09-prompt-library/PATTERNS.md` and `library/` into the target's
-`docs/prompts/` and add a pointer line to the target CLAUDE.md
-(create CLAUDE.md if missing). Then run its checklist.md as usual.
+Module 09 (prompt-library) has no templates to merge. Copy:
+`PATTERNS.md` + `library/` -> target `docs/prompts/` (copy-paste menu), and
+`commands/*.md` -> target `.claude/commands/` (invocable slash commands). Add
+a pointer line to the target CLAUDE.md listing docs/prompts/ and the command
+names (create CLAUDE.md if missing). See modules/09-prompt-library/ROLLOUT.md
+for the ready intro prompt. Then run its checklist.md as usual.
 
 ## Phase 3 - Verify pipeline end-to-end
 
