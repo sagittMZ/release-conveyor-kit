@@ -1,13 +1,14 @@
 #!/bin/bash
-# Usage digest: сколько раз за неделю вызывались слэш-команды библиотеки промптов.
-# Источник правды - транскрипты Claude Code (~/.claude/projects/*/*.jsonl),
-# где каждый вызов пишется как <command-name>/имя. Параллель к rtk gain --history,
-# только меряет не токены, а использование команд/промптов.
+# Usage digest: что реально использовалось за неделю в сессиях Claude Code.
+# Источник правды - транскрипты (~/.claude/projects/*/*.jsonl):
+#   слэш-команды        <command-name>/имя
+#   скиллы (из запасника) "skill":"имя"   (Claude дёргает сам через Skill)
+#   субагенты            "subagent_type":"имя"  (Task)
+# Параллель к rtk gain --history, только меряет использование, а не токены.
 #
-# По умолчанию печатает отчёт в stdout. Если заданы TG_BOT_TOKEN и TG_CHAT_ID
-# (env), дополнительно шлёт его в Telegram - как rtk-telegram-report.sh.
-# Секреты НЕ хранятся в этом файле (правило кита): передавай их окружением
-# или из cron-обёртки, лежащей вне репозитория.
+# По умолчанию печатает в stdout. Если заданы TG_BOT_TOKEN и TG_CHAT_ID (env) -
+# дополнительно шлёт в Telegram (как rtk-telegram-report.sh). Секреты НЕ хранятся
+# в этом файле (правило кита): передаются окружением из обёртки вне репозитория.
 
 set -euo pipefail
 
@@ -19,41 +20,60 @@ LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases
 
 DATE="$(date '+%Y-%m-%d')"
 
-# Транскрипты, тронутые за последние N дней.
 mapfile -t FILES < <(find "$PROJECTS_DIR" -name '*.jsonl' -mtime "-${DAYS}" 2>/dev/null)
 
 if [ "${#FILES[@]}" -eq 0 ]; then
-  REPORT="Prompt Library Usage - $DATE
+  echo "Prompt Library Usage - $DATE
 За последние $DAYS дн. активных сессий не найдено."
-  echo "$REPORT"
   exit 0
 fi
 
-# Все вызовы слэш-команд за период (включая встроенные - для контекста).
-ALL_CALLS="$(grep -oh '<command-name>/[a-z0-9-]*' "${FILES[@]}" 2>/dev/null \
+# --- сбор счётчиков ---
+CMD_COUNTS="$(grep -oh '<command-name>/[a-z0-9-]*' "${FILES[@]}" 2>/dev/null \
   | sed 's#<command-name>/##' | sort | uniq -c | sort -rn || true)"
+SKILL_COUNTS="$(grep -oh '"skill":"[a-z0-9-]*"' "${FILES[@]}" 2>/dev/null \
+  | sed 's#"skill":"##;s#"##' | sort | uniq -c | sort -rn || true)"
+AGENT_COUNTS="$(grep -oh '"subagent_type":"[a-z0-9_-]*"' "${FILES[@]}" 2>/dev/null \
+  | sed 's#"subagent_type":"##;s#"##' | sort | uniq -c | sort -rn || true)"
 
-# Считаем только команды библиотеки.
-LIB_LINES=""
-LIB_TOTAL=0
+is_lib() { for c in $LIB_COMMANDS; do [ "$1" = "$c" ] && return 0; done; return 1; }
+
+LIB_BLOCK=""; LIB_TOTAL=0
 for c in $LIB_COMMANDS; do
-  n="$(printf '%s\n' "$ALL_CALLS" | awk -v cmd="$c" '$2==cmd {print $1}')"
-  n="${n:-0}"
+  n="$(printf '%s\n' "$CMD_COUNTS" | awk -v cmd="$c" '$2==cmd {print $1}')"; n="${n:-0}"
   LIB_TOTAL=$((LIB_TOTAL + n))
-  LIB_LINES="${LIB_LINES}$(printf '  /%-16s %s\n' "$c" "$n")"$'\n'
+  LIB_BLOCK="${LIB_BLOCK}$(printf '  /%-15s %s' "$c" "$n")"$'\n'
 done
+
+OTHER_BLOCK=""
+while read -r n name; do
+  [ -z "${name:-}" ] && continue
+  is_lib "$name" && continue
+  OTHER_BLOCK="${OTHER_BLOCK}$(printf '  /%-15s %s' "$name" "$n")"$'\n'
+done <<< "$CMD_COUNTS"
+
+fmt() { # печатает блок счётчиков или "-"
+  if [ -z "$(printf '%s' "$1" | tr -d '[:space:]')" ]; then echo "  (нет)"; else
+    printf '%s' "$1" | awk '{printf "  %-18s %s\n",$2,$1}'; fi
+}
 
 REPORT="Prompt Library Usage - $DATE
 Окно: последние $DAYS дн., сессий: ${#FILES[@]}
 
-Команды библиотеки (модуль 09), всего вызовов: $LIB_TOTAL
-${LIB_LINES}
-Не вызывались за период - кандидаты на удаление или лучший нейминг.
-Часто вызываемые - кандидаты на хук (следующая ступень лестницы закрепления)."
+== Команды библиотеки (модуль 09), всего: $LIB_TOTAL ==
+${LIB_BLOCK}
+== Прочие слэш-команды (встроенные + твои) ==
+$([ -n "$(printf '%s' "$OTHER_BLOCK" | tr -d '[:space:]')" ] && printf '%s' "$OTHER_BLOCK" || echo '  (нет)')
+== Скиллы (Claude дёргает из запасника) ==
+$(fmt "$SKILL_COUNTS")
+== Субагенты (Task) ==
+$(fmt "$AGENT_COUNTS")
+--
+Ноль у команды библиотеки - плохой нейминг/не нужна. Частые - кандидат в хук.
+Часто дёргаемый скилл/субагент - кандидат оформить своей командой."
 
 echo "$REPORT"
 
-# Опциональная доставка в Telegram (только если заданы секреты в окружении).
 if [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
   curl -s -X POST \
     "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
