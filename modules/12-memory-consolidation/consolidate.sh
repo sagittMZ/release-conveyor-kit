@@ -18,9 +18,15 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$HERE/../.." && pwd)"
-LIB="$REPO_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"
-OUT_DIR="${CONSOLIDATE_OUT_DIR:-$REPO_ROOT/docs/consolidation}"
+# Корень проекта: git-топлевел, иначе текущий каталог (переносимо: кит и
+# вендоренный tools/prompt-kit/memory-consolidation/).
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# lib-transcripts: override, иначе рядом с харнессом (вендоринг), иначе в ките.
+LIB=""
+for _c in "${CONSOLIDATE_LIB:-}" "$HERE/../lib-transcripts.sh" "$PROJECT_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"; do
+  [ -n "$_c" ] && [ -f "$_c" ] && { LIB="$_c"; break; }
+done
+OUT_DIR="${CONSOLIDATE_OUT_DIR:-$PROJECT_ROOT/docs/consolidation}"
 
 DAYS="${CONSOLIDATE_DAYS:-7}"; WITH_PROMPTS=0
 while [ "$#" -gt 0 ]; do
@@ -33,7 +39,7 @@ done
 
 # каталог памяти проекта: ~/.claude/projects/<encoded-PWD>/memory
 if [ -z "${MEMORY_DIR:-}" ]; then
-  _enc="$(printf '%s' "$REPO_ROOT" | sed 's#/#-#g')"
+  _enc="$(printf '%s' "$PROJECT_ROOT" | sed 's#/#-#g')"
   MEMORY_DIR="$HOME/.claude/projects/$_enc/memory"
 fi
 
@@ -50,11 +56,11 @@ OUT="$OUT_DIR/material-$DATE.md"
 
   echo "## 1. Снапшоты сессий (docs/.session-current.md)"
   echo
-  SNAP="$REPO_ROOT/docs/.session-current.md"
+  SNAP="$PROJECT_ROOT/docs/.session-current.md"
   if [ -f "$SNAP" ]; then
     echo "### Текущий"; echo '```'; cat "$SNAP"; echo '```'; echo
     echo "### История коммитов снапшота (последние 8)"
-    git -C "$REPO_ROOT" log -8 --format='- %ad %h %s' --date=short -- docs/.session-current.md 2>/dev/null || echo "(git недоступен)"
+    git -C "$PROJECT_ROOT" log -8 --format='- %ad %h %s' --date=short -- docs/.session-current.md 2>/dev/null || echo "(git недоступен)"
   else
     echo "(снапшота нет)"
   fi
@@ -72,8 +78,8 @@ OUT="$OUT_DIR/material-$DATE.md"
 
   echo "## 3. Инвентарь .ai/"
   echo
-  if [ -d "$REPO_ROOT/.ai" ]; then
-    find "$REPO_ROOT/.ai" -maxdepth 1 -name '*.md' -printf '- %f\n' 2>/dev/null
+  if [ -d "$PROJECT_ROOT/.ai" ]; then
+    find "$PROJECT_ROOT/.ai" -maxdepth 1 -name '*.md' -printf '- %f\n' 2>/dev/null
   else
     echo "(в этом проекте .ai/ нет - у кита роли в AGENTS.md модуля 08)"
   fi

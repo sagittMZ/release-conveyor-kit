@@ -17,12 +17,23 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$HERE/../.." && pwd)"
-CMD_DIR="$REPO_ROOT/modules/09-prompt-library/commands"
+# Корень проекта: git-топлевел, иначе текущий каталог. Не завязан на глубину
+# харнесса - работает и в ките (modules/11-...), и в вендоренной раскладке
+# (tools/prompt-kit/command-evals/).
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# Каталог команд: явный override, иначе .claude/commands (после раскатки в
+# проект), иначе исходники модуля 9 (в ките).
+if [ -n "${EVAL_CMD_DIR:-}" ]; then CMD_DIR="$EVAL_CMD_DIR"
+elif [ -d "$PROJECT_ROOT/.claude/commands" ]; then CMD_DIR="$PROJECT_ROOT/.claude/commands"
+else CMD_DIR="$PROJECT_ROOT/modules/09-prompt-library/commands"; fi
 EXPECT="$HERE/expectations.tsv"
-LIB="$REPO_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"
-OUT_DIR="${EVAL_OUT_DIR:-$REPO_ROOT/docs/evals}"
+OUT_DIR="${EVAL_OUT_DIR:-$PROJECT_ROOT/docs/evals}"
 USAGE_DAYS="${EVAL_USAGE_DAYS:-30}"
+# lib-transcripts: override, иначе рядом с харнессом (вендоринг), иначе в ките.
+LIB=""
+for _c in "${EVAL_LIB:-}" "$HERE/../lib-transcripts.sh" "$PROJECT_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"; do
+  [ -n "$_c" ] && [ -f "$_c" ] && { LIB="$_c"; break; }
+done
 
 TARGET="--all"; DO_BASELINE=0; STRICT=0
 for a in "$@"; do
