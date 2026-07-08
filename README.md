@@ -21,7 +21,13 @@ Vercel + GitHub Actions + Codemagic. Применяется AI-агентом в
 | 6 | [secrets](modules/06-secrets/) | .env-паттерны, .gitignore, gitleaks в CI |
 | 7 | [smoke-e2e](modules/07-smoke-e2e/) | Playwright smoke (5-8 сценариев) как шаблон |
 | 8 | [agent-layer](modules/08-agent-layer/) | Промпты применения: интервью -> детект -> применение -> верификация |
-| 9 | [prompt-library](modules/09-prompt-library/) | Библиотека стартовых промптов владельцу: 6 паттернов + 21 промпт по фазам. Стеко-независимый - применим к ЛЮБОМУ проекту |
+| 9 | [prompt-library](modules/09-prompt-library/) | Библиотека стартовых промптов владельцу: 6 паттернов + 21 промпт по фазам + 13 слэш-команд. Стеко-независимый - применим к ЛЮБОМУ проекту |
+| 10 | coverage-matrix | Матрица покрытия автотестами. Зарезервирован, см. [BACKLOG.md](BACKLOG.md) |
+| 11 | [command-evals](modules/11-command-evals/) | Измеримое качество команд: структурные проверки + LLM-судья. Стеко-независимый |
+| 12 | [memory-consolidation](modules/12-memory-consolidation/) | Консолидация памяти в ревьюабельные инсайты (файловый аналог Dreaming). Стеко-независимый |
+
+Стеко-независимый слой (09 + 11 + 12) и как им пользоваться - в
+[docs/prompt-kit-guide.md](docs/prompt-kit-guide.md) (юзергайд + витрина).
 
 ## Применение (кратко)
 
