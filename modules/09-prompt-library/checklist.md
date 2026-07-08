@@ -1,13 +1,16 @@
 # Чек-лист верификации: 09-prompt-library
 
-1. В целевом проекте существует `docs/prompts/PATTERNS.md` и `docs/prompts/library/`
-   с шестью поддиректориями фаз (discover, design, build, ship, operate, automate).
-2. Каждый файл в `library/` начинается с YAML frontmatter и содержит поля
+1. В целевом проекте существует `docs/prompts/library/PATTERNS.md` и
+   `docs/prompts/library/` с шестью поддиректориями фаз (discover, design,
+   build, ship, operate, automate). Существующий `docs/prompts/` (если был) не
+   затёрт - меню кита лежит в отдельном `library/`.
+2. Каждый файл-меню начинается с YAML frontmatter и содержит поля
    `id`, `phase`, `category`, `roles`. Быстрая проверка:
    `grep -L "^id:" docs/prompts/library/*/*.md` - выхлоп должен быть пустым.
 3. `phase` в frontmatter совпадает с именем директории файла.
-4. В CLAUDE.md целевого проекта есть строка-указатель на `docs/prompts/`
-   и список слэш-команд.
+4. В AI_WORKFLOW.md целевого проекта есть секция-указатель на
+   `docs/prompts/library/` и список слэш-команд (если AI_WORKFLOW.md нет -
+   строка в CLAUDE.md).
 5. Слэш-команды на месте: `ls .claude/commands/` показывает spec.md, precommit.md,
    session-wrap.md, release-notes.md, security-scan.md, edge-cases.md. Проверка,
    что Claude их видит: команда `/precommit` появляется в автодополнении или

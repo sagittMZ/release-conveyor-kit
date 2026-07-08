@@ -44,11 +44,14 @@ Order and gating per AGENTS.md. For each module:
 5. Append the module outcome to the report draft.
 
 Module 09 (prompt-library) has no templates to merge. Copy:
-`PATTERNS.md` + `library/` -> target `docs/prompts/` (copy-paste menu), and
-`commands/*.md` -> target `.claude/commands/` (invocable slash commands). Add
-a pointer line to the target CLAUDE.md listing docs/prompts/ and the command
-names (create CLAUDE.md if missing). See modules/09-prompt-library/ROLLOUT.md
-for the ready intro prompt. Then run its checklist.md as usual.
+`PATTERNS.md` + `library/` -> target `docs/prompts/library/` (copy-paste menu;
+if `docs/prompts/` already exists, do NOT overwrite it - the menu goes into the
+separate `library/` subdir, merge only), and `commands/*.md` -> target
+`.claude/commands/` (invocable slash commands). Add a pointer section to the
+target AI_WORKFLOW.md listing docs/prompts/library/ and the command names (fall
+back to CLAUDE.md if AI_WORKFLOW.md is missing). See
+modules/09-prompt-library/ROLLOUT.md for the ready intro prompt. Then run its
+checklist.md as usual.
 
 ## Phase 3 - Verify pipeline end-to-end
 
