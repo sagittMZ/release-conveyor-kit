@@ -19,7 +19,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib-transcripts.sh"
 DAYS="${DIGEST_DAYS:-7}"
 
 # Команды библиотеки промптов (модуль 09). Дополняй по мере роста набора.
-LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases backlog scope-triage handoff impl-plan audit eval-command"
+LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases backlog scope-triage handoff impl-plan audit eval-command consolidate-memory"
 
 DATE="$(date '+%Y-%m-%d')"
 
