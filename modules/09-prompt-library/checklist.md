@@ -11,12 +11,13 @@
 4. В AI_WORKFLOW.md целевого проекта есть секция-указатель на
    `docs/prompts/library/` и список слэш-команд (если AI_WORKFLOW.md нет -
    строка в CLAUDE.md).
-5. Слэш-команды на месте: `ls .claude/commands/` показывает 11 файлов - spec.md,
+5. Слэш-команды на месте: `ls .claude/commands/` показывает 13 файлов - spec.md,
    precommit.md, session-wrap.md, release-notes.md, security-scan.md,
    edge-cases.md, backlog.md, scope-triage.md, handoff.md, impl-plan.md,
-   audit.md. Проверка, что Claude их видит: команда `/precommit` появляется в
-   автодополнении или `/help`. Вызвать `/precommit` в чистом дереве - должен
-   вернуть "нет изменений".
+   audit.md, eval-command.md, consolidate-memory.md (последние две - мета-команды
+   модулей 11/12; их пути к харнессу подогнаны под tools/prompt-kit/). Проверка,
+   что Claude их видит: `/precommit` появляется в автодополнении или `/help`.
+   Вызвать `/precommit` в чистом дереве - должен вернуть "нет изменений".
 6. (Опционально) Дайджест использования запускается:
    `bash modules/09-prompt-library/usage-digest/usage-digest.sh` печатает отчёт.
 7. Выборочно: открыть 2-3 промпта-меню, подставить слоты под целевой проект,
