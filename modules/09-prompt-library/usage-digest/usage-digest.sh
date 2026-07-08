@@ -12,7 +12,10 @@
 
 set -euo pipefail
 
-PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
+# Общий чтец транскриптов (см. lib-transcripts.sh). Держит логику чтения истории
+# в одном месте для модулей 09/11/12.
+source "$(dirname "${BASH_SOURCE[0]}")/lib-transcripts.sh"
+
 DAYS="${DIGEST_DAYS:-7}"
 
 # Команды библиотеки промптов (модуль 09). Дополняй по мере роста набора.
@@ -20,7 +23,7 @@ LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases
 
 DATE="$(date '+%Y-%m-%d')"
 
-mapfile -t FILES < <(find "$PROJECTS_DIR" -name '*.jsonl' -mtime "-${DAYS}" 2>/dev/null)
+mapfile -t FILES < <(lt_find_files "$DAYS")
 
 if [ "${#FILES[@]}" -eq 0 ]; then
   echo "Prompt Library Usage - $DATE
@@ -29,12 +32,9 @@ if [ "${#FILES[@]}" -eq 0 ]; then
 fi
 
 # --- сбор счётчиков ---
-CMD_COUNTS="$(grep -oh '<command-name>/[a-z0-9-]*' "${FILES[@]}" 2>/dev/null \
-  | sed 's#<command-name>/##' | sort | uniq -c | sort -rn || true)"
-SKILL_COUNTS="$(grep -oh '"skill":"[a-z0-9-]*"' "${FILES[@]}" 2>/dev/null \
-  | sed 's#"skill":"##;s#"##' | sort | uniq -c | sort -rn || true)"
-AGENT_COUNTS="$(grep -oh '"subagent_type":"[a-z0-9_-]*"' "${FILES[@]}" 2>/dev/null \
-  | sed 's#"subagent_type":"##;s#"##' | sort | uniq -c | sort -rn || true)"
+CMD_COUNTS="$(lt_cmd_counts "${FILES[@]}")"
+SKILL_COUNTS="$(lt_skill_counts "${FILES[@]}")"
+AGENT_COUNTS="$(lt_agent_counts "${FILES[@]}")"
 
 is_lib() { for c in $LIB_COMMANDS; do [ "$1" = "$c" ] && return 0; done; return 1; }
 
