@@ -1,0 +1,25 @@
+# Ожидания по командам модуля 09 (рубрик слоя 1 в машинном виде).
+# eval.sh проверяет каждую команду против её строки. Новая команда без строки -
+# FAIL "нет ожиданий" (заставляет объявлять намерение осознанно).
+# Колонки (TAB-разделитель):
+#   name       имя команды (= имя файла без .md)
+#   needs_arg  y/n - команда принимает аргумент ($ARGUMENTS/$1): нужен
+#              argument-hint + ветка-fallback "если не задано - спроси"
+#   analyzer   y/n - команда только читает/анализирует: нужен guard
+#              "не пиши код"/"ничего не коммить"/"ничего не меняй"/"не начинай"
+#   ai_role    ожидаемая привязка к .ai/: имя файла роли (условная ссылка в теле),
+#              MULTI (мульти-ролевая, ссылка на карту PATTERNS.md), или - (нет)
+#
+# name	needs_arg	analyzer	ai_role
+spec	y	y	PRODUCT_OWNER
+precommit	n	y	PROJECT_POLICIES
+session-wrap	n	n	-
+release-notes	n	n	-
+security-scan	y	y	SECURITY_CHECKLIST
+edge-cases	y	y	QA_ENGINEER
+backlog	y	y	PRODUCT_OWNER
+scope-triage	y	y	PRODUCT_OWNER
+handoff	y	n	-
+impl-plan	y	y	MULTI
+audit	y	y	-
+eval-command	y	y	-
