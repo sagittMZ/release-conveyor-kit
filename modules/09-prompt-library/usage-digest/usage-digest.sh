@@ -16,7 +16,7 @@ PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
 DAYS="${DIGEST_DAYS:-7}"
 
 # Команды библиотеки промптов (модуль 09). Дополняй по мере роста набора.
-LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases"
+LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases backlog scope-triage handoff impl-plan audit"
 
 DATE="$(date '+%Y-%m-%d')"
 

@@ -17,13 +17,14 @@ $KIT/modules/09-prompt-library
    ИДЕМПОТЕНТНОСТЬ: если docs/prompts/ уже существует (там могут быть мои
    большие PROMPT_*.md) - НЕ затирай его, клади меню кита именно в
    docs/prompts/library/ и только мержь новые файлы.
-2. Скопируй commands/*.md -> .claude/commands/ этого проекта (это слэш-команды:
-   /spec, /precommit, /session-wrap, /release-notes, /security-scan, /edge-cases).
+2. Скопируй commands/*.md -> .claude/commands/ этого проекта (11 слэш-команд:
+   /spec, /precommit, /session-wrap, /release-notes, /security-scan, /edge-cases,
+   /backlog, /scope-triage, /handoff, /impl-plan, /audit).
 3. Добавь секцию в AI_WORKFLOW.md проекта (по иерархии - именно там проводка
    команд, не в CLAUDE.md):
    "Библиотека промптов: docs/prompts/library/ (начни с PATTERNS.md).
    Слэш-команды: /spec /precommit /session-wrap /release-notes /security-scan
-   /edge-cases."
+   /edge-cases /backlog /scope-triage /handoff /impl-plan /audit."
    Если AI_WORKFLOW.md нет - тогда строку-указатель в CLAUDE.md.
 4. Прогони чек-лист modules/09-prompt-library/checklist.md.
 5. Ничего из прикладного кода не трогай. Покажи git diff и жди моего слова
