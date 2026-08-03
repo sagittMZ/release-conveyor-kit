@@ -65,7 +65,9 @@ KIT=$KIT
 7. GITIGNORE (публикуемость): добавь в .gitignore проекта, если ещё нет:
    docs/evals/
    docs/consolidation/
-   (Это сырьё evals/консолидации - приватно и регенерируемо, в историю не едет.)
+   (docs/evals/ - карточки evals, приватно и регенерируемо. Сырьё консолидации
+   по умолчанию пишется ВНЕ дерева, в ~/.claude/projects/<enc>/consolidation/;
+   строка docs/consolidation/ - страховка на случай CONSOLIDATE_OUT_DIR-override.)
 
 8. БЛОК Б -> BACKLOG проекта (план масштабирования, НЕ реализовывать):
    - Multi-agent оркестрация (координатор + параллельные sub-agents) - под широкие
@@ -78,9 +80,10 @@ KIT=$KIT
    - bash tools/prompt-kit/command-evals/eval.sh --all  -> должно быть 100%
      (харнесс сам читает .claude/commands этого проекта);
    - bash tools/prompt-kit/memory-consolidation/consolidate.sh --days 7  ->
-     создаёт docs/consolidation/material-<дата>.md без ошибок;
-   - git status  -> docs/evals/ и docs/consolidation/ НЕ видны (gitignore рабо-
-     тает);
+     создаёт material-<дата>.md в ~/.claude/projects/<enc>/consolidation/
+     (путь печатает сам скрипт) без ошибок, В ДЕРЕВЕ проекта файл не появляется;
+   - git status  -> чист от артефактов evals/консолидации (docs/evals/ скрыт
+     gitignore-ом, сырьё консолидации физически вне дерева);
    - чек-листы: $KIT/modules/09-prompt-library/checklist.md,
      $KIT/modules/11-command-evals/checklist.md,
      $KIT/modules/12-memory-consolidation/checklist.md.
@@ -99,8 +102,9 @@ KIT=$KIT
   если будешь править/добавлять свои команды. Есть .ai/ - команды подхватят роли.
 - **project-beta (Next.js + Supabase):** блок А целиком; позже можно добавить
   релизные модули (CI, secrets, monitoring). ВНИМАНИЕ: PHI в gitignore -
-  security-scan уместен; consolidate.sh читает MEMORY.md/.ai/ - проверь, что
-  сырьё консолидации точно в .gitignore.
+  security-scan уместен; consolidate.sh читает MEMORY.md/.ai/, его сырьё по
+  умолчанию пишется вне git-дерева (приватная зона ~/.claude/projects/<enc>/),
+  строка docs/consolidation/ в .gitignore - обязательная страховка.
 - **donor-project:** позже, после двух других (донор кита, трогать осторожно).
 
 ## После раскатки

@@ -9,10 +9,15 @@
 #
 # Использование:
 #   consolidate.sh [--days N] [--with-prompts]
-# Вывод: docs/consolidation/material-<дата>.md (каталог в .gitignore - приватно).
+# Вывод: ~/.claude/projects/<encoded-root>/consolidation/material-<дата>.md -
+# ВНЕ рабочего дерева репозитория (по образцу MEMORY_DIR): сырьё содержит
+# приватные снапшоты/промпты (для project-beta - PHI-риск), git-дерево
+# ему не дом. gitignore на docs/consolidation/ остаётся страховкой на случай
+# CONSOLIDATE_OUT_DIR-override внутрь дерева.
 #
 # Env:
 #   MEMORY_DIR  каталог памяти проекта (по умолчанию выводится из PWD)
+#   CONSOLIDATE_OUT_DIR  куда писать сырьё (по умолчанию приватная зона выше)
 #   CONSOLIDATE_DAYS  окно в днях (по умолчанию 7; флаг --days важнее)
 
 set -euo pipefail
@@ -26,7 +31,9 @@ LIB=""
 for _c in "${CONSOLIDATE_LIB:-}" "$HERE/../lib-transcripts.sh" "$PROJECT_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"; do
   [ -n "$_c" ] && [ -f "$_c" ] && { LIB="$_c"; break; }
 done
-OUT_DIR="${CONSOLIDATE_OUT_DIR:-$PROJECT_ROOT/docs/consolidation}"
+# Приватная зона проекта (та же схема кодирования пути, что у Claude Code).
+_enc="$(printf '%s' "$PROJECT_ROOT" | sed 's#/#-#g')"
+OUT_DIR="${CONSOLIDATE_OUT_DIR:-$HOME/.claude/projects/$_enc/consolidation}"
 
 DAYS="${CONSOLIDATE_DAYS:-7}"; WITH_PROMPTS=0
 while [ "$#" -gt 0 ]; do
@@ -39,7 +46,6 @@ done
 
 # каталог памяти проекта: ~/.claude/projects/<encoded-PWD>/memory
 if [ -z "${MEMORY_DIR:-}" ]; then
-  _enc="$(printf '%s' "$PROJECT_ROOT" | sed 's#/#-#g')"
   MEMORY_DIR="$HOME/.claude/projects/$_enc/memory"
 fi
 
@@ -52,6 +58,11 @@ OUT="$OUT_DIR/material-$DATE.md"
   echo
   echo "Окно: последние $DAYS дн. Собрано consolidate.sh (детерминированно)."
   echo "Это СЫРЬЁ для /consolidate-memory, не дистиллят. Не редактируй вручную."
+  if [ "$WITH_PROMPTS" -eq 1 ]; then
+    echo
+    echo "> ВНИМАНИЕ (приватность/PHI): файл содержит выборку печатанных промптов"
+    echo "> из транскриптов. Не переноси его в git-дерево и не цитируй в коммитах."
+  fi
   echo
 
   echo "## 1. Снапшоты сессий (docs/.session-current.md)"
@@ -107,4 +118,4 @@ OUT="$OUT_DIR/material-$DATE.md"
 } > "$OUT"
 
 echo "Сырьё собрано: $OUT"
-echo "Дальше: в сессии вызови /consolidate-memory - он дистиллирует в DRAFT на твоё ревью."
+echo "Дальше: в сессии вызови /consolidate-memory - он дистиллирует в DRAFT (в том же каталоге) на твоё ревью."

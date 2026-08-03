@@ -8,18 +8,23 @@
 ## Поток (дёшево, ревьюабельно)
 
 1. **Сбор (bash, 0 стоимости):** `consolidate.sh` собирает разрозненные
-   источники в один файл `docs/consolidation/material-<дата>.md`. Сам не
-   дистиллирует.
+   источники в один файл `material-<дата>.md` в ПРИВАТНОЙ зоне проекта
+   `~/.claude/projects/<enc>/consolidation/` (вне git-дерева, по образцу
+   каталога памяти). Сам не дистиллирует.
 2. **Дистилляция (в текущей сессии):** `/consolidate-memory` читает материал и
-   по `DISTILL_RUBRIC.md` оформляет ПРЕДЛОЖЕННЫЙ дифф
-   `docs/consolidation/DRAFT-<дата>.md` (Добавить / Обновить / Противоречия).
+   по `DISTILL_RUBRIC.md` оформляет ПРЕДЛОЖЕННЫЙ дифф `DRAFT-<дата>.md` в том
+   же приватном каталоге (Добавить / Обновить / Противоречия).
    Не отдельный платный прогон - работает внутри уже идущей сессии.
 3. **Приёмка (вручную):** the owner читает DRAFT и мержит принятое в MEMORY.md/.ai/
    сама. Автоматической записи в боевые файлы нет.
 
 ## Безопасность (не затирать ручное)
 
-- Вывод только в `docs/consolidation/` (в `.gitignore` - приватно, регенерируемо).
+- Вывод только в приватную зону `~/.claude/projects/<enc>/consolidation/` -
+  сырьё (снапшоты, промпты; для health-проектов - PHI) в git-дерево не попадает
+  физически. `.gitignore` на `docs/consolidation/` остаётся страховкой на случай
+  `CONSOLIDATE_OUT_DIR`-override внутрь дерева. `--with-prompts` - явный opt-in,
+  файл получает PHI-предупреждение в шапке.
 - Боевые MEMORY.md / файлы памяти / .ai/ автоматически не переписываются.
 - Противоречия с ручными записями выносятся отдельной секцией на решение the owner,
   не «исправляются».
@@ -34,6 +39,7 @@ bash modules/12-memory-consolidation/consolidate.sh [--days N] [--with-prompts]
 Затем в сессии: `/consolidate-memory`.
 
 Env: `MEMORY_DIR` (каталог памяти проекта, по умолчанию выводится из пути репо),
+`CONSOLIDATE_OUT_DIR` (куда писать сырьё; по умолчанию приватная зона проекта),
 `CONSOLIDATE_DAYS` (окно, по умолчанию 7).
 
 ## Cadence (без платного cron)
@@ -47,7 +53,7 @@ Env: `MEMORY_DIR` (каталог памяти проекта, по умолча
 
 | Файл | Что это |
 |---|---|
-| consolidate.sh | Детерминированный сбор сырья -> docs/consolidation/material-<дата>.md |
+| consolidate.sh | Детерминированный сбор сырья -> ~/.claude/projects/<enc>/consolidation/material-<дата>.md |
 | DISTILL_RUBRIC.md | Правила дистилляции: атомарность, дедуп, категории, не затирать ручное |
 | checklist.md | Верификация |
 | commands/ -> /consolidate-memory в modules/09-prompt-library/commands/ (единый дом) |
