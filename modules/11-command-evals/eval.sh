@@ -69,8 +69,10 @@ if [ -f "$LIB" ]; then
   fi
 fi
 
-FAILFILE="$(mktemp)"
-trap 'rm -f "$FAILFILE"' EXIT
+FAILFILE="$(mktemp)"; SKIPFILE="$(mktemp)"
+trap 'rm -f "$FAILFILE" "$SKIPFILE"' EXIT
+# В ките (исходники модулей на месте) требования строже, чем в вендоренном проекте.
+IN_KIT=0; [ -d "$PROJECT_ROOT/modules/09-prompt-library" ] && IN_KIT=1
 
 # --- проверки одной команды: печатает "passed total"; детали фейлов -> FAILFILE ---
 eval_one() {
@@ -80,7 +82,15 @@ eval_one() {
     echo "  [$name] нет файла команды" >> "$FAILFILE"; echo "0 1"; return
   fi
   if [ -z "${EXP_ARG[$name]:-}" ]; then
-    echo "  [$name] нет строки в expectations.tsv" >> "$FAILFILE"; echo "0 1"; return
+    # В ките новая команда без строки ожиданий - провал (намерение объявляется
+    # осознанно). В чужом проекте свои команды - не наша юрисдикция: в отдельный
+    # список "вне ожиданий", не в провалы (честность метрики, P-M1).
+    if [ "$IN_KIT" -eq 1 ]; then
+      echo "  [$name] нет строки в expectations.tsv" >> "$FAILFILE"; echo "0 1"
+    else
+      echo "$name" >> "$SKIPFILE"; echo "skip"
+    fi
+    return
   fi
   body="$(cat "$f")"
 
@@ -161,9 +171,11 @@ mkdir -p "$OUT_DIR"
 DATE="$(date '+%Y-%m-%d')"
 SCORE_TSV="$OUT_DIR/scorecard.tsv"; : > "$SCORE_TSV"
 
-TOTAL_P=0; TOTAL_T=0; ROWS=""
+TOTAL_P=0; TOTAL_T=0; ROWS=""; SCORED=0
 for n in "${NAMES[@]}"; do
   read -r p t < <(eval_one "$n")
+  [ "$p" = "skip" ] && continue
+  SCORED=$((SCORED+1))
   TOTAL_P=$((TOTAL_P+p)); TOTAL_T=$((TOTAL_T+t))
   printf '%s\t%s\t%s\n' "$n" "$p" "$t" >> "$SCORE_TSV"
   pct=$(( t>0 ? 100*p/t : 0 ))
@@ -177,10 +189,27 @@ for n in "${NAMES[@]}"; do
 done
 
 OVERALL=$(( TOTAL_T>0 ? 100*TOTAL_P/TOTAL_T : 0 ))
-REPORT="Command Evals (слой 1) - $DATE
-Команд: ${#NAMES[@]}, проверок пройдено: $TOTAL_P/$TOTAL_T (${OVERALL}%)
+
+# Слой 2 (поведение): честная подача покрытия (Q-H1). Метрика слоя 1 - про
+# структуру исходников, НЕ про поведение; сколько команд реально прогнано
+# LLM-судьёй - берём из свежего judge-отчёта.
+JUDGE_LINE="слой 2 (поведение, LLM-судья): не прогнан - запусти /eval-command --judge"
+JUDGE_F="$(ls -1 "$OUT_DIR"/judge-*.md 2>/dev/null | sort | tail -1 || true)"
+if [ -n "${JUDGE_F:-}" ]; then
+  J_N="$(awk -F'|' '/^\|/ && $2 !~ /Команда|---/ {gsub(/ /,"",$2); if ($2!="") print $2}' "$JUDGE_F" | sort -u | wc -l)"
+  JUDGE_LINE="слой 2 (поведение, LLM-судья): прогнан для $J_N из $SCORED команд ($(basename "$JUDGE_F"))"
+fi
+
+REPORT="Command Evals - $DATE
+слой 1 (структура исходников): команд $SCORED, проверок пройдено: $TOTAL_P/$TOTAL_T (${OVERALL}%)
+$JUDGE_LINE
 
 ${ROWS}"
+if [ -s "$SKIPFILE" ]; then
+  REPORT="${REPORT}
+Вне ожиданий (свои команды проекта, не скорятся - добавь строки в expectations.tsv, чтобы включить):
+$(sed 's/^/  /' "$SKIPFILE")"
+fi
 if [ -s "$FAILFILE" ]; then
   REPORT="${REPORT}
 Проваленные проверки:

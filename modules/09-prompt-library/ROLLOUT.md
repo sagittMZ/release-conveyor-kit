@@ -91,8 +91,13 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
    (Первоисточник: $KIT/docs/analysis-agentic-patterns-2026-07-08.md.)
 
 9. ВЕРИФИКАЦИЯ (прогони и покажи результат):
-   - bash tools/prompt-kit/command-evals/eval.sh --all  -> должно быть 100%
-     (харнесс сам читает .claude/commands этого проекта);
+   - bash tools/prompt-kit/command-evals/eval.sh --all  -> слой 1 = 100% по
+     13 командам кита (харнесс сам читает .claude/commands этого проекта);
+     СВОИ команды проекта попадут в раздел «вне ожиданий» - это норма, не
+     провал; чтобы включить их в скоринг, добавь им строки в
+     tools/prompt-kit/command-evals/expectations.tsv. Строка «слой 2» честно
+     скажет «не прогнан» - поведенческий прогон в целевом проекте по желанию
+     (/eval-command --judge);
    - bash tools/prompt-kit/memory-consolidation/consolidate.sh --days 7  ->
      создаёт material-<дата>.md в <claude-config>/projects/<enc>/consolidation/
      (путь печатает сам скрипт) без ошибок, В ДЕРЕВЕ проекта файл не появляется;
