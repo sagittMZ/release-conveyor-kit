@@ -13,7 +13,10 @@
       backgroundColor под сплэш - см. паттерн донора в AUDIT.md).
 - [ ] Платформо-зависимые вызовы (StatusBar и т.п.) - только под Android-гардом.
 - [ ] `public/.well-known/apple-app-site-association` + Content-Type заголовок
-      в vercel.json (для universal links):
+      в vercel.json - скопируй шаблон кита
+      `modules/03-store-deploy/templates/vercel.json` в корень проекта (или
+      вмержь его секции headers/rewrites в существующий). Содержимое AASA
+      (для universal links):
 
 ```json
 {

@@ -61,8 +61,12 @@ Settings -> Secrets and variables -> Actions:
 }]
 ```
 
-Заголовок Content-Type для Vercel уже в vercel.json-паттерне кита (модуль 1
-README корня / донор). Проверка: `curl https://<домен>/.well-known/assetlinks.json`.
+Заголовок Content-Type и SPA-rewrite с исключением /.well-known/ - в шаблоне
+кита `modules/03-store-deploy/templates/vercel.json`: скопируй его в корень
+проекта как `vercel.json` (если файл уже есть - вмержь секции headers/rewrites,
+не затирая своё). Проверено на доноре. Проверка после деплоя:
+`curl -I https://<домен>/.well-known/assetlinks.json` (ожидай
+Content-Type: application/json, а не HTML SPA-фолбэка).
 
 ## Шаг 5 - Store listing (Владелец, агент помогает текстами)
 

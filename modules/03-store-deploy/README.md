@@ -11,6 +11,7 @@
 | google-play.md | Полный сценарий: upload key -> секреты -> консоль -> assetlinks -> listing -> Data Safety -> ревьюер -> Internal Testing -> Production | Проверен донором (Google Play пройден), кроме шага Data Safety-конспекта и опции API-загрузки - они добавлены китом |
 | app-store.md | Сценарий TestFlight/App Store через Codemagic без Mac (волны A-C) | Волна A проверена; B-C - из плейбука донора, НЕ проверены до конца |
 | templates/play-upload-step.yml | Опциональный job автозагрузки AAB в трек через Google Play Developer API | Добавлен китом, НЕ проверен |
+| templates/vercel.json | Хостинг-конфиг для deep links: Content-Type обоих .well-known-файлов + SPA-rewrite, который их не перехватывает; копируется/мержится в корень целевого проекта | Паттерн проверен донором (headers + rewrite-исключение), сам файл собран китом |
 
 ## Деградация в инструкцию (принцип 5 ТЗ)
 

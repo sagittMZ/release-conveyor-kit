@@ -4,8 +4,10 @@
 
 - [ ] google-play.md / app-store.md скопированы в docs/ целевого проекта,
       плейсхолдеры заменены значениями из conveyor.config.json.
-- [ ] assetlinks.json / apple-app-site-association созданы (если есть deep links)
-      и vercel.json отдаёт их с Content-Type application/json.
+- [ ] assetlinks.json / apple-app-site-association созданы (если есть deep links);
+      vercel.json в корне проекта существует (из templates/vercel.json кита или
+      вмержен) и отдаёт их с Content-Type application/json, SPA-rewrite их
+      не перехватывает.
 - [ ] В репо нет кредов ревьюера и реальных fingerprints до получения от владельца.
 - [ ] (Если автозагрузка) play-upload-step.yml вмержен в android-build.yml,
       YAML валиден.
