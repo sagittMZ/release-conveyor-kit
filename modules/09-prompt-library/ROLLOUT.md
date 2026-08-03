@@ -66,7 +66,8 @@ KIT=$KIT
    docs/evals/
    docs/consolidation/
    (docs/evals/ - карточки evals, приватно и регенерируемо. Сырьё консолидации
-   по умолчанию пишется ВНЕ дерева, в ~/.claude/projects/<enc>/consolidation/;
+   по умолчанию пишется ВНЕ дерева, в <claude-config>/projects/<enc>/consolidation/
+   (база: CLAUDE_CONFIG_DIR, иначе ~/.claude - едино на всех платформах);
    строка docs/consolidation/ - страховка на случай CONSOLIDATE_OUT_DIR-override.)
 
 8. БЛОК Б -> BACKLOG проекта (план масштабирования, НЕ реализовывать):
@@ -80,7 +81,7 @@ KIT=$KIT
    - bash tools/prompt-kit/command-evals/eval.sh --all  -> должно быть 100%
      (харнесс сам читает .claude/commands этого проекта);
    - bash tools/prompt-kit/memory-consolidation/consolidate.sh --days 7  ->
-     создаёт material-<дата>.md в ~/.claude/projects/<enc>/consolidation/
+     создаёт material-<дата>.md в <claude-config>/projects/<enc>/consolidation/
      (путь печатает сам скрипт) без ошибок, В ДЕРЕВЕ проекта файл не появляется;
    - git status  -> чист от артефактов evals/консолидации (docs/evals/ скрыт
      gitignore-ом, сырьё консолидации физически вне дерева);
@@ -103,7 +104,7 @@ KIT=$KIT
 - **project-beta (Next.js + Supabase):** блок А целиком; позже можно добавить
   релизные модули (CI, secrets, monitoring). ВНИМАНИЕ: PHI в gitignore -
   security-scan уместен; consolidate.sh читает MEMORY.md/.ai/, его сырьё по
-  умолчанию пишется вне git-дерева (приватная зона ~/.claude/projects/<enc>/),
+  умолчанию пишется вне git-дерева (приватная зона Claude-конфига),
   строка docs/consolidation/ в .gitignore - обязательная страховка.
 - **donor-project:** позже, после двух других (донор кита, трогать осторожно).
 

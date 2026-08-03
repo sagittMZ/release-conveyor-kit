@@ -1,7 +1,7 @@
 # Чек-лист верификации: 12-memory-consolidation
 
 1. `bash modules/12-memory-consolidation/consolidate.sh --days 7` создаёт
-   `material-<дата>.md` в `~/.claude/projects/<enc>/consolidation/` (путь
+   `material-<дата>.md` в `<claude-config>/projects/<enc>/consolidation/` (путь
    печатается скриптом) и завершается без ошибок.
 2. Материал содержит секции: снапшоты сессий (текущий + история из git), индекс
    памяти MEMORY.md (если доступен), инвентарь .ai/, сводку использования.

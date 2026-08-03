@@ -1,9 +1,11 @@
 ---
 description: Дистилляция собранного сырья памяти в ревьюабельный DRAFT
 ---
-Каталог консолидации проекта: `~/.claude/projects/<enc>/consolidation/`, где
-`<enc>` - абсолютный путь корня репо с заменой `/` на `-` (та же схема, что у
-памяти; вычислить: `echo "$HOME/.claude/projects/$(git rev-parse --show-toplevel | sed 's#/#-#g')/consolidation"`).
+Каталог консолидации проекта (единое правило для всех проектов и платформ):
+`<claude-config>/projects/<enc>/consolidation/`, где база = `$CLAUDE_CONFIG_DIR`
+или `~/.claude`, а `<enc>` - абсолютный путь корня репо с заменой `/` на `-`
+(та же схема, что у памяти; вычислить:
+`echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(git rev-parse --show-toplevel | sed 's#/#-#g')/consolidation"`).
 Сырьё и DRAFT живут там, ВНЕ git-дерева: в них приватные снапшоты и промпты.
 
 Прочитай самый свежий material-<дата>.md из этого каталога (если его нет -

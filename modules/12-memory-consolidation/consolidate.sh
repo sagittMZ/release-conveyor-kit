@@ -31,9 +31,16 @@ LIB=""
 for _c in "${CONSOLIDATE_LIB:-}" "$HERE/../lib-transcripts.sh" "$PROJECT_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"; do
   [ -n "$_c" ] && [ -f "$_c" ] && { LIB="$_c"; break; }
 done
-# Приватная зона проекта (та же схема кодирования пути, что у Claude Code).
+# ЕДИНОЕ ПРАВИЛО ХРАНЕНИЯ СЫРЬЯ (все проекты, все платформы): рядом с памятью
+# проекта - <claude-config>/projects/<enc>/consolidation/. База берётся как у
+# самого Claude Code: CLAUDE_CONFIG_DIR, иначе ~/.claude - одинаково работает
+# на Linux/macOS/Windows(git-bash/WSL). Сырьё РЕГЕНЕРИРУЕМО (собирается из
+# транскриптов заново), поэтому переезд на другую платформу/путь ничего
+# ценного не теряет: долговечное - только принятый the owner дистиллят в
+# MEMORY.md/.ai/, а он живёт в самом проекте.
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 _enc="$(printf '%s' "$PROJECT_ROOT" | sed 's#/#-#g')"
-OUT_DIR="${CONSOLIDATE_OUT_DIR:-$HOME/.claude/projects/$_enc/consolidation}"
+OUT_DIR="${CONSOLIDATE_OUT_DIR:-$CLAUDE_DIR/projects/$_enc/consolidation}"
 
 DAYS="${CONSOLIDATE_DAYS:-7}"; WITH_PROMPTS=0
 while [ "$#" -gt 0 ]; do
@@ -46,7 +53,7 @@ done
 
 # каталог памяти проекта: ~/.claude/projects/<encoded-PWD>/memory
 if [ -z "${MEMORY_DIR:-}" ]; then
-  MEMORY_DIR="$HOME/.claude/projects/$_enc/memory"
+  MEMORY_DIR="$CLAUDE_DIR/projects/$_enc/memory"
 fi
 
 mkdir -p "$OUT_DIR"
