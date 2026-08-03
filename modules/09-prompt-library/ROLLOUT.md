@@ -24,20 +24,30 @@ $KIT
 git diff и жди моего слова перед коммитом.
 
 KIT=$KIT
+KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F)"
+
+0. ПРОВЕНАНС (сквозное правило): каждый копируемый артефакт получает штамп
+   $KIT_STAMP - иначе при 3+ проектах копии разъедутся без шанса это заметить.
+   Как штамповать - в шагах ниже; сверка потом: tools/prompt-kit/check-provenance.sh.
 
 1. КОМАНДЫ (13) -> .claude/commands/ РЕАЛЬНЫМИ файлами (не симлинки на кит):
    скопируй $KIT/modules/09-prompt-library/commands/*.md.
    Список: spec, precommit, session-wrap, release-notes, security-scan,
    edge-cases, backlog, scope-triage, handoff, impl-plan, audit, eval-command,
    consolidate-memory.
+   В каждый скопированный файл добавь во frontmatter (после description:)
+   строку:  provenance: $KIT_STAMP
 
 2. МЕНЮ-БИБЛИОТЕКА -> docs/prompts/library/ этого проекта:
    скопируй $KIT/modules/09-prompt-library/PATTERNS.md и .../library/.
    ИДЕМПОТЕНТНОСТЬ: если docs/prompts/ уже занят (напр. большими PROMPT_*.md) -
    НЕ затирай, клади меню в отдельный docs/prompts/library/, только мержь.
+   В PATTERNS.md и каждый файл library/ добавь ПЕРВОЙ строкой:
+   <!-- provenance: $KIT_STAMP -->
 
 3. ГАЙД -> docs/prompt-kit-guide.md: скопируй $KIT/docs/prompt-kit-guide.md
-   (то же относительное место, что и в ките).
+   (то же относительное место, что и в ките) и добавь первой строкой тот же
+   <!-- provenance: $KIT_STAMP -->
 
 4. ТУЛИНГ (харнесс evals/консолидации) -> tools/prompt-kit/ ВЕНДОРИНГОМ:
    tools/prompt-kit/
@@ -46,7 +56,10 @@ KIT=$KIT
      command-evals/                <- всё из $KIT/modules/11-command-evals/
        (eval.sh, expectations.tsv, RUBRIC.md, cases/, judge/)
      memory-consolidation/         <- consolidate.sh, DISTILL_RUBRIC.md из $KIT/modules/12-memory-consolidation/
-     PROVENANCE                    <- запиши: "vendored from release-conveyor-kit @ <git -C $KIT rev-parse HEAD>, <дата>"
+     check-provenance.sh           <- $KIT/modules/09-prompt-library/check-provenance.sh
+     PROVENANCE                    <- две строки:
+                                      vendored from $KIT_STAMP
+                                      kit path: $KIT
 
 5. ПОДГОНИ ПУТИ в двух скопированных мета-командах (.claude/commands/):
    в eval-command.md и consolidate-memory.md замени префиксы путей харнесса:
@@ -85,6 +98,8 @@ KIT=$KIT
      (путь печатает сам скрипт) без ошибок, В ДЕРЕВЕ проекта файл не появляется;
    - git status  -> чист от артефактов evals/консолидации (docs/evals/ скрыт
      gitignore-ом, сырьё консолидации физически вне дерева);
+   - bash tools/prompt-kit/check-provenance.sh --strict  -> все артефакты со
+     штампом, дрейфа нет (свежая раскатка = на HEAD кита);
    - чек-листы: $KIT/modules/09-prompt-library/checklist.md,
      $KIT/modules/11-command-evals/checklist.md,
      $KIT/modules/12-memory-consolidation/checklist.md.
@@ -111,6 +126,8 @@ KIT=$KIT
 ## После раскатки
 
 - Через неделю-две - `tools/prompt-kit/usage-digest.sh`: что реально пошло в дело.
-- Обновление кита -> проекта: сравни PROVENANCE-коммит с текущим китом, перенеси
-  нужные правки (вендоринг, не submodule - проект владеет своей копией).
+- Обновление кита -> проекта: `bash tools/prompt-kit/check-provenance.sh` -
+  покажет отставание штампов от HEAD кита и какие исходники изменились;
+  перенеси нужные правки и обнови штампы (вендоринг, не submodule - проект
+  владеет своей копией).
 - Схема выше одинакова для всех проектов - это и есть «та же схема» раскатки.
