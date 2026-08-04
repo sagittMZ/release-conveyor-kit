@@ -24,3 +24,4 @@ impl-plan	y	y	MULTI
 audit	y	y	-
 eval-command	y	y	-
 consolidate-memory	n	y	-
+arch-viz	n	n	-

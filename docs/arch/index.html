@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture</title>
+<style>
+  :root{
+    --bg:#0f1420; --bg2:#151b2b; --panel:#1a2236; --panel2:#20294077;
+    --line:#2a3550; --txt:#dce3f2; --dim:#8b96b3; --accent:#ffd166;
+    --focus:#4cc9f0; --danger:#ef6461;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--txt); overflow:hidden;
+    font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  button{font:inherit; color:inherit; background:none; border:none; cursor:pointer}
+
+  /* ---------- layout ---------- */
+  #app{display:flex; height:100%}
+  #sidebar{
+    width:300px; min-width:300px; background:var(--bg2); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; z-index:30; transition:transform .25s;
+  }
+  #stage{flex:1; position:relative; overflow:hidden}
+  #rightpanel{
+    width:340px; min-width:340px; background:var(--bg2); border-left:1px solid var(--line);
+    display:flex; flex-direction:column; z-index:25; transition:transform .25s;
+  }
+
+  /* ---------- sidebar ---------- */
+  #sidebar header{padding:14px 16px 10px; border-bottom:1px solid var(--line)}
+  #sidebar h1{font-size:16px; letter-spacing:.3px}
+  #sidebar h1 small{color:var(--dim); font-weight:400; display:block; font-size:11px; margin-top:2px}
+  #searchwrap{padding:10px 12px; display:flex; gap:8px; align-items:center}
+  #search{
+    flex:1; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    color:var(--txt); padding:7px 10px; outline:none;
+  }
+  #search:focus{border-color:var(--focus)}
+  #collapseAll{color:var(--dim); font-size:12px; padding:4px 6px; border-radius:6px}
+  #collapseAll:hover{color:var(--txt); background:var(--panel)}
+  #toc{overflow-y:auto; flex:1; padding:4px 8px 20px}
+  .tocgroup{margin-top:8px}
+  .tocgroup>button{
+    width:100%; text-align:left; display:flex; align-items:center; gap:8px;
+    padding:6px 8px; border-radius:8px; font-weight:600; font-size:13px;
+  }
+  .tocgroup>button:hover{background:var(--panel)}
+  .tocgroup .dot{width:10px; height:10px; border-radius:3px; flex:none}
+  .tocgroup .arr{margin-left:auto; color:var(--dim); transition:transform .2s}
+  .tocgroup.closed .arr{transform:rotate(-90deg)}
+  .tocgroup.closed ul{display:none}
+  .tocgroup ul{list-style:none; margin:2px 0 4px}
+  .tocgroup li button{
+    width:100%; text-align:left; padding:5px 8px 5px 28px; border-radius:8px;
+    color:var(--dim); font-size:13px;
+  }
+  .tocgroup li button:hover{color:var(--txt); background:var(--panel)}
+  .tocgroup li button.active{color:var(--bg); background:var(--accent); font-weight:600}
+  .hit{color:var(--focus)}
+
+  /* ---------- stage ---------- */
+  #legend{
+    position:absolute; top:10px; left:12px; right:12px; z-index:10;
+    display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;
+    background:var(--panel2); backdrop-filter:blur(6px);
+    border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:12px;
+  }
+  #legend .item{display:flex; align-items:center; gap:6px; color:var(--dim)}
+  #legend .dot{width:10px; height:10px; border-radius:3px}
+  #controls{position:absolute; right:12px; bottom:12px; z-index:10; display:flex; gap:8px}
+  #controls button, #togglePanels button{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:7px 11px; font-size:12px; color:var(--txt);
+  }
+  #controls button:hover{border-color:var(--focus)}
+  #togglePanels{position:absolute; left:12px; bottom:12px; z-index:10; display:none; gap:8px}
+  #svg{width:100%; height:100%; display:block; cursor:grab}
+  #svg.panning{cursor:grabbing}
+
+  .node{cursor:pointer}
+  .node rect{
+    fill:var(--panel); stroke-width:1.6; rx:10;
+    transition:filter .15s, opacity .2s;
+  }
+  .node text{fill:var(--txt); font-size:12.5px; pointer-events:none}
+  .node .sub{fill:var(--dim); font-size:10px}
+  .node:hover rect{filter:brightness(1.25)}
+  .node.sel rect{stroke:var(--accent); stroke-width:2.5; filter:brightness(1.2)}
+  .node.flowon rect{stroke:var(--accent); stroke-width:2.5}
+  .dimmed{opacity:.16}
+  .edge{fill:none; stroke:var(--line); stroke-width:1.6; transition:opacity .2s}
+  .edge.hl{stroke:var(--focus); stroke-width:2.2}
+  .edge.flowon{stroke:var(--accent); stroke-width:2.6}
+  .edgelabel{fill:var(--dim); font-size:10px; display:none}
+  .edgelabel.show{display:block; fill:var(--accent)}
+  .stepnum circle{fill:var(--accent)}
+  .stepnum text{fill:#1a1a1a; font-size:11px; font-weight:700}
+
+  #tooltip{
+    position:absolute; z-index:40; max-width:300px; display:none;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; font-size:12px; pointer-events:none;
+    box-shadow:0 8px 24px #0008;
+  }
+  #tooltip b{display:block; margin-bottom:4px}
+  #tooltip .files{color:var(--dim); margin-top:6px; font-family:ui-monospace,monospace; font-size:11px}
+
+  /* ---------- right panel ---------- */
+  #rightpanel header{
+    display:flex; border-bottom:1px solid var(--line);
+  }
+  #rightpanel header button{
+    flex:1; padding:12px; font-size:13px; color:var(--dim); border-bottom:2px solid transparent;
+  }
+  #rightpanel header button.on{color:var(--txt); border-bottom-color:var(--accent)}
+  .pane{overflow-y:auto; flex:1; padding:14px 16px; display:none}
+  .pane.on{display:block}
+  #detail .empty, #flowsteps .empty{color:var(--dim); font-size:13px; margin-top:8px}
+  #detail h2{font-size:16px; margin-bottom:2px}
+  #detail .grp{font-size:11px; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:10px}
+  #detail p{color:var(--txt); margin-bottom:10px}
+  #detail h3{font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--dim); margin:12px 0 6px}
+  #detail ul{list-style:none}
+  #detail li{padding:3px 0; font-size:12.5px}
+  #detail .file{font-family:ui-monospace,monospace; font-size:11.5px; color:var(--focus); word-break:break-all}
+  #detail .tech{display:inline-block; background:var(--panel); border:1px solid var(--line);
+    border-radius:6px; padding:2px 8px; margin:2px 4px 2px 0; font-size:11px}
+  #detail .rel button{color:var(--focus); padding:2px 0; text-align:left}
+  #detail .rel button:hover{text-decoration:underline}
+  #detail .rel .dir{color:var(--dim); font-size:11px}
+
+  #flows .flowitem{
+    width:100%; text-align:left; border:1px solid var(--line); background:var(--panel);
+    border-radius:10px; padding:10px 12px; margin-bottom:8px;
+  }
+  #flows .flowitem:hover{border-color:var(--accent)}
+  #flows .flowitem.on{border-color:var(--accent); background:#2a2410}
+  #flows .flowitem b{display:block; font-size:13px}
+  #flows .flowitem span{color:var(--dim); font-size:12px}
+  #flowsteps ol{margin:6px 0 0 18px}
+  #flowsteps li{margin-bottom:8px; font-size:12.5px}
+  #flowsteps li b{color:var(--accent)}
+  #clearflow{margin:10px 0 0; color:var(--dim); font-size:12px}
+  #clearflow:hover{color:var(--txt)}
+
+  /* ---------- responsive ---------- */
+  #burger{display:none; position:absolute; top:10px; left:12px; z-index:35;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px}
+  @media (max-width:1100px){
+    #rightpanel{position:absolute; right:0; top:0; bottom:0; transform:translateX(100%)}
+    #rightpanel.open{transform:none; box-shadow:-12px 0 30px #0008}
+    #togglePanels{display:flex}
+  }
+  @media (max-width:800px){
+    #sidebar{position:absolute; left:0; top:0; bottom:0; transform:translateX(-100%)}
+    #sidebar.open{transform:none; box-shadow:12px 0 30px #0008}
+    #burger{display:block}
+    #legend{top:52px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <nav id="sidebar">
+    <header>
+      <h1 id="prj">Architecture <small id="meta"></small></h1>
+    </header>
+    <div id="searchwrap">
+      <input id="search" type="search" placeholder="Поиск компонентов..." autocomplete="off">
+      <button id="collapseAll" title="Свернуть/развернуть все">свернуть</button>
+    </div>
+    <div id="toc"></div>
+  </nav>
+
+  <main id="stage">
+    <button id="burger" aria-label="Меню">☰</button>
+    <div id="legend"></div>
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#2a3550"></path>
+        </marker>
+        <marker id="arrHl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#4cc9f0"></path>
+        </marker>
+        <marker id="arrFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#ffd166"></path>
+        </marker>
+      </defs>
+      <g id="world"></g>
+    </svg>
+    <div id="controls">
+      <button id="fit">Fit to screen</button>
+      <button id="resetZoom">Reset zoom</button>
+      <button id="resetPos" title="Сбросить перетащенные позиции">Reset layout</button>
+    </div>
+    <div id="togglePanels"><button id="openFlows">Потоки</button></div>
+    <div id="tooltip"></div>
+  </main>
+
+  <aside id="rightpanel">
+    <header>
+      <button id="tabDetail" class="on">Компонент</button>
+      <button id="tabFlows">Потоки</button>
+    </header>
+    <div id="detail" class="pane on"><div class="empty">Кликни ноду на диаграмме или пункт меню слева.</div></div>
+    <div id="flowsPane" class="pane">
+      <div id="flows"></div>
+      <button id="clearflow">✕ снять подсветку потока</button>
+      <div id="flowsteps"><div class="empty">Выбери поток - путь подсветится, шаги появятся здесь.</div></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const DATA = {"meta": {"project": "release-conveyor-kit", "updated": "2026-08-04", "commit": "e06ebcf"}, "groups": [{"id": "actors", "label": "Актор", "color": "#e8a2c8"}, {"id": "contracts", "label": "Контракты и знание", "color": "#b8a2e8"}, {"id": "release", "label": "Релизный конвейер (01-08)", "color": "#6fa8dc"}, {"id": "promptkit", "label": "Prompt-kit слой (09/11/12/13)", "color": "#8fbfa3"}, {"id": "delivery", "label": "Поставка в проект", "color": "#ffd166"}, {"id": "runtime", "label": "Рантайм и внешнее", "color": "#e07a5f"}], "nodes": [{"id": "owner", "label": "Владелец", "group": "actors", "desc": "Ставит цели, даёт «го» на раскатки и публикации, принимает DRAFT-ы и вердикты пилотов. Все внешние действия - только с его слова.", "files": ["DECISIONS.md"], "tech": ["решения"]}, {"id": "agent", "label": "Агент (сессия Claude Code)", "group": "actors", "desc": "Исполняет модули: анализ, генерация, раскатка, evals, консолидация. Работает по контрактам кита и слэш-командам.", "files": ["AGENTS.md"], "tech": ["Claude Code"]}, {"id": "tz", "label": "ТЗ и скоуп v0", "group": "contracts", "desc": "Цели, не-цели и границы конвейера. Скоуп-дисциплина: лишнее уходит в BACKLOG с условиями активации.", "files": ["TZ.md", "BACKLOG.md"], "tech": ["markdown"]}, {"id": "decisions", "label": "DECISIONS / BLOCKERS", "group": "contracts", "desc": "Журнал автономных решений и блокеров. Сюда же записан принцип нулевой обвязки (#9).", "files": ["DECISIONS.md", "BLOCKERS.md"], "tech": ["журнал"]}, {"id": "config", "label": "conveyor.config", "group": "contracts", "desc": "Параметры целевого проекта: ветки, версии Node, команды сборки. Маркеры # conveyor: в шаблонах показывают, что менять.", "files": ["conveyor.config.json"], "tech": ["JSON"]}, {"id": "sessiondocs", "label": "Сессионные доки", "group": "contracts", "desc": "Точка входа новой сессии, снапшот прошлой, хендоффы - непрерывность работы между сессиями агента.", "files": ["docs/NEW_SESSION_PROMPT.md", "docs/.session-current.md"], "tech": ["markdown"]}, {"id": "m01", "label": "01 ci-core", "group": "release", "desc": "PR-конвейер: lint + unit + build на каждый push. Кэш npm, concurrency-отмена, summary.", "files": ["modules/01-ci-core/templates/ci.yml"], "tech": ["GitHub Actions"]}, {"id": "m02", "label": "02 mobile-build", "group": "release", "desc": "Android/iOS сборки Capacitor-приложения.", "files": ["modules/02-mobile-build/"], "tech": ["Capacitor"]}, {"id": "m03", "label": "03 store-deploy", "group": "release", "desc": "Сценарии Google Play и App Store: ключи, deep links (vercel.json шаблон), listing, автозагрузка AAB.", "files": ["modules/03-store-deploy/templates/vercel.json", "modules/03-store-deploy/google-play.md"], "tech": ["Play Console", "Codemagic"]}, {"id": "m04", "label": "04 staging", "group": "release", "desc": "Staging-окружение и QA-cleanup через RPC под JWT - эталон модели секретов.", "files": ["modules/04-staging/"], "tech": ["Supabase"]}, {"id": "m05", "label": "05 monitoring", "group": "release", "desc": "Sentry: релизные теги, sourcemaps, алерты.", "files": ["modules/05-monitoring/"], "tech": ["Sentry"]}, {"id": "m06", "label": "06 secrets", "group": "release", "desc": "Гигиена секретов: gitleaks, чек-листы, никакого service role в CI и клиенте.", "files": ["modules/06-secrets/"], "tech": ["gitleaks"]}, {"id": "m07", "label": "07 smoke-e2e", "group": "release", "desc": "Смоук-набор Playwright: 5-8 сценариев, 1 шард.", "files": ["modules/07-smoke-e2e/"], "tech": ["Playwright"]}, {"id": "m08", "label": "08 agent-layer", "group": "release", "desc": "Роли и промпты агента для применения конвейера: AGENTS.md, apply-kit. Порядок модулей: 1-6-4-7-5-2-3.", "files": ["modules/08-agent-layer/AGENTS.md", "modules/08-agent-layer/prompts/apply-kit.md"], "tech": ["промпты"]}, {"id": "m09", "label": "09 prompt-library", "group": "promptkit", "desc": "14 слэш-команд + 21 промпт-меню по 6 фазам + PATTERNS. Стеко-независимое ядро, догфудится самим китом через симлинки.", "files": ["modules/09-prompt-library/commands/", "modules/09-prompt-library/PATTERNS.md"], "tech": ["slash-команды"]}, {"id": "digest", "label": "usage-digest", "group": "promptkit", "desc": "Что реально использовалось за неделю: команды, скиллы, субагенты. Ноль вызовов = кандидат на переименование.", "files": ["modules/09-prompt-library/usage-digest/usage-digest.sh"], "tech": ["bash"]}, {"id": "libtr", "label": "lib-transcripts", "group": "promptkit", "desc": "Общий чтец транскриптов для модулей 09/11/12: файлы за окно, счётчики, печатанные промпты.", "files": ["modules/09-prompt-library/usage-digest/lib-transcripts.sh"], "tech": ["bash"]}, {"id": "m11", "label": "11 command-evals", "group": "promptkit", "desc": "Качество команд числом: слой 1 - структурные проверки против expectations.tsv, слой 2 - LLM-судья по кейсам. Метрика всегда подаётся двумя слоями.", "files": ["modules/11-command-evals/eval.sh", "modules/11-command-evals/expectations.tsv"], "tech": ["bash", "LLM-судья"]}, {"id": "m12", "label": "12 memory-consolidation", "group": "promptkit", "desc": "Файловый аналог Dreaming: детерминированный сбор сырья вне git-дерева, дистилляция в DRAFT командой, ручная приёмка.", "files": ["modules/12-memory-consolidation/consolidate.sh", "modules/12-memory-consolidation/DISTILL_RUBRIC.md"], "tech": ["bash"]}, {"id": "m13", "label": "13 arch-viz", "group": "promptkit", "desc": "Эта визуализация: данные обновляет команда в сессии, HTML собирается детерминированно, CI следит за свежестью.", "files": ["modules/13-arch-viz/template.html", "modules/13-arch-viz/build-arch-viz.sh"], "tech": ["SVG", "vanilla JS"]}, {"id": "prov", "label": "check-provenance", "group": "promptkit", "desc": "Сверка вендоренных копий с китом: штампы kit@sha, отставание от HEAD, изменившиеся исходники.", "files": ["modules/09-prompt-library/check-provenance.sh"], "tech": ["bash"]}, {"id": "rollout", "label": "ROLLOUT (ТЗ раскатки)", "group": "delivery", "desc": "Промпт полной раскатки блока A в проект: команды, меню, гайд, тулинг, гитигнор, верификация. Несёт реестр нулевой обвязки.", "files": ["modules/09-prompt-library/ROLLOUT.md"], "tech": ["промпт"]}, {"id": "registry", "label": "Реестр обвязки", "group": "delivery", "desc": "Что получает каждый проект: проектный уровень (команды, плагины) и машинный (rtk, клоны-пины). Вход - только через вердикт пилота или аудит.", "files": ["modules/09-prompt-library/ROLLOUT.md", "DECISIONS.md"], "tech": ["правило"]}, {"id": "vendored", "label": "Вендоренная копия в проекте", "group": "delivery", "desc": "tools/prompt-kit/ + .claude/commands/ + docs/prompts/ целевого проекта. Проект владеет копией; дрейф ловит check-provenance.", "files": ["modules/09-prompt-library/ROLLOUT.md"], "tech": ["вендоринг"]}, {"id": "target", "label": "Целевой проект", "group": "runtime", "desc": "Репозиторий, получающий обвязку: релизный конвейер по стеку и стеко-независимый prompt-kit слой.", "files": [], "tech": ["любой стек"]}, {"id": "gha", "label": "GitHub Actions", "group": "runtime", "desc": "Исполняет шаблоны конвейера и arch-viz workflow: сборки, проверки, staleness-репорты.", "files": [".github/workflows/"], "tech": ["CI"]}, {"id": "transcripts", "label": "Транскрипты сессий", "group": "runtime", "desc": "Локальная история Claude Code - источник правды для digest, evals-ранжирования и консолидации.", "files": [], "tech": ["JSONL"]}, {"id": "privzone", "label": "Приватная зона проекта", "group": "runtime", "desc": "Каталог рядом с памятью проекта, вне git-дерева: сырьё и DRAFT-ы консолидации. Единое правило для всех платформ.", "files": [], "tech": ["файлы"]}, {"id": "stores", "label": "Сторы и хостинг", "group": "runtime", "desc": "Google Play, App Store, Vercel: конечные точки поставки приложения.", "files": [], "tech": ["Play", "App Store", "Vercel"]}], "edges": [{"from": "owner", "to": "agent", "label": "цели, «го»", "kind": "control"}, {"from": "agent", "to": "owner", "label": "отчёты, DRAFT-ы", "kind": "data"}, {"from": "tz", "to": "agent", "label": "скоуп", "kind": "control"}, {"from": "agent", "to": "decisions", "label": "решения", "kind": "data"}, {"from": "sessiondocs", "to": "agent", "label": "контекст сессии", "kind": "control"}, {"from": "agent", "to": "sessiondocs", "label": "снапшоты", "kind": "data"}, {"from": "config", "to": "m01", "label": "параметры", "kind": "build"}, {"from": "config", "to": "m02", "label": "appId, версии", "kind": "build"}, {"from": "m08", "to": "agent", "label": "роли, apply-kit", "kind": "control"}, {"from": "m01", "to": "gha", "label": "ci.yml", "kind": "build"}, {"from": "m02", "to": "gha", "label": "build workflows", "kind": "build"}, {"from": "m03", "to": "stores", "label": "сценарии, AAB", "kind": "build"}, {"from": "m04", "to": "target", "label": "staging-паттерны", "kind": "build"}, {"from": "m05", "to": "target", "label": "Sentry-обвязка", "kind": "build"}, {"from": "m06", "to": "gha", "label": "gitleaks", "kind": "build"}, {"from": "m07", "to": "gha", "label": "smoke.yml", "kind": "build"}, {"from": "agent", "to": "m09", "label": "вызов команд", "kind": "control"}, {"from": "m09", "to": "m11", "label": "исходники команд", "kind": "data"}, {"from": "libtr", "to": "digest", "label": "счётчики", "kind": "data"}, {"from": "libtr", "to": "m11", "label": "ранжирование", "kind": "data"}, {"from": "libtr", "to": "m12", "label": "сырьё окна", "kind": "data"}, {"from": "transcripts", "to": "libtr", "label": "JSONL", "kind": "data"}, {"from": "m12", "to": "privzone", "label": "material, DRAFT", "kind": "data"}, {"from": "agent", "to": "m13", "label": "/arch-viz", "kind": "control"}, {"from": "m13", "to": "gha", "label": "arch-viz.yml", "kind": "build"}, {"from": "rollout", "to": "vendored", "label": "копирование со штампами", "kind": "build"}, {"from": "registry", "to": "rollout", "label": "состав обвязки", "kind": "control"}, {"from": "m09", "to": "rollout", "label": "команды, меню", "kind": "data"}, {"from": "m11", "to": "rollout", "label": "харнесс evals", "kind": "data"}, {"from": "m12", "to": "rollout", "label": "харнесс консолидации", "kind": "data"}, {"from": "m13", "to": "rollout", "label": "template + builder", "kind": "data"}, {"from": "prov", "to": "vendored", "label": "сверка штампов", "kind": "control"}, {"from": "vendored", "to": "target", "label": "обвязка проекта", "kind": "build"}, {"from": "m08", "to": "target", "label": "применение конвейера", "kind": "build"}, {"from": "gha", "to": "target", "label": "прогоны CI", "kind": "control"}], "flows": [{"id": "f-rollout", "name": "Раскатка блока A в проект", "desc": "Полное внедрение стеко-независимого слоя в целевой проект", "steps": [{"node": "owner", "text": "Даёт «го» на раскатку в конкретный проект."}, {"node": "agent", "text": "Открывает сессию целевого проекта, берёт промпт раскатки."}, {"node": "rollout", "text": "Ведёт по шагам: команды, меню, гайд, тулинг, gitignore, провенанс-штампы."}, {"node": "vendored", "text": "В проекте появляется собственная копия слоя (tools/prompt-kit + .claude/commands)."}, {"node": "target", "text": "Проект самодостаточен; верификация: eval.sh, check-provenance, consolidate smoke."}]}, {"id": "f-evals", "name": "Evals качества команд", "desc": "Двухслойная проверка слэш-команд: структура + поведение", "steps": [{"node": "agent", "text": "Вызывает /eval-command (вручную или в рамках верификации)."}, {"node": "m09", "text": "Исходники 14 команд - предмет проверки."}, {"node": "m11", "text": "Слой 1: структурные инварианты против expectations.tsv; слой 2: LLM-судья по кейсам. Карточка баллов с дельтой."}]}, {"id": "f-consolidate", "name": "Консолидация памяти", "desc": "Дистилляция сырья сессий в ревьюабельные инсайты", "steps": [{"node": "transcripts", "text": "Накапливается история сессий проекта."}, {"node": "libtr", "text": "consolidate.sh через общий чтец собирает окно активности."}, {"node": "m12", "text": "Сырьё оформляется в material-<дата>.md, детерминированно и бесплатно."}, {"node": "privzone", "text": "Материал и DRAFT живут вне git-дерева (приватность, PHI)."}, {"node": "agent", "text": "/consolidate-memory дистиллирует материал в DRAFT по рубрике."}, {"node": "owner", "text": "Ревьюит DRAFT, принятое вручную мержится в память и .ai/."}]}, {"id": "f-archviz", "name": "Обновление архитектурной визуализации", "desc": "Гибрид: LLM-анализ в сессии, детерминированная сборка, CI-свежесть", "steps": [{"node": "agent", "text": "/arch-viz анализирует репозиторий и обновляет arch-data.json."}, {"node": "m13", "text": "build-arch-viz.sh валидирует инварианты и инлайнит данные в шаблон."}, {"node": "gha", "text": "На пуше в main: пересборка при отставании HTML + staleness-репорт «данные старее исходников»."}]}, {"id": "f-release", "name": "Релизный конвейер приложения", "desc": "Путь стеко-зависимой обвязки: от CI до сторов", "steps": [{"node": "m08", "text": "apply-kit ведёт агента по порядку модулей 1-6-4-7-5-2-3."}, {"node": "m01", "text": "PR-конвейер: lint + unit + build."}, {"node": "m06", "text": "Гигиена секретов и gitleaks-гейт."}, {"node": "gha", "text": "Workflows целевого проекта гоняют проверки и сборки."}, {"node": "m03", "text": "Сценарии сторов: ключи, deep links, listing."}, {"node": "stores", "text": "Приложение доезжает до Google Play / App Store / Vercel."}]}]};
+
+/* ================= geometry / layout ================= */
+const NW = 176, NH = 52, COLW = 260, VGAP = 26, PAD = 60;
+const nodes = {}, groupsById = {};
+DATA.groups.forEach(g => groupsById[g.id] = g);
+const LSKEY = 'archviz:' + (DATA.meta.project || 'project') + ':pos';
+let savedPos = {};
+try { savedPos = JSON.parse(localStorage.getItem(LSKEY) || '{}'); } catch(e){}
+
+(function layout(){
+  const cols = {};
+  DATA.groups.forEach((g,i)=> cols[g.id]=i);
+  const stacks = {};
+  DATA.nodes.forEach(n=>{
+    const c = cols[n.group] ?? 0;
+    stacks[c] = stacks[c] || [];
+    stacks[c].push(n);
+  });
+  const maxLen = Math.max(...Object.values(stacks).map(s=>s.length));
+  DATA.nodes.forEach(n=>{
+    const c = cols[n.group] ?? 0;
+    const stack = stacks[c], i = stack.indexOf(n);
+    const x = PAD + c*COLW;
+    const y = PAD + i*(NH+VGAP) + ((maxLen-stack.length)*(NH+VGAP))/2;
+    const p = savedPos[n.id];
+    nodes[n.id] = { ...n, x: p?p.x:x, y: p?p.y:y };
+  });
+})();
+
+/* ================= svg build ================= */
+const svg = document.getElementById('svg'), world = document.getElementById('world');
+const NS = 'http://www.w3.org/2000/svg';
+function el(t, attrs, parent){
+  const e = document.createElementNS(NS, t);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function edgePath(e){
+  const a = nodes[e.from], b = nodes[e.to];
+  const x1 = a.x+NW, y1 = a.y+NH/2, x2 = b.x, y2 = b.y+NH/2;
+  if (x2 >= x1 + 20){
+    const dx = Math.max(40,(x2-x1)/2);
+    return `M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`;
+  }
+  const xa=a.x+NW/2, xb=b.x+NW/2;
+  const ya = y2>y1 ? a.y+NH : a.y, yb = y2>y1 ? b.y : b.y+NH;
+  const dy = Math.max(36, Math.abs(yb-ya)/2) * (y2>y1?1:-1);
+  return `M${xa},${ya} C${xa},${ya+dy} ${xb},${yb-dy} ${xb},${yb}`;
+}
+const edgeEls = [], nodeEls = {};
+const gEdges = el('g',{},world), gNodes = el('g',{},world), gSteps = el('g',{},world);
+DATA.edges.forEach((e,i)=>{
+  const p = el('path',{class:'edge','marker-end':'url(#arr)',d:edgePath(e)},gEdges);
+  const lbl = el('text',{class:'edgelabel','text-anchor':'middle'},gEdges);
+  lbl.textContent = e.label || '';
+  edgeEls.push({e,p,lbl});
+});
+function truncate(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
+DATA.nodes.forEach(n=>{
+  const g = el('g',{class:'node','data-id':n.id},gNodes);
+  const color = (groupsById[n.group]||{}).color || '#888';
+  el('rect',{width:NW,height:NH,rx:10,stroke:color},g);
+  el('rect',{width:4,height:NH-16,x:7,y:8,rx:2,fill:color},g);
+  const t1 = el('text',{x:18,y:22},g); t1.textContent = truncate(n.label,22);
+  const t2 = el('text',{x:18,y:38,class:'sub'},g); t2.textContent = truncate((n.tech||[]).join(' · '),26);
+  nodeEls[n.id]=g;
+  g.addEventListener('click', ev=>{ ev.stopPropagation(); selectNode(n.id,{center:false}); });
+  g.addEventListener('mouseenter', ev=>showTip(n,ev));
+  g.addEventListener('mousemove', ev=>moveTip(ev));
+  g.addEventListener('mouseleave', hideTip);
+});
+function positionAll(){
+  DATA.nodes.forEach(n=>{
+    const p = nodes[n.id];
+    nodeEls[n.id].setAttribute('transform',`translate(${p.x},${p.y})`);
+  });
+  edgeEls.forEach(o=>{
+    o.p.setAttribute('d', edgePath(o.e));
+    const a=nodes[o.e.from], b=nodes[o.e.to];
+    o.lbl.setAttribute('x',(a.x+NW+b.x)/2);
+    o.lbl.setAttribute('y',(a.y+b.y+NH)/2 - 6);
+  });
+  drawStepNums();
+}
+
+/* ================= zoom / pan ================= */
+let view = {x:0,y:0,k:1};
+function applyView(){ world.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.k})`); }
+svg.addEventListener('wheel', ev=>{
+  ev.preventDefault();
+  const s = ev.deltaY < 0 ? 1.12 : 1/1.12;
+  const k2 = Math.min(3, Math.max(.15, view.k*s));
+  const r = svg.getBoundingClientRect();
+  const mx = ev.clientX-r.left, my = ev.clientY-r.top;
+  view.x = mx-(mx-view.x)*(k2/view.k);
+  view.y = my-(my-view.y)*(k2/view.k);
+  view.k = k2; applyView();
+},{passive:false});
+let drag = null;
+svg.addEventListener('mousedown', ev=>{
+  const nodeG = ev.target.closest('.node');
+  if (nodeG){
+    const id = nodeG.getAttribute('data-id');
+    drag = {type:'node',id,sx:ev.clientX,sy:ev.clientY,ox:nodes[id].x,oy:nodes[id].y};
+  } else {
+    drag = {type:'pan',sx:ev.clientX,sy:ev.clientY,ox:view.x,oy:view.y};
+    svg.classList.add('panning');
+  }
+});
+window.addEventListener('mousemove', ev=>{
+  if(!drag) return;
+  const dx = ev.clientX-drag.sx, dy = ev.clientY-drag.sy;
+  if (drag.type==='pan'){ view.x=drag.ox+dx; view.y=drag.oy+dy; applyView(); }
+  else {
+    nodes[drag.id].x = drag.ox+dx/view.k; nodes[drag.id].y = drag.oy+dy/view.k;
+    positionAll(); drag.moved = true; hideTip();
+  }
+});
+window.addEventListener('mouseup', ()=>{
+  if (drag && drag.type==='node' && drag.moved){
+    savedPos[drag.id] = {x:nodes[drag.id].x, y:nodes[drag.id].y};
+    try{ localStorage.setItem(LSKEY, JSON.stringify(savedPos)); }catch(e){}
+  }
+  drag=null; svg.classList.remove('panning');
+});
+function bbox(){
+  let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+  Object.values(nodes).forEach(p=>{ x1=Math.min(x1,p.x); y1=Math.min(y1,p.y); x2=Math.max(x2,p.x+NW); y2=Math.max(y2,p.y+NH); });
+  return {x1,y1,x2,y2};
+}
+function fit(){
+  const b = bbox(), r = svg.getBoundingClientRect();
+  const k = Math.min(3, Math.min(r.width/(b.x2-b.x1+120), r.height/(b.y2-b.y1+160)));
+  view.k = k;
+  view.x = (r.width-(b.x2-b.x1)*k)/2 - b.x1*k;
+  view.y = (r.height-(b.y2-b.y1)*k)/2 - b.y1*k + 20;
+  applyView();
+}
+function centerOn(id){
+  const p = nodes[id], r = svg.getBoundingClientRect();
+  view.k = Math.max(view.k, .9);
+  view.x = r.width/2-(p.x+NW/2)*view.k;
+  view.y = r.height/2-(p.y+NH/2)*view.k;
+  applyView();
+}
+document.getElementById('fit').onclick = fit;
+document.getElementById('resetZoom').onclick = ()=>{ view={x:0,y:0,k:1}; applyView(); };
+document.getElementById('resetPos').onclick = ()=>{
+  savedPos={}; try{ localStorage.removeItem(LSKEY);}catch(e){}
+  location.reload();
+};
+
+/* ================= tooltip ================= */
+const tip = document.getElementById('tooltip');
+function showTip(n,ev){
+  tip.innerHTML = `<b>${n.label}</b>${n.desc||''}` +
+    ((n.files&&n.files.length)?`<div class="files">${n.files.slice(0,4).join('<br>')}</div>`:'');
+  tip.style.display='block'; moveTip(ev);
+}
+function moveTip(ev){
+  const r = document.getElementById('stage').getBoundingClientRect();
+  let x = ev.clientX-r.left+14, y = ev.clientY-r.top+14;
+  if (x+310 > r.width) x = ev.clientX-r.left-310;
+  if (y+tip.offsetHeight+20 > r.height) y = ev.clientY-r.top-tip.offsetHeight-10;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function hideTip(){ tip.style.display='none'; }
+
+/* ================= selection / detail ================= */
+let selected = null;
+function clearSel(){
+  document.querySelectorAll('.node.sel').forEach(x=>x.classList.remove('sel'));
+  edgeEls.forEach(o=>{ o.p.classList.remove('hl'); o.p.setAttribute('marker-end', activeFlow? o.p.getAttribute('marker-end') :'url(#arr)'); });
+  if (!activeFlow) undim();
+  document.querySelectorAll('#toc li button.active').forEach(b=>b.classList.remove('active'));
+  selected=null;
+}
+function dimExcept(keepNodes, keepEdges){
+  DATA.nodes.forEach(n=> nodeEls[n.id].classList.toggle('dimmed', !keepNodes.has(n.id)));
+  edgeEls.forEach((o,i)=> o.p.classList.toggle('dimmed', !keepEdges.has(i)));
+}
+function undim(){
+  document.querySelectorAll('.dimmed').forEach(x=>x.classList.remove('dimmed'));
+}
+function selectNode(id, opts={}){
+  if (activeFlow) clearFlow();
+  clearSel();
+  selected = id;
+  nodeEls[id].classList.add('sel');
+  const keepN = new Set([id]), keepE = new Set();
+  edgeEls.forEach((o,i)=>{
+    if (o.e.from===id || o.e.to===id){
+      keepE.add(i); keepN.add(o.e.from); keepN.add(o.e.to);
+      o.p.classList.add('hl'); o.p.setAttribute('marker-end','url(#arrHl)');
+    }
+  });
+  dimExcept(keepN, keepE);
+  const tb = document.querySelector(`#toc li button[data-id="${id}"]`);
+  if (tb){ tb.classList.add('active'); tb.scrollIntoView({block:'nearest'}); }
+  if (opts.center!==false) centerOn(id);
+  renderDetail(id);
+  showPane('detail');
+  if (window.innerWidth<=1100) document.getElementById('rightpanel').classList.add('open');
+}
+svg.addEventListener('click', ()=>{ if(!activeFlow){ clearSel(); renderDetailEmpty(); } });
+
+const detail = document.getElementById('detail');
+function renderDetailEmpty(){ detail.innerHTML = '<div class="empty">Кликни ноду на диаграмме или пункт меню слева.</div>'; }
+function renderDetail(id){
+  const n = DATA.nodes.find(x=>x.id===id);
+  const g = groupsById[n.group]||{};
+  const inn = DATA.edges.filter(e=>e.to===id), out = DATA.edges.filter(e=>e.from===id);
+  const rel = (list,dir)=> list.map(e=>{
+    const other = dir==='in'? e.from : e.to;
+    const on = DATA.nodes.find(x=>x.id===other);
+    return `<li class="rel"><span class="dir">${dir==='in'?'←':'→'}</span> <button data-go="${other}">${on?on.label:other}</button> <span class="dir">${e.label||''}</span></li>`;
+  }).join('') || '<li class="dir" style="color:var(--dim)">нет</li>';
+  detail.innerHTML = `
+    <h2>${n.label}</h2>
+    <span class="grp" style="background:${g.color}22;color:${g.color};border:1px solid ${g.color}55">${g.label||n.group}</span>
+    <p>${n.desc||''}</p>
+    ${(n.tech&&n.tech.length)?`<h3>Технологии</h3><div>${n.tech.map(t=>`<span class="tech">${t}</span>`).join('')}</div>`:''}
+    ${(n.files&&n.files.length)?`<h3>Ключевые файлы</h3><ul>${n.files.map(f=>`<li class="file">${f}</li>`).join('')}</ul>`:''}
+    <h3>Входящие</h3><ul>${rel(inn,'in')}</ul>
+    <h3>Исходящие</h3><ul>${rel(out,'out')}</ul>`;
+  detail.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>selectNode(b.getAttribute('data-go')));
+}
+
+/* ================= flows ================= */
+let activeFlow = null;
+const flowsBox = document.getElementById('flows'), stepsBox = document.getElementById('flowsteps');
+DATA.flows.forEach(f=>{
+  const b = document.createElement('button');
+  b.className='flowitem'; b.innerHTML = `<b>${f.name}</b><span>${f.desc||''}</span>`;
+  b.onclick = ()=> activeFlow===f.id ? clearFlow() : showFlow(f.id);
+  b.setAttribute('data-flow',f.id);
+  flowsBox.appendChild(b);
+});
+function flowEdgeIdx(a,b){
+  return edgeEls.findIndex(o=>o.e.from===a && o.e.to===b);
+}
+function drawStepNums(){
+  gSteps.innerHTML='';
+  if (!activeFlow) return;
+  const f = DATA.flows.find(x=>x.id===activeFlow);
+  f.steps.forEach((s,i)=>{
+    const p = nodes[s.node]; if(!p) return;
+    const g = el('g',{class:'stepnum',transform:`translate(${p.x-10},${p.y-10})`},gSteps);
+    el('circle',{r:11,cx:0,cy:0},g);
+    const t = el('text',{x:0,y:4,'text-anchor':'middle'},g);
+    t.textContent = i+1;
+  });
+}
+function showFlow(id){
+  clearSel(); clearFlow(false);
+  activeFlow = id;
+  const f = DATA.flows.find(x=>x.id===id);
+  const keepN = new Set(), keepE = new Set();
+  f.steps.forEach((s,i)=>{
+    keepN.add(s.node);
+    nodeEls[s.node] && nodeEls[s.node].classList.add('flowon');
+    if (i>0){
+      const ei = flowEdgeIdx(f.steps[i-1].node, s.node);
+      if (ei>=0){
+        keepE.add(ei);
+        edgeEls[ei].p.classList.add('flowon');
+        edgeEls[ei].p.setAttribute('marker-end','url(#arrFlow)');
+        edgeEls[ei].lbl.classList.add('show');
+      }
+    }
+  });
+  dimExcept(keepN, keepE);
+  drawStepNums();
+  document.querySelectorAll('#flows .flowitem').forEach(x=>x.classList.toggle('on', x.getAttribute('data-flow')===id));
+  stepsBox.innerHTML = `<h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:4px">Шаги</h3><ol>` +
+    f.steps.map(s=>{
+      const n = DATA.nodes.find(x=>x.id===s.node);
+      return `<li><b>${n?n.label:s.node}.</b> ${s.text}</li>`;
+    }).join('') + '</ol>';
+  showPane('flows');
+}
+function clearFlow(redraw=true){
+  activeFlow = null;
+  document.querySelectorAll('.flowon').forEach(x=>x.classList.remove('flowon'));
+  edgeEls.forEach(o=>{ o.p.setAttribute('marker-end','url(#arr)'); o.lbl.classList.remove('show'); });
+  document.querySelectorAll('#flows .flowitem.on').forEach(x=>x.classList.remove('on'));
+  gSteps.innerHTML='';
+  if (redraw){ undim(); stepsBox.innerHTML='<div class="empty">Выбери поток - путь подсветится, шаги появятся здесь.</div>'; }
+}
+document.getElementById('clearflow').onclick = ()=>clearFlow();
+
+/* ================= right panel tabs ================= */
+function showPane(which){
+  document.getElementById('tabDetail').classList.toggle('on', which==='detail');
+  document.getElementById('tabFlows').classList.toggle('on', which==='flows');
+  document.getElementById('detail').classList.toggle('on', which==='detail');
+  document.getElementById('flowsPane').classList.toggle('on', which==='flows');
+}
+document.getElementById('tabDetail').onclick = ()=>showPane('detail');
+document.getElementById('tabFlows').onclick = ()=>showPane('flows');
+document.getElementById('openFlows').onclick = ()=>{
+  document.getElementById('rightpanel').classList.add('open'); showPane('flows');
+};
+
+/* ================= sidebar toc + search ================= */
+const toc = document.getElementById('toc');
+DATA.groups.forEach(g=>{
+  const wrap = document.createElement('div'); wrap.className='tocgroup';
+  const head = document.createElement('button');
+  head.innerHTML = `<span class="dot" style="background:${g.color}"></span>${g.label}<span class="arr">▾</span>`;
+  head.onclick = ()=>wrap.classList.toggle('closed');
+  const ul = document.createElement('ul');
+  DATA.nodes.filter(n=>n.group===g.id).forEach(n=>{
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.textContent = n.label; b.setAttribute('data-id',n.id); b.setAttribute('data-txt',(n.label+' '+(n.desc||'')+' '+(n.files||[]).join(' ')).toLowerCase());
+    b.onclick = ()=>{ selectNode(n.id); if (window.innerWidth<=800) document.getElementById('sidebar').classList.remove('open'); };
+    li.appendChild(b); ul.appendChild(li);
+  });
+  wrap.appendChild(head); wrap.appendChild(ul); toc.appendChild(wrap);
+});
+let allClosed=false;
+document.getElementById('collapseAll').onclick = function(){
+  allClosed=!allClosed;
+  document.querySelectorAll('.tocgroup').forEach(x=>x.classList.toggle('closed',allClosed));
+  this.textContent = allClosed?'развернуть':'свернуть';
+};
+document.getElementById('search').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  document.querySelectorAll('.tocgroup').forEach(gr=>{
+    let any=false;
+    gr.querySelectorAll('li').forEach(li=>{
+      const b = li.querySelector('button');
+      const hit = !q || b.getAttribute('data-txt').includes(q);
+      li.style.display = hit?'':'none'; if (hit) any=true;
+      b.innerHTML = (q&&hit)? b.textContent.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<span class="hit">$1</span>') : b.textContent;
+    });
+    gr.style.display = any?'':'none';
+    if (q) gr.classList.remove('closed');
+  });
+});
+
+/* ================= legend / meta / burger ================= */
+const legend = document.getElementById('legend');
+legend.innerHTML = DATA.groups.map(g=>`<span class="item"><span class="dot" style="background:${g.color}"></span>${g.label}</span>`).join('');
+document.getElementById('prj').childNodes[0].textContent = DATA.meta.project || 'Architecture';
+document.getElementById('meta').textContent = `обновлено ${DATA.meta.updated||'?'} @ ${DATA.meta.commit||'?'} · ${DATA.nodes.length} нод · ${DATA.edges.length} рёбер`;
+document.getElementById('burger').onclick = ()=>document.getElementById('sidebar').classList.toggle('open');
+
+positionAll();
+window.addEventListener('resize', ()=>{});
+fit();
+</script>
+</body>
+</html>
