@@ -30,11 +30,11 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
    $KIT_STAMP - иначе при 3+ проектах копии разъедутся без шанса это заметить.
    Как штамповать - в шагах ниже; сверка потом: tools/prompt-kit/check-provenance.sh.
 
-1. КОМАНДЫ (13) -> .claude/commands/ РЕАЛЬНЫМИ файлами (не симлинки на кит):
+1. КОМАНДЫ (14) -> .claude/commands/ РЕАЛЬНЫМИ файлами (не симлинки на кит):
    скопируй $KIT/modules/09-prompt-library/commands/*.md.
    Список: spec, precommit, session-wrap, release-notes, security-scan,
    edge-cases, backlog, scope-triage, handoff, impl-plan, audit, eval-command,
-   consolidate-memory.
+   consolidate-memory, arch-viz.
    В каждый скопированный файл добавь во frontmatter (после description:)
    строку:  provenance: $KIT_STAMP
 
@@ -56,6 +56,7 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
      command-evals/                <- всё из $KIT/modules/11-command-evals/
        (eval.sh, expectations.tsv, RUBRIC.md, cases/, judge/)
      memory-consolidation/         <- consolidate.sh, DISTILL_RUBRIC.md из $KIT/modules/12-memory-consolidation/
+     arch-viz/                     <- template.html, build-arch-viz.sh, README.md, checklist.md из $KIT/modules/13-arch-viz/
      check-provenance.sh           <- $KIT/modules/09-prompt-library/check-provenance.sh
      PROVENANCE                    <- две строки:
                                       vendored from $KIT_STAMP
@@ -73,7 +74,7 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
    "Prompt-kit слой: гайд docs/prompt-kit-guide.md; меню docs/prompts/library/
    (начни с PATTERNS.md); тулинг tools/prompt-kit/. Слэш-команды: /spec /precommit
    /session-wrap /release-notes /security-scan /edge-cases /backlog /scope-triage
-   /handoff /impl-plan /audit /eval-command /consolidate-memory."
+   /handoff /impl-plan /audit /eval-command /consolidate-memory /arch-viz."
 
 7. GITIGNORE (публикуемость): добавь в .gitignore проекта, если ещё нет:
    docs/evals/
@@ -82,6 +83,12 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
    по умолчанию пишется ВНЕ дерева, в <claude-config>/projects/<enc>/consolidation/
    (база: CLAUDE_CONFIG_DIR, иначе ~/.claude - едино на всех платформах);
    строка docs/consolidation/ - страховка на случай CONSOLIDATE_OUT_DIR-override.)
+
+7b. ARCH-VIZ WORKFLOW: скопируй $KIT/modules/13-arch-viz/templates/arch-viz.yml
+   в .github/workflows/arch-viz.yml и подгони conveyor-маркеры: ветка main,
+   путь builder-а (tools/prompt-kit/arch-viz/build-arch-viz.sh), пути исходников
+   для staleness (напр. src/). Первичную генерацию данных сделай командой
+   /arch-viz в сессии (LLM-шаг, не CI) и закоммить docs/arch/ вместе с раскаткой.
 
 8. БЛОК Б -> BACKLOG проекта (план масштабирования, НЕ реализовывать):
    - Multi-agent оркестрация (координатор + параллельные sub-agents) - под широкие
@@ -150,6 +157,7 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
 | 13 команд + меню + гайд + evals + консолидация | проект | в обвязке (шаги 1-9) |
 | rtk | машина | в обвязке: проверить `rtk --version` в шаге 9; если нет - установить до раскатки |
 | ponytail (пин v4.8.4, bc9ee94) | проект + машина (клон `~/antigravity/vendor/ponytail`) | ПИЛОТ до ~2026-08-10; при вердикте «оставить» перенести шаг ниже в основной промпт |
+| arch-viz (модуль 13) | проект (шаги 1, 4, 7b) | в обвязке: испытан на ките 2026-08-04 (браузерный смоук чистый, свой workflow) |
 
 Вход нового компонента в обвязку - только через вердикт пилота/аудит (как у
 ponytail), не через хайп. Принято = добавлено в реестр и в промпт раскатки.
