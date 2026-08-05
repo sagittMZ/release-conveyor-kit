@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ARCHVIZ_SRC_PATHS=\"modules/\" bash modules/13-arch-viz/freshness-hook.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -56,7 +56,7 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
      command-evals/                <- всё из $KIT/modules/11-command-evals/
        (eval.sh, expectations.tsv, RUBRIC.md, cases/, judge/)
      memory-consolidation/         <- consolidate.sh, DISTILL_RUBRIC.md из $KIT/modules/12-memory-consolidation/
-     arch-viz/                     <- template.html, build-arch-viz.sh, README.md, checklist.md из $KIT/modules/13-arch-viz/
+     arch-viz/                     <- template.html, build-arch-viz.sh, freshness-hook.sh, README.md, checklist.md из $KIT/modules/13-arch-viz/
      check-provenance.sh           <- $KIT/modules/09-prompt-library/check-provenance.sh
      PROVENANCE                    <- две строки:
                                       vendored from $KIT_STAMP
@@ -89,7 +89,13 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
    путь builder-а (tools/prompt-kit/arch-viz/build-arch-viz.sh), пути исходников
    для staleness (напр. src/). Первичную генерацию данных сделай командой
    /arch-viz в сессии (LLM-шаг, не CI) и закоммить docs/arch/ вместе с раскаткой.
-   ЖЁСТКАЯ ГАРАНТИЯ СВЕЖЕСТИ (обязательный шаг владельца): положи в
+   АВТОТРИГГЕР (главный контур, без участия владельца): добавь в
+   .claude/settings.json проекта (мержем, не затирая существующие hooks)
+   hooks.UserPromptSubmit -> command:
+   ARCHVIZ_SRC_PATHS="src/" bash tools/prompt-kit/arch-viz/freshness-hook.sh
+   (пути = те же, что в workflow). Хук при устаревании сам ставит сессии
+   задачу обновить визуализацию в текущем ходе; нудж не чаще раза в сутки.
+   ЖЁСТКАЯ ГАРАНТИЯ СВЕЖЕСТИ (внешняя страховка, шаг владельца): положи в
    Settings -> Secrets and variables -> Actions три секрета -
    TELEGRAM_BOT_TOKEN (тот же бот), TELEGRAM_CHAT_ID (<telegram-chat-id>),
    TELEGRAM_THREAD_ID (топик ЭТОГО проекта в форум-группе). Тогда CI при
