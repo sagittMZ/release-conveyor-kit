@@ -2,7 +2,7 @@
   "meta": {
     "project": "release-conveyor-kit",
     "updated": "2026-08-05",
-    "commit": "7010cb2",
+    "commit": "d2d5685",
     "lang": "en"
   },
   "groups": [
@@ -280,10 +280,11 @@
       "id": "m13",
       "label": "13 arch-viz",
       "group": "promptkit",
-      "desc": "This visualization: data is refreshed by a command in-session, HTML is built deterministically, CI watches freshness.",
+      "desc": "This visualization: data refreshed by an in-session command (auto-trigger: a freshness hook on every prompt), HTML built deterministically, CI pings Telegram when stale.",
       "files": [
         "modules/13-arch-viz/template.html",
-        "modules/13-arch-viz/build-arch-viz.sh"
+        "modules/13-arch-viz/build-arch-viz.sh",
+        "modules/13-arch-viz/freshness-hook.sh"
       ],
       "tech": [
         "SVG",
