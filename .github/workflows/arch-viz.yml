@@ -1,11 +1,26 @@
-# arch-viz (догфуд кита): пересборка docs/arch/index.html из закоммиченных
-# данных + staleness-репорт. Источник шаблона: modules/13-arch-viz/templates/.
+# arch-viz: детерминированная пересборка визуализации архитектуры + staleness
+# с ЖЁСТКОЙ гарантией: уведомление в Telegram-топик проекта, когда данные
+# устарели (исходники моложе arch-data.json). Анти-спам: пинг один раз на
+# эпизод устаревания (когда оно ПОЯВИЛОСЬ в этом пуше), summary - всегда.
+#
+# Секреты (Settings -> Secrets and variables -> Actions):
+#   TELEGRAM_BOT_TOKEN   токен бота
+#   TELEGRAM_CHAT_ID     id группы/чата
+#   TELEGRAM_THREAD_ID   id топика проекта в форум-группе (пусто = без топика)
+# Без секретов workflow работает, уведомление тихо пропускается (см. summary).
+#
+# Догфуд кита. Источник шаблона: modules/13-arch-viz/templates/arch-viz.yml.
 name: arch-viz
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      test_notify:
+        description: 'Send a test Telegram notification'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write   # только ради автокоммита пересобранного HTML; обычно no-op
@@ -41,20 +56,53 @@ jobs:
             echo "HTML отставал от данных - пересобран и закоммичен" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Staleness report (data vs sources)
+      - name: Staleness check + Telegram guarantee
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TG_THREAD: ${{ secrets.TELEGRAM_THREAD_ID }}
+          BEFORE_SHA: ${{ github.event.before }}
+          TEST_NOTIFY: ${{ inputs.test_notify }}
         run: |
           set -euo pipefail
+          notify() { # notify <текст>
+            if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+              echo "(TG-уведомление пропущено: секреты TELEGRAM_* не настроены)" >> "$GITHUB_STEP_SUMMARY"
+              return 0
+            fi
+            curl -s -o /dev/null --max-time 20 \
+              --data-urlencode "chat_id=${TG_CHAT}" \
+              ${TG_THREAD:+--data-urlencode "message_thread_id=${TG_THREAD}"} \
+              --data-urlencode "text=$1" \
+              "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" || true
+            echo "(TG-уведомление отправлено)" >> "$GITHUB_STEP_SUMMARY"
+          }
+          if [ "${TEST_NOTIFY:-false}" = "true" ]; then
+            notify "arch-viz: тестовое уведомление из ${GITHUB_REPOSITORY} - связка CI -> Telegram работает."
+            exit 0
+          fi
           [ -f docs/arch/arch-data.json ] || exit 0
-          data_t="$(git log -1 --format=%ct -- docs/arch/arch-data.json)"
           # кит: следим за modules/
-          src_t="$(git log -1 --format=%ct -- modules/ 2>/dev/null || echo 0)"
-          if [ "${src_t:-0}" -gt "${data_t:-0}" ]; then
+          SRC_PATHS="modules/"
+          stale_at() { # stale_at <rev> -> 0 если данные устарели на этой ревизии
+            local d s
+            d="$(git log -1 --format=%ct "$1" -- docs/arch/arch-data.json 2>/dev/null || echo 0)"
+            s="$(git log -1 --format=%ct "$1" -- $SRC_PATHS 2>/dev/null || echo 0)"
+            [ "${s:-0}" -gt "${d:-0}" ]
+          }
+          if stale_at HEAD; then
             {
               echo "### Визуализация архитектуры устарела"
-              echo "Исходники менялись позже arch-data.json."
-              echo "В сессии проекта прогони \`/arch-viz\` и закоммить данные + HTML."
+              echo "Исходники менялись позже arch-data.json. Прогони \`/arch-viz\` в сессии проекта."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::notice::arch-viz: данные старее исходников - прогони /arch-viz в сессии"
+            echo "::notice::arch-viz: данные старее исходников - прогони /arch-viz"
+            # пинг только в начале эпизода: до этого пуша устаревания не было
+            if [ -n "${BEFORE_SHA:-}" ] && [ "${BEFORE_SHA}" != "0000000000000000000000000000000000000000" ] \
+               && git cat-file -e "${BEFORE_SHA}" 2>/dev/null && stale_at "${BEFORE_SHA}"; then
+              echo "(эпизод устаревания уже шёл - TG-пинг не дублируем)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              notify "arch-viz: в ${GITHUB_REPOSITORY} визуализация архитектуры устарела - исходники новее arch-data.json. Прогони /arch-viz в сессии проекта."
+            fi
           else
             echo "Данные визуализации не старее исходников" >> "$GITHUB_STEP_SUMMARY"
           fi

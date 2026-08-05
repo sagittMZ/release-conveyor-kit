@@ -89,6 +89,12 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
    путь builder-а (tools/prompt-kit/arch-viz/build-arch-viz.sh), пути исходников
    для staleness (напр. src/). Первичную генерацию данных сделай командой
    /arch-viz в сессии (LLM-шаг, не CI) и закоммить docs/arch/ вместе с раскаткой.
+   ЖЁСТКАЯ ГАРАНТИЯ СВЕЖЕСТИ (обязательный шаг владельца): положи в
+   Settings -> Secrets and variables -> Actions три секрета -
+   TELEGRAM_BOT_TOKEN (тот же бот), TELEGRAM_CHAT_ID (<telegram-chat-id>),
+   TELEGRAM_THREAD_ID (топик ЭТОГО проекта в форум-группе). Тогда CI при
+   устаревании визуализации шлёт пинг прямо в топик проекта (один раз на
+   эпизод). Проверка связки: Run workflow с test_notify=true.
 
 8. БЛОК Б -> BACKLOG проекта (план масштабирования, НЕ реализовывать):
    - Multi-agent оркестрация (координатор + параллельные sub-agents) - под широкие
