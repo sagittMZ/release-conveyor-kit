@@ -65,21 +65,29 @@ jobs:
           TEST_NOTIFY: ${{ inputs.test_notify }}
         run: |
           set -euo pipefail
-          notify() { # notify <текст>
+          notify() { # notify <текст>; возвращает 0 только при подтверждённой доставке
             if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
               echo "(TG-уведомление пропущено: секреты TELEGRAM_* не настроены)" >> "$GITHUB_STEP_SUMMARY"
-              return 0
+              return 1
             fi
-            curl -s -o /dev/null --max-time 20 \
+            local resp
+            resp="$(curl -s --max-time 20 \
               --data-urlencode "chat_id=${TG_CHAT}" \
               ${TG_THREAD:+--data-urlencode "message_thread_id=${TG_THREAD}"} \
               --data-urlencode "text=$1" \
-              "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" || true
-            echo "(TG-уведомление отправлено)" >> "$GITHUB_STEP_SUMMARY"
+              "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" 2>&1)" || resp="curl failed: $resp"
+            if printf '%s' "$resp" | grep -q '"ok":true'; then
+              echo "(TG-уведомление доставлено)" >> "$GITHUB_STEP_SUMMARY"
+              return 0
+            fi
+            echo "(TG-уведомление НЕ доставлено, ответ API: ${resp})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::arch-viz: TG-уведомление не доставлено: ${resp}"
+            return 1
           }
           if [ "${TEST_NOTIFY:-false}" = "true" ]; then
+            # тестовый режим строгий: нет доставки - красный прогон
             notify "arch-viz: тестовое уведомление из ${GITHUB_REPOSITORY} - связка CI -> Telegram работает."
-            exit 0
+            exit $?
           fi
           [ -f docs/arch/arch-data.json ] || exit 0
           # кит: следим за modules/
@@ -101,7 +109,7 @@ jobs:
                && git cat-file -e "${BEFORE_SHA}" 2>/dev/null && stale_at "${BEFORE_SHA}"; then
               echo "(эпизод устаревания уже шёл - TG-пинг не дублируем)" >> "$GITHUB_STEP_SUMMARY"
             else
-              notify "arch-viz: в ${GITHUB_REPOSITORY} визуализация архитектуры устарела - исходники новее arch-data.json. Прогони /arch-viz в сессии проекта."
+              notify "arch-viz: в ${GITHUB_REPOSITORY} визуализация архитектуры устарела - исходники новее arch-data.json. Прогони /arch-viz в сессии проекта." || true
             fi
           else
             echo "Данные визуализации не старее исходников" >> "$GITHUB_STEP_SUMMARY"
