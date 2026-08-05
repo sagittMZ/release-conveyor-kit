@@ -53,6 +53,15 @@
 | checklist.md | Верификация (структурная + браузерный смоук) |
 | команда /arch-viz | единый дом - modules/09-prompt-library/commands/arch-viz.md |
 
+## Языки (решение the owner 2026-08-04)
+
+Каноника - АНГЛИЙСКАЯ: docs/arch/arch-data.json (meta.lang: en) и
+docs/arch/index.html - это часть портфолио и публичного репо. UI шаблона
+двуязычный: словарь EN/RU внутри, переключается полем meta.lang данных.
+Русская версия - личный слой владельца: arch-data.ru.json + index.ru.html,
+в .gitignore, регенерируются по запросу
+(`build-arch-viz.sh --data docs/arch/arch-data.ru.json --out docs/arch/index.ru.html`).
+
 ## Публикуемость
 
 В данных - только то, что есть в самом репозитории. Никаких приватных путей

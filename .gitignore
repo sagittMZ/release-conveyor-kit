@@ -11,3 +11,8 @@ docs/consolidation/
 # Локальные настройки Claude Code и загрузки ccgram-моста.
 .claude/settings.local.json
 .ccgram-uploads/
+
+# Русская версия арх-визуализации - личный слой the owner, регенерируема
+# (см. команду /arch-viz, шаг 4). Публичная каноника - английская.
+docs/arch/*.ru.json
+docs/arch/*.ru.html

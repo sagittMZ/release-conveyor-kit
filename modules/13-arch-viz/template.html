@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -170,8 +170,8 @@
       <h1 id="prj">Architecture <small id="meta"></small></h1>
     </header>
     <div id="searchwrap">
-      <input id="search" type="search" placeholder="Поиск компонентов..." autocomplete="off">
-      <button id="collapseAll" title="Свернуть/развернуть все">свернуть</button>
+      <input id="search" type="search" placeholder="Search components..." autocomplete="off">
+      <button id="collapseAll" title="Collapse/expand all">collapse</button>
     </div>
     <div id="toc"></div>
   </nav>
@@ -198,26 +198,49 @@
       <button id="resetZoom">Reset zoom</button>
       <button id="resetPos" title="Сбросить перетащенные позиции">Reset layout</button>
     </div>
-    <div id="togglePanels"><button id="openFlows">Потоки</button></div>
+    <div id="togglePanels"><button id="openFlows">Flows</button></div>
     <div id="tooltip"></div>
   </main>
 
   <aside id="rightpanel">
     <header>
-      <button id="tabDetail" class="on">Компонент</button>
-      <button id="tabFlows">Потоки</button>
+      <button id="tabDetail" class="on">Component</button>
+      <button id="tabFlows">Flows</button>
     </header>
-    <div id="detail" class="pane on"><div class="empty">Кликни ноду на диаграмме или пункт меню слева.</div></div>
+    <div id="detail" class="pane on"><div class="empty">Click a node on the diagram or an item in the left menu.</div></div>
     <div id="flowsPane" class="pane">
       <div id="flows"></div>
-      <button id="clearflow">✕ снять подсветку потока</button>
-      <div id="flowsteps"><div class="empty">Выбери поток - путь подсветится, шаги появятся здесь.</div></div>
+      <button id="clearflow">✕ clear flow highlight</button>
+      <div id="flowsteps"><div class="empty">Pick a flow - its path lights up and the steps appear here.</div></div>
     </div>
   </aside>
 </div>
 
 <script>
 const DATA = __ARCH_DATA__;
+
+/* ================= i18n ================= */
+const RU = {
+  search:'Поиск компонентов...', collapse:'свернуть', expand:'развернуть',
+  tabDetail:'Компонент', tabFlows:'Потоки',
+  emptyDetail:'Кликни ноду на диаграмме или пункт меню слева.',
+  emptyFlow:'Выбери поток - путь подсветится, шаги появятся здесь.',
+  clearFlow:'✕ снять подсветку потока', openFlows:'Потоки',
+  tech:'Технологии', files:'Ключевые файлы', incoming:'Входящие', outgoing:'Исходящие',
+  none:'нет', steps:'Шаги', metaFmt:(u,c,n,e)=>`обновлено ${u} @ ${c} · ${n} нод · ${e} рёбер`,
+  fit:'Fit to screen', resetZoom:'Reset zoom', resetLayout:'Reset layout'
+};
+const EN = {
+  search:'Search components...', collapse:'collapse', expand:'expand',
+  tabDetail:'Component', tabFlows:'Flows',
+  emptyDetail:'Click a node on the diagram or an item in the left menu.',
+  emptyFlow:'Pick a flow - its path lights up and the steps appear here.',
+  clearFlow:'✕ clear flow highlight', openFlows:'Flows',
+  tech:'Technologies', files:'Key files', incoming:'Incoming', outgoing:'Outgoing',
+  none:'none', steps:'Steps', metaFmt:(u,c,n,e)=>`updated ${u} @ ${c} · ${n} nodes · ${e} edges`,
+  fit:'Fit to screen', resetZoom:'Reset zoom', resetLayout:'Reset layout'
+};
+const L = DATA.meta.lang === 'ru' ? RU : EN;
 
 /* ================= geometry / layout ================= */
 const NW = 176, NH = 52, COLW = 260, VGAP = 26, PAD = 60;
@@ -426,7 +449,7 @@ function selectNode(id, opts={}){
 svg.addEventListener('click', ()=>{ if(!activeFlow){ clearSel(); renderDetailEmpty(); } });
 
 const detail = document.getElementById('detail');
-function renderDetailEmpty(){ detail.innerHTML = '<div class="empty">Кликни ноду на диаграмме или пункт меню слева.</div>'; }
+function renderDetailEmpty(){ detail.innerHTML = `<div class="empty">${L.emptyDetail}</div>`; }
 function renderDetail(id){
   const n = DATA.nodes.find(x=>x.id===id);
   const g = groupsById[n.group]||{};
@@ -435,15 +458,15 @@ function renderDetail(id){
     const other = dir==='in'? e.from : e.to;
     const on = DATA.nodes.find(x=>x.id===other);
     return `<li class="rel"><span class="dir">${dir==='in'?'←':'→'}</span> <button data-go="${other}">${on?on.label:other}</button> <span class="dir">${e.label||''}</span></li>`;
-  }).join('') || '<li class="dir" style="color:var(--dim)">нет</li>';
+  }).join('') || `<li class="dir" style="color:var(--dim)">${L.none}</li>`;
   detail.innerHTML = `
     <h2>${n.label}</h2>
     <span class="grp" style="background:${g.color}22;color:${g.color};border:1px solid ${g.color}55">${g.label||n.group}</span>
     <p>${n.desc||''}</p>
-    ${(n.tech&&n.tech.length)?`<h3>Технологии</h3><div>${n.tech.map(t=>`<span class="tech">${t}</span>`).join('')}</div>`:''}
-    ${(n.files&&n.files.length)?`<h3>Ключевые файлы</h3><ul>${n.files.map(f=>`<li class="file">${f}</li>`).join('')}</ul>`:''}
-    <h3>Входящие</h3><ul>${rel(inn,'in')}</ul>
-    <h3>Исходящие</h3><ul>${rel(out,'out')}</ul>`;
+    ${(n.tech&&n.tech.length)?`<h3>${L.tech}</h3><div>${n.tech.map(t=>`<span class="tech">${t}</span>`).join('')}</div>`:''}
+    ${(n.files&&n.files.length)?`<h3>${L.files}</h3><ul>${n.files.map(f=>`<li class="file">${f}</li>`).join('')}</ul>`:''}
+    <h3>${L.incoming}</h3><ul>${rel(inn,'in')}</ul>
+    <h3>${L.outgoing}</h3><ul>${rel(out,'out')}</ul>`;
   detail.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>selectNode(b.getAttribute('data-go')));
 }
 
@@ -493,7 +516,7 @@ function showFlow(id){
   dimExcept(keepN, keepE);
   drawStepNums();
   document.querySelectorAll('#flows .flowitem').forEach(x=>x.classList.toggle('on', x.getAttribute('data-flow')===id));
-  stepsBox.innerHTML = `<h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:4px">Шаги</h3><ol>` +
+  stepsBox.innerHTML = `<h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:4px">${L.steps}</h3><ol>` +
     f.steps.map(s=>{
       const n = DATA.nodes.find(x=>x.id===s.node);
       return `<li><b>${n?n.label:s.node}.</b> ${s.text}</li>`;
@@ -506,7 +529,7 @@ function clearFlow(redraw=true){
   edgeEls.forEach(o=>{ o.p.setAttribute('marker-end','url(#arr)'); o.lbl.classList.remove('show'); });
   document.querySelectorAll('#flows .flowitem.on').forEach(x=>x.classList.remove('on'));
   gSteps.innerHTML='';
-  if (redraw){ undim(); stepsBox.innerHTML='<div class="empty">Выбери поток - путь подсветится, шаги появятся здесь.</div>'; }
+  if (redraw){ undim(); stepsBox.innerHTML=`<div class="empty">${L.emptyFlow}</div>`; }
 }
 document.getElementById('clearflow').onclick = ()=>clearFlow();
 
@@ -543,7 +566,7 @@ let allClosed=false;
 document.getElementById('collapseAll').onclick = function(){
   allClosed=!allClosed;
   document.querySelectorAll('.tocgroup').forEach(x=>x.classList.toggle('closed',allClosed));
-  this.textContent = allClosed?'развернуть':'свернуть';
+  this.textContent = allClosed?L.expand:L.collapse;
 };
 document.getElementById('search').addEventListener('input', function(){
   const q = this.value.trim().toLowerCase();
@@ -564,9 +587,20 @@ document.getElementById('search').addEventListener('input', function(){
 const legend = document.getElementById('legend');
 legend.innerHTML = DATA.groups.map(g=>`<span class="item"><span class="dot" style="background:${g.color}"></span>${g.label}</span>`).join('');
 document.getElementById('prj').childNodes[0].textContent = DATA.meta.project || 'Architecture';
-document.getElementById('meta').textContent = `обновлено ${DATA.meta.updated||'?'} @ ${DATA.meta.commit||'?'} · ${DATA.nodes.length} нод · ${DATA.edges.length} рёбер`;
+document.getElementById('meta').textContent = L.metaFmt(DATA.meta.updated||'?', DATA.meta.commit||'?', DATA.nodes.length, DATA.edges.length);
 document.getElementById('burger').onclick = ()=>document.getElementById('sidebar').classList.toggle('open');
 
+if (DATA.meta.lang === 'ru'){
+  document.documentElement.lang = 'ru';
+  document.getElementById('search').placeholder = L.search;
+  document.getElementById('collapseAll').textContent = L.collapse;
+  document.getElementById('tabDetail').textContent = L.tabDetail;
+  document.getElementById('tabFlows').textContent = L.tabFlows;
+  document.getElementById('openFlows').textContent = L.openFlows;
+  document.getElementById('clearflow').textContent = L.clearFlow;
+  renderDetailEmpty();
+  stepsBox.innerHTML = `<div class="empty">${L.emptyFlow}</div>`;
+}
 positionAll();
 window.addEventListener('resize', ()=>{});
 fit();
