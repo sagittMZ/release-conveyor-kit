@@ -1,119 +1,130 @@
-# Prompt Kit - юзергайд
+# Prompt Kit - user guide
 
-Стеко-независимый слой кита: **команды + паттерны промптов + измеримость + память**.
-Применим к любому проекту (Python, Next.js, что угодно), отдельно от релизного
-пайплайна (модули 1-8, они под конкретный стек). Этот гайд - и методичка «что
-чем звать», и витрина того, как устроена работа с агентом.
+The kit's stack-independent layer: **commands + prompt patterns +
+measurability + memory**. It applies to any project (Python, Next.js, anything),
+separately from the release pipeline (modules 01-08, which target one stack).
+This guide is both a "what to call when" manual and a demonstration of how the
+work with an agent is organized.
 
-## Что ты получаешь
+## What you get
 
-1. **Команды** (`/имя`) - быстрые действия одной строкой, каждый вызов логируется.
-2. **Паттерны + лестница закрепления** - как писать промпты и как поднимать
-   повторяемое из чата в команду и хук.
-3. **Измеримость и память** - evals качества команд (модуль 11) и консолидация
-   памяти (модуль 12), чтобы качество не дрейфовало, а память не росла сыростью.
+1. **Commands** (`/name`) - one-line actions, every invocation logged.
+2. **Patterns and the escalation ladder** - how to write prompts, and how to
+   lift whatever repeats out of chat and into a command, then a hook.
+3. **Measurability and memory** - evals of command quality (module 11) and
+   memory consolidation (module 12), so quality does not drift and memory does
+   not pile up as raw sediment.
 
-## Команды: что за что и когда
+## The commands: what each is for
 
-### Рабочие
+### Working commands
 
-| Команда | Когда звать | Что делает |
+| Command | When to call it | What it does |
 |---|---|---|
-| `/spec` | начинаю фичу, нужны требования | интервью по фиче -> SPEC.md |
-| `/impl-plan` | требования готовы, нужен план работ | пофазный план командой ролей + гейт неопределённости |
-| `/edge-cases` | проектирую/тестирую фичу | список ошибок, пустых состояний, крайних случаев |
-| `/scope-triage` | много задач, не ясен порядок | топ 2-3 блока с приоритетом, выровненным по связанности |
-| `/backlog` | родилась идея / надо ранжировать | занести в бэклог или отсортировать по приоритету |
-| `/precommit` | перед коммитом | ревью незакоммиченного: баги, утечки, сломанные инварианты |
-| `/security-scan` | трогаю чувствительное | ревью безопасности пути субагентом |
-| `/release-notes` | вышел релиз | заметки между двумя тегами, сгруппированные |
-| `/session-wrap` | конец сессии | снапшот состояния + предложения в CLAUDE.md |
-| `/handoff` | контекст кончается, нужна новая сессия | запускающий промпт для свежего агента |
-| `/audit` | нужен разбор проекта | аналитическая записка -> docs/*.md + саммари |
+| `/spec` | starting a feature, requirements needed | a feature interview -> SPEC.md |
+| `/impl-plan` | requirements ready, a work plan needed | a phased plan by a team of roles + an uncertainty gate |
+| `/edge-cases` | designing or testing a feature | the errors, empty states and edge cases |
+| `/scope-triage` | many tasks, unclear order | the top 2-3 blocks, priority adjusted for coupling |
+| `/backlog` | an idea appeared, or ranking is needed | file it into the backlog, or sort by priority |
+| `/precommit` | before a commit | review of what is uncommitted: bugs, leaks, broken invariants |
+| `/security-scan` | touching something sensitive | a security review of a path, run by a subagent |
+| `/release-notes` | a release went out | grouped notes between two tags |
+| `/session-wrap` | end of a session | a state snapshot + suggestions for CLAUDE.md |
+| `/handoff` | context is running out, a new session is needed | a kickoff prompt for a fresh agent |
+| `/audit` | the project needs a review | an analytical note -> docs/*.md + a summary |
 
-### Мета / тулинг
+### Meta and tooling
 
-| Команда | Когда звать | Что делает |
+| Command | When to call it | What it does |
 |---|---|---|
-| `/eval-command` | правлю команды, хочу мерить качество | структурные evals (слой 1) + LLM-судья по кейсам (`--judge`) |
-| `/consolidate-memory` | память/снапшоты разрослись | дистилляция сырья в ревьюабельный DRAFT (боевые файлы не трогает) |
+| `/eval-command` | editing commands, want to measure quality | structural evals (layer 1) + the LLM judge over cases (`--judge`) |
+| `/consolidate-memory` | memory and snapshots have grown | distill the raw material into a reviewable DRAFT (the live files are untouched) |
+| `/arch-viz` | the structure changed | refresh the architecture visualization: data + built HTML |
 
-## Как выбрать команду (дерево)
+## Choosing a command (a decision tree)
 
-- Не знаю, что строить, нужны требования -> **/spec**
-- Требования есть, нужен план -> **/impl-plan**
-- Что может сломаться в фиче -> **/edge-cases**
-- Слишком много задач, с чего начать -> **/scope-triage**
-- Просто занести идею на потом -> **/backlog**
-- Перед коммитом проверить -> **/precommit** (безопасность -> **/security-scan**)
-- Разобрать/оценить проект целиком -> **/audit**
-- Заканчиваю работу -> **/session-wrap**; передаю новой сессии -> **/handoff**
-- Хочу измерить качество своих команд -> **/eval-command**
-- Память заросла -> **/consolidate-memory**
+- I do not know what to build, I need requirements -> **/spec**
+- Requirements exist, I need a plan -> **/impl-plan**
+- What could break in this feature -> **/edge-cases**
+- Too many tasks, where do I start -> **/scope-triage**
+- Just park an idea for later -> **/backlog**
+- Check before committing -> **/precommit** (security -> **/security-scan**)
+- Review or assess the whole project -> **/audit**
+- Wrapping up work -> **/session-wrap**; handing over to a new session ->
+  **/handoff**
+- Measure the quality of my commands -> **/eval-command**
+- Memory has gone weedy -> **/consolidate-memory**
+- The architecture drawing is out of date -> **/arch-viz**
 
-## Роли = твои .ai/
+## Roles are your .ai/
 
-Команды не вводят своих ролей: где нужна «линза» (взгляд продакта, безопасника,
-QA), это соответствующий файл в `.ai/` проекта. Команды ссылаются на него
-условно - есть файл, сверяются с ним; нет - работают в разумный дефолт.
+The commands introduce no roles of their own: where a "lens" is needed (the
+product, security or QA view), that lens is the corresponding file in the
+project's `.ai/`. Commands reference it conditionally - if the file is there
+they check against it, if not they fall back to a sensible default.
 
-| Линза | Файл в .ai/ |
+| Lens | File in .ai/ |
 |---|---|
 | pm | PRODUCT_OWNER.md |
 | design | UX_DESIGN.md / UI_RULES.md |
 | security | SECURITY_CHECKLIST.md + SECURITY_AUDITOR.md |
 | qa | QA_ENGINEER.md |
 | data | DATA_INTERPRETER.md |
-| правила проекта | PROJECT_POLICIES.md |
+| project-wide rules | PROJECT_POLICIES.md |
 
-## Лестница закрепления
+## The escalation ladder
 
-Промпт, сработавший дважды, не должен жить в буфере обмена:
+A prompt that worked twice should not live in your clipboard:
 
-`чат -> правило в CLAUDE.md -> команда (/имя) -> хук (всегда, без запроса)`
+`chat -> a rule in CLAUDE.md -> a command (/name) -> a hook (always, unasked)`
 
-Каждая ступень убирает необходимость помнить о предыдущей. Подробнее -
-`modules/09-prompt-library/PATTERNS.md` (6 паттернов составления промптов).
+Each rung removes the need to remember the previous one. Details in
+`modules/09-prompt-library/PATTERNS.md` (the six prompt-writing patterns).
 
-## Измеримость: evals команд (модуль 11)
+## Measurability: command evals (module 11)
 
-«Хорош ли `/spec`?» - не на глаз, а числом.
-- **Слой 1** (bash, 0 стоимости): структурные проверки исходников команд -
-  валидный frontmatter, fallback, guard анализатора, привязка к `.ai/`, гигиена.
-  Базлайн и дельта: правка команды либо держит балл, либо роняет.
-- **Слой 2** (`--judge`): субагент исполняет команду на тест-кейсе, судья
-  оценивает ответ по рубрику (0-5). Запуск в текущей сессии, точечно.
+"Is `/spec` any good?" - answered with a number, not a feeling.
+- **Layer 1** (bash, zero cost): structural checks of the command sources -
+  valid frontmatter, a fallback, the analyzer guard, the `.ai/` binding,
+  hygiene. With a baseline and a delta: an edit either holds the score or drops
+  it.
+- **Layer 2** (`--judge`): a subagent executes the command against a test case
+  and a judge scores the answer against the rubric (0-5). Runs inside the
+  current session, selectively.
 
-Запуск: `/eval-command --all` (слой 1) или `/eval-command --judge`.
+Run it with `/eval-command --all` (layer 1) or `/eval-command --judge`.
 
-## Память: консолидация (модуль 12)
+## Memory: consolidation (module 12)
 
-Файловый способ не дать памяти зарасти сырьём.
-1. `consolidate.sh` детерминированно собирает сырьё (снапшоты, MEMORY.md, .ai/,
-   использование) в один файл.
-2. `/consolidate-memory` дистиллирует его в **DRAFT** (Добавить / Обновить /
-   Противоречия) - боевые MEMORY.md/.ai/ не трогает.
-3. Ты читаешь DRAFT и мержишь принятое вручную.
+A file-based way to keep memory from turning into sediment.
+1. `consolidate.sh` deterministically gathers the raw material (snapshots,
+   MEMORY.md, .ai/, usage) into one file.
+2. `/consolidate-memory` distills it into a **DRAFT** (Add / Update / Conflicts)
+   - the live MEMORY.md and .ai/ are never touched.
+3. You read the DRAFT and merge what you accept by hand.
 
-## Карта модулей кита
+## Map of the kit's modules
 
-| # | Слой | Стек |
+| # | Layer | Stack |
 |---|---|---|
-| 01-07 | релизный пайплайн (CI, сборка, сторы, стейджинг, мониторинг, секреты, smoke) | React/Vite/Supabase |
-| 08 | agent-layer (промпты применения кита) | - |
-| 09 | prompt-library (команды + паттерны) | стеко-независим |
-| 10 | coverage-matrix (матрица покрытия) | зарезервирован, в бэклоге |
-| 11 | command-evals (измеримость команд) | стеко-независим |
-| 12 | memory-consolidation (консолидация памяти) | стеко-независим |
+| 01-07 | the release pipeline (CI, builds, stores, staging, monitoring, secrets, smoke) | React/Vite/Supabase |
+| 08 | agent-layer (the prompts that apply the kit) | - |
+| 09 | prompt-library (commands + patterns) | stack-independent |
+| 10 | coverage-matrix (test coverage matrix) | reserved, in the backlog |
+| 11 | command-evals (measurable command quality) | stack-independent |
+| 12 | memory-consolidation | stack-independent |
+| 13 | arch-viz (architecture visualization) | stack-independent |
 
-Стеко-независимый слой (09 + 11 + 12) применяется к любому проекту; 01-08 - под
-целевой стек.
+The stack-independent layer (09 + 11 + 12 + 13) applies to any project; 01-08
+target the stack.
 
-## Куда что кладётся
+## Where things go
 
-- команды -> `.claude/commands/` (вызов по `/имя`);
-- меню-библиотека -> `docs/prompts/library/`;
-- тулинг evals/консолидации + lib -> `tools/prompt-kit/` (вендоринг, с PROVENANCE);
-- проводка команд -> секция в `AI_WORKFLOW.md`;
-- сырьё evals/консолидации -> `docs/evals/`, `docs/consolidation/` (в `.gitignore`,
-  приватно и регенерируемо).
+- commands -> `.claude/commands/` (invoked as `/name`);
+- the menu library -> `docs/prompts/library/`;
+- the evals and consolidation tooling plus lib -> `tools/prompt-kit/` (vendored,
+  with a PROVENANCE file);
+- the wiring for the commands -> a section in `AI_WORKFLOW.md`;
+- eval artifacts -> `docs/evals/`, and consolidation raw material outside the
+  tree entirely (both private and reproducible; `docs/consolidation/` stays in
+  `.gitignore` as insurance).

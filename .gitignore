@@ -1,31 +1,32 @@
-# Публикуемость репо: ничего личного и регенерируемого в истории.
-# Принцип: репо публикует ИНСТРУМЕНТЫ, а не результаты их применения к самому
-# киту. Внутренняя кухня (ТЗ, журнал постройки, аудиты, планы, хендоффы) живёт
-# в docs/private/ и в git не попадает.
+# Publishability: nothing personal and nothing reproducible reaches history.
+# The principle: this repository publishes the INSTRUMENTS, not the artifacts of
+# applying them to the kit itself. The owner's workshop (spec, build journal,
+# audits, plans, handoffs) lives in docs/private/ and never enters git.
 
-# Внутренний слой владельца: ТЗ, прогресс, блокеры, бэклог, журнал решений,
-# аудиты, аналитические записки, планы реализации, хендоффы.
+# The owner's internal layer: spec, progress, blockers, backlog, decision
+# journal, audits, analytical notes, implementation plans, handoffs.
 docs/private/
 
-# Сессионная механика: точка входа сессии и снапшот. По природе приватные и
-# постоянно меняющиеся файлы (паттерн .env). В репо лежит только шаблон
-# docs/NEW_SESSION_PROMPT.example.md.
+# Session mechanics: the session entry point and the snapshot. Private by
+# nature and constantly changing (the .env pattern). Only the template,
+# docs/NEW_SESSION_PROMPT.example.md, is committed.
 docs/NEW_SESSION_PROMPT.md
 docs/.session-current.md
 
-# Артефакты evals (модуль 11): карточки/базлайн, содержат счётчики использования
-# из приватных транскриптов. Регенерируются eval.sh.
+# Eval artifacts (module 11): scorecards and baseline; they carry usage counters
+# derived from private transcripts. Reproducible with eval.sh.
 docs/evals/
 
-# Сырьё и черновики консолидации памяти (модуль 12): приватные транскрипты и
-# снапшоты. Регенерируются consolidate.sh; принятый дистиллят владелец мержит вручную.
+# Consolidation raw material and drafts (module 12): private transcripts and
+# snapshots. Reproducible with consolidate.sh; the owner merges the accepted
+# distillate by hand.
 docs/consolidation/
 
-# Локальные настройки Claude Code и загрузки Telegram-моста.
+# Local Claude Code settings and Telegram bridge uploads.
 .claude/settings.local.json
 .ccgram-uploads/
 
-# Русская версия арх-визуализации - личный слой владельца, регенерируема
-# (см. команду /arch-viz, шаг 4). Публичная каноника - английская.
+# Translated versions of the architecture visualization - the owner's local
+# layer, reproducible (see the /arch-viz command). English is canonical.
 docs/arch/*.ru.json
 docs/arch/*.ru.html
