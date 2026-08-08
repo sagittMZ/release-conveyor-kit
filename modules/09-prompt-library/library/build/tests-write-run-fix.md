@@ -7,21 +7,20 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-напиши тесты для {path}, запусти их и почини все падения
+write tests for {path}, run them and fix every failure
 ```
 
-Слот: `path` = src/lib/parsers/feed.ts.
+Slot: `path` = src/lib/parsers/feed.ts.
 
-## Почему работает
+## Why it works
 
-"Напиши + запусти + почини" в одном промпте даёт агенту петлю самопроверки
-(паттерн 2): он итерирует до зелёного, не останавливаясь за инструкциями
-после каждого шага.
+"Write + run + fix" in one prompt gives the agent a self-check loop (pattern 2):
+it iterates until green instead of stopping for instructions after each step.
 
-## Закрепить
+## How to escalate it
 
-Убедиться, что тестовая команда проекта записана в CLAUDE.md (в проектах
-конвейера это vitest; `/init` подхватит её автоматически).
+Make sure the project's test command is recorded in CLAUDE.md (in conveyor
+projects that is vitest; `/init` picks it up automatically).

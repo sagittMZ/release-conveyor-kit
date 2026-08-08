@@ -7,21 +7,22 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-я {role}. проведи меня по тому, что происходит, когда пользователь {action} -
-от UI до результата
+I am a {role}. walk me through what happens when a user {action} - from the UI
+to the result
 ```
 
-Слоты: `role` = продакт; `action` = нажимает "Экспорт в PDF".
+Slots: `role` = product manager; `action` = clicks "Export to PDF".
 
-## Почему работает
+## Why it works
 
-Названная роль задаёт высоту ответа: агент объясняет, что продукт реально
-делает, прямо из исходников - без похода к инженеру и без чтения кода тобой.
+Naming the role sets the altitude of the answer: the agent explains what the
+product actually does, straight from the sources - without you going to an
+engineer and without you reading the code.
 
-## Закрепить
+## How to escalate it
 
-Если такой уровень ответов нужен всегда - задать output style, чтобы каждая
-сессия отвечала на этой высоте.
+If you always want answers at that altitude, set an output style so every
+session replies there by default.

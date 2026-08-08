@@ -7,25 +7,25 @@ needs: []
 module: 05-monitoring
 ---
 
-## Промпт
+## Prompt
 
 ```
-{symptom}. проверь ошибки в Sentry, последние деплои и изменения конфигов,
-затем назови наиболее вероятную причину
+{symptom}. check the Sentry errors, the recent deploys and the config changes,
+then name the most likely cause
 ```
 
-Слот: `symptom` = час назад чекаут начал возвращать 500.
+Slot: `symptom` = checkout started returning 500s an hour ago.
 
-## Почему работает
+## Why it works
 
-Перечисляешь ИСТОЧНИКИ улик, а не шаги расследования. Агент читает логи,
-git-историю и конфиги вместе и сужает причину на пересечении - как дежурный,
-а не как чек-лист.
+You list the SOURCES of evidence, not the steps of the investigation. The agent
+reads logs, git history and configs together and narrows the cause down at their
+intersection - like someone on call, not like a checklist.
 
-Sentry поставлен модулем 05; health-чек (`/auth/v1/health` для Supabase) -
-первая проверка "жив ли бэкенд вообще".
+Sentry is installed by module 05; a health check (`/auth/v1/health` for
+Supabase) is the first "is the backend alive at all" probe.
 
-## Закрепить
+## How to escalate it
 
-Подключить Sentry через MCP - агент будет читать error reports сам, без
-копипасты стектрейсов.
+Connect Sentry through MCP - the agent will read error reports itself, with no
+stack traces pasted by hand.

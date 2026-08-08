@@ -1,93 +1,96 @@
-# Как составлять промпты: 6 паттернов и лестница закрепления
+# How to write prompts: 6 patterns and the escalation ladder
 
-Все промпты в library/ построены на шести паттернах. Зная их, ты пишешь свои
-промпты сам - библиотека нужна как стартер, а не как справочник на каждый день.
+Every prompt in `library/` is built on six patterns. Once you know them you
+write your own prompts, and the library becomes a starter rather than a
+reference you consult daily.
 
-## 1. Опиши результат, а не шаги
+## 1. Describe the outcome, not the steps
 
-Скажи, что хочешь получить, и дай агенту самому найти файлы.
-
-```
-добавь rate limiting на публичный API и убедись, что существующие тесты проходят
-```
-
-Ни одного пути к файлу - и не надо. Перечисление шагов лишает агента права
-найти путь лучше твоего.
-
-## 2. Дай петлю самопроверки
-
-Проси "сделай, запусти, почини" одним промптом - иначе агент остановится
-после первой попытки и будет ждать инструкций.
+Say what you want to end up with and let the agent find the files.
 
 ```
-напиши миграцию, прогони её на dev-базе и подтверди, что схема совпадает
+add rate limiting to the public API and make sure the existing tests still pass
 ```
 
-## 3. Укажи на референс
+Not a single file path, and none is needed. Listing the steps takes away the
+agent's chance to find a better path than yours.
 
-Назови существующий файл, тест или паттерн. Без референса агент пишет
-"по общим best practices", с референсом - в конвенциях твоего проекта.
+## 2. Give it a self-check loop
 
-```
-сделай страницу настроек по тому же лейауту, что и страница профиля
-```
-
-## 4. Назови измеримую цель
-
-Когда цель - производительность или покрытие, дай метрику и порог:
-критерий готовности становится однозначным.
+Ask for "do it, run it, fix it" in one prompt - otherwise the agent stops after
+the first attempt and waits for instructions.
 
 ```
-уменьши бандл до 200KB и покажи, что именно ты выкинул
+write the migration, run it against the dev database and confirm the schema matches
 ```
 
-## 5. Дай артефакт, а не пересказ
+## 3. Point at a reference
 
-Вставляй ошибки, логи, скриншоты, plan output прямо в промпт (или @-упоминание
-файла). Агент читает источник, а не твоё описание источника.
-
-```
-почему падает сборка? @build.log
-```
-
-## 6. Скажи формат ответа
-
-Назови формат, длину, аудиторию - объяснение подстроится под то, как ты его
-будешь использовать.
+Name an existing file, test or pattern. Without a reference the agent writes to
+generic best practices; with one it writes to your project's conventions.
 
 ```
-объясни, как работает retry-логика платежей, как HTML-страницу с диаграммой,
-и открой её в браузере
+build the settings page with the same layout as the profile page
 ```
 
-## Лестница закрепления
+## 4. Name a measurable target
 
-Промпт, сработавший дважды, не должен жить в буфере обмена. Эскалация:
+When the goal is performance or coverage, give a metric and a threshold - the
+definition of done stops being a matter of opinion.
 
-1. **Промпт** - разовый запрос. Живёт здесь, в library/.
-2. **Правило в CLAUDE.md** - когда исправляешь агента второй раз за одно и то
-   же: `ты снова используешь default exports - добавь правило в CLAUDE.md,
-   чтобы это прекратилось`. Правило читается каждой сессией и достаётся всей
-   команде через git.
-3. **Скилл (/команда)** - когда цепочка шагов повторяется: `создай скилл
-   /release-notes, который сравнивает два тега и группирует изменения`.
-4. **Хук** - когда действие должно происходить ВСЕГДА, без запроса:
-   `напиши хук, который гоняет prettier после каждой правки .ts-файла`.
+```
+get the bundle under 200KB and show me exactly what you dropped
+```
 
-Правило большого пальца: chat -> file -> command -> automatic. Каждая ступень
-убирает необходимость помнить о предыдущей.
+## 5. Give the artifact, not a retelling
 
-## Роли = твои .ai/
+Paste errors, logs, screenshots or plan output straight into the prompt (or
+@-mention the file). The agent reads the source instead of your description of
+the source.
 
-Модуль 9 не вводит собственных ролей и не заводит теги-персоны. Когда промпту
-нужна «линза» (посмотреть глазами продакта, безопасника, QA), эта линза уже
-описана - это соответствующий файл в .ai/ проекта с его обязательными чтениями.
-«Взять линзу» значит буквально: прочитать нужный .ai/-файл и держаться его
-приоритетов и критериев.
+```
+why is the build failing? @build.log
+```
 
-Карта линза -> файл:
+## 6. State the output format
 
-| Линза (тег) | Файл в .ai/ |
+Name the format, the length and the audience - the explanation adapts to how you
+are going to use it.
+
+```
+explain how the payment retry logic works, as an HTML page with a diagram,
+and open it in the browser
+```
+
+## The escalation ladder
+
+A prompt that worked twice should not live in your clipboard. The escalation:
+
+1. **Prompt** - a one-off request. It lives here, in `library/`.
+2. **A rule in CLAUDE.md** - when you correct the agent about the same thing a
+   second time: `you are using default exports again - add a rule to CLAUDE.md
+   so this stops`. The rule is read by every session and reaches the whole team
+   through git.
+3. **A skill (a /command)** - when a chain of steps repeats: `create a
+   /release-notes skill that compares two tags and groups the changes`.
+4. **A hook** - when something must happen ALWAYS, without being asked: `write a
+   hook that runs prettier after every edit to a .ts file`.
+
+Rule of thumb: chat -> file -> command -> automatic. Each rung removes the need
+to remember the previous one.
+
+## Roles are your .ai/
+
+Module 09 does not introduce roles of its own and does not invent persona tags.
+When a prompt needs a "lens" - to look at something as a product owner, a
+security engineer, a QA would - that lens is already described: it is the
+corresponding file in the project's `.ai/`, with its own required reading.
+"Taking the lens" means literally that: read the relevant `.ai/` file and stay
+within its priorities and criteria.
+
+Lens-to-file map:
+
+| Lens (tag) | File in .ai/ |
 | --- | --- |
 | pm | PRODUCT_OWNER.md |
 | design | UX_DESIGN.md / UI_RULES.md |
@@ -96,9 +99,9 @@
 | qa | QA_ENGINEER.md |
 | marketing | MARKETING.md |
 
-Правила проекта в целом - .ai/PROJECT_POLICIES.md; их держат все линзы.
+Project-wide rules live in `.ai/PROJECT_POLICIES.md`; every lens honors them.
 
-Поэтому слэш-команды кита ссылаются на .ai/ условно («если есть <файл> -
-сверься»): в проекте с .ai/ команда работает по регуляторке, без .ai/ -
-деградирует в разумный дефолт. Свою роль в промпт не встраивай - делегируй
-в .ai/.
+This is why the kit's slash commands reference `.ai/` conditionally ("if the
+project has <file>, check against it"): in a project with `.ai/` the command
+works to the project's own rules, and without `.ai/` it degrades to a sensible
+default. Do not bake a role into a prompt - delegate it to `.ai/`.

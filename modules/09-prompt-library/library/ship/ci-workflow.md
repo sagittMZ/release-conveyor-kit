@@ -7,24 +7,24 @@ needs: []
 module: 01-ci-core
 ---
 
-## Промпт
+## Prompt
 
 ```
-напиши GitHub Actions workflow, который {steps} на каждый push в {branch}
+write a GitHub Actions workflow that {steps} on every push to {branch}
 ```
 
-Слоты: `steps` = гоняет тесты и деплоит на staging; `branch` = main.
+Slots: `steps` = runs the tests and deploys to staging; `branch` = main.
 
-## Почему работает
+## Why it works
 
-Описываешь, когда запускать и что делать - YAML генерируется под команды
-сборки и тестов твоего проекта, а не по абстрактному шаблону.
+You describe when it runs and what it does - the YAML is generated for your
+project's build and test commands rather than from an abstract template.
 
-В проектах конвейера сначала посмотри `.github/workflows/` - базовый CI уже
-поставлен модулем 01; этот промпт для ДОПОЛНИТЕЛЬНЫХ workflow. Напомни
-агенту про идемпотентность: дополнять существующие, не дублировать.
+In conveyor projects, look at `.github/workflows/` first: the base CI is already
+installed by module 01, and this prompt is for ADDITIONAL workflows. Remind the
+agent about idempotency: extend what exists, do not duplicate it.
 
-## Закрепить
+## How to escalate it
 
-Правило в CLAUDE.md: новые workflow не дублируют существующие jobs, а
-переиспользуют их через workflow_call.
+A rule in CLAUDE.md: new workflows do not duplicate existing jobs, they reuse
+them through workflow_call.

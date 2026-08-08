@@ -7,26 +7,26 @@ needs: []
 module: 06-secrets
 ---
 
-## Промпт
+## Prompt
 
 ```
-проверь субагентом {path} на проблемы безопасности: захардкоженные секреты,
-обход RLS, использование service role key в пользовательских флоу, инъекции.
-доложи находки списком по убыванию серьёзности
+have a subagent check {path} for security problems: hardcoded secrets, RLS
+bypasses, service role key usage in user-facing flows, injection. report the
+findings ordered by severity
 ```
 
-Слот: `path` = src/api/.
+Slot: `path` = src/api/.
 
-## Почему работает
+## Why it works
 
-Субагент гоняет аудит в своём контексте и возвращает выжимку - длинное
-ревью не съедает основную сессию. Конкретный список угроз (вместо "проверь
-безопасность") фокусирует проверку на реальных рисках Supabase-стека.
+The subagent runs the audit in its own context and returns a summary, so a long
+review does not eat the main session. A concrete list of threats (instead of
+"check the security") focuses the review on the real risks of a Supabase stack.
 
-Гигиену секретов в CI держит модуль 06 (gitleaks); этот промпт - ручной
-второй эшелон для логики доступа, которую сканер не видит.
+Secret hygiene in CI is held by module 06 (gitleaks); this prompt is the manual
+second line for access logic a scanner cannot see.
 
-## Закрепить
+## How to escalate it
 
-Завести выделенного security-review субагента с этим чек-листом, общего для
-всех проектов.
+Create a dedicated security-review subagent carrying this checklist, shared
+across all your projects.

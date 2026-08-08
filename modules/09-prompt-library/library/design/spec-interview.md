@@ -7,22 +7,22 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-я хочу построить {feature}. интервьюируй меня про реализацию, UX, крайние
-случаи и трейдоффы, пока не покроем всё, затем запиши спеку в SPEC.md
+I want to build {feature}. interview me about implementation, UX, edge cases and
+trade-offs until everything is covered, then write the spec to SPEC.md
 ```
 
-Слот: `feature` = лимиты запросов на воркспейс.
+Slot: `feature` = per-workspace request limits.
 
-## Почему работает
+## Why it works
 
-Просишь, чтобы интервьюировали тебя, вместо того чтобы писать спеку самому.
-Агент задаёт структурированные вопросы до полноты требований и фиксирует
-результат в файл - спека рождается из диалога, а не из чистого листа.
+You ask to be interviewed instead of writing the spec yourself. The agent asks
+structured questions until the requirements are complete and records the result
+in a file - the spec comes out of a conversation rather than a blank page.
 
-## Закрепить
+## How to escalate it
 
-Сохранить свои вопросы интервью как скилл /spec - каждая спека будет
-начинаться одинаково.
+Save your interview questions as a /spec skill, so every spec starts the same
+way.

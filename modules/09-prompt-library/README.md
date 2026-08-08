@@ -1,77 +1,82 @@
-# Модуль 9 - prompt-library
+# Module 09 - prompt-library
 
-Библиотека стартовых промптов, которую конвейер ставит в целевой проект вместе
-с пайплайном. Пайплайн отвечает на вопрос "как собирается и едет релиз",
-библиотека - "как с этим проектом разговаривать агенту и владельцу".
+The starter prompt library the conveyor installs into a target project
+alongside the pipeline. The pipeline answers "how a release is built and
+shipped"; the library answers "how the owner and the agent talk about this
+project".
 
-## Отличие от остальных модулей
+## How it differs from the other modules
 
-**Стеко-независимый.** Единственный модуль, который можно применять к любому
-проекту (Python, Next.js, что угодно), в том числе ОТДЕЛЬНО от модулей 1-7.
-Scope guard из AGENTS.md на него не распространяется: если стек целевого
-проекта вне скоупа v0, модуль 9 всё равно применяется.
+**Stack-independent.** The only module that applies to any project (Python,
+Next.js, anything), including SEPARATELY from modules 01-07. The scope guard in
+AGENTS.md does not apply to it: if the target project's stack is out of v0
+scope, module 09 is still applied.
 
-## Два уровня: меню и команды
+## Two levels: menu and commands
 
-Библиотека - меню для копипаста (для человека). Команды - вызов по `/имя`.
-Это ровно лестница закрепления: то, чем реально пользуешься, поднимается из
-меню в команду (удобнее с телефона + каждый вызов логируется).
+The library is a copy-paste menu, for a human. The commands are invoked as
+`/name`. That is exactly the escalation ladder: whatever you actually use rises
+from the menu into a command - easier from a phone, and every invocation is
+logged.
 
-| Файл | Что это |
+| File | What it is |
 |---|---|
-| PATTERNS.md | 6 паттернов составления промптов + лестница закрепления. Читается владельцем один раз |
-| library/&lt;phase&gt;/*.md | 21 промпт-меню: один файл = один промпт, YAML frontmatter (id, phase, category, roles, needs, module) + текст + "почему работает" + "закрепить" |
-| commands/*.md | 12 слэш-команд Claude Code (см. таблицу ниже). Ставятся в `.claude/commands/` проекта, вызываются в чате, логируются |
-| usage-digest/ | Анализатор: сколько раз за неделю вызывались команды (по транскриптам) |
-| ROLLOUT.md | Вступительные промпты для раскатки модуля в сессию проекта |
-| check-provenance.sh | Сверка вендоренных копий с китом: у каждого артефакта штамп `release-conveyor-kit@<sha>`, скрипт показывает отставание от HEAD кита и изменившиеся исходники. Вендорится в tools/prompt-kit/ раскаткой |
-| checklist.md | Верификация применения |
+| PATTERNS.md | 6 prompt-writing patterns + the escalation ladder. The owner reads it once |
+| library/&lt;phase&gt;/*.md | 21 menu prompts: one file per prompt, YAML frontmatter (id, phase, category, roles, needs, module) + the text + "why it works" + "how to escalate it" |
+| commands/*.md | 14 Claude Code slash commands (table below). Installed into the project's `.claude/commands/`, invoked in chat, logged |
+| usage-digest/ | Analyzer: how many times each command was invoked this week, read from transcripts |
+| ROLLOUT.md | The rollout spec and prompts for installing this layer into a project |
+| check-provenance.sh | Reconciles vendored copies with the kit: every artifact carries a `kit@<sha>` stamp, and the script reports the lag behind the kit's HEAD and which sources changed. Vendored into tools/prompt-kit/ at rollout |
+| checklist.md | Verification of the application |
 
-Фазы: discover / design / build / ship / operate / automate.
-Роли-теги: pm, design, docs, marketing, security, ops, data. Пустой список
-ролей = промпт универсальный. Для соло-владельца роли - это "линзы": спросить
-проект как PM, как безопасник.
+Phases: discover / design / build / ship / operate / automate.
+Role tags: pm, design, docs, marketing, security, ops, data. An empty role list
+means the prompt is universal. For a solo owner the roles are "lenses": ask the
+project as a PM would, as a security engineer would.
 
-## Применение
+## Application
 
-1. `PATTERNS.md` и `library/` -> `docs/prompts/library/` целевого проекта (меню).
-2. `commands/*.md` -> `.claude/commands/` целевого проекта (слэш-команды).
-3. Добавить секцию в AI_WORKFLOW.md целевого проекта - указатель на
-   docs/prompts/library/ и список команд (см. ROLLOUT.md - готовый промпт).
-4. Прогнать checklist.md.
+1. `PATTERNS.md` and `library/` -> the target project's `docs/prompts/library/`
+   (the menu).
+2. `commands/*.md` -> the target project's `.claude/commands/` (slash commands).
+3. Add a section to the target project's AI_WORKFLOW.md - a pointer to
+   `docs/prompts/library/` and the list of commands (ROLLOUT.md has a
+   ready-made prompt).
+4. Run checklist.md.
 
-Идемпотентность: если `docs/prompts/` в проекте уже занят (например, там уже
-лежат большие PROMPT_*.md) - меню кита едет в отдельный `docs/prompts/library/`,
-существующее не затирается, только мержится.
+Idempotency: if `docs/prompts/` is already taken in the project (say it already
+holds large PROMPT_*.md files), the kit's menu goes into a separate
+`docs/prompts/library/` - existing content is merged with, never overwritten.
 
-Слоты в промптах-меню - `{в фигурных скобках}`, под ними примеры значений.
-В командах аргументы подставляются как `$ARGUMENTS` / `$1 $2`.
+Slots in the menu prompts are `{in curly braces}`, with example values under
+them. In commands, arguments are substituted as `$ARGUMENTS` / `$1 $2`.
 
-## Команды (13)
+## Commands (14)
 
-Команды ссылаются на роли условно: если в проекте есть указанный `.ai/`-файл,
-команда сверяется с ним; без него - работает в разумный дефолт (см. секцию
-"Роли = твои .ai/" в PATTERNS.md).
+Commands reference roles conditionally: if the project has the named `.ai/`
+file, the command checks against it; without it, the command degrades to a
+sensible default (see "Roles are your .ai/" in PATTERNS.md).
 
-| Команда | Роль .ai/ | Что делает |
+| Command | .ai/ role | What it does |
 |---|---|---|
-| /spec | PRODUCT_OWNER, PROJECT_POLICIES | интервью по фиче -> SPEC.md |
-| /precommit | PROJECT_POLICIES, SECURITY_CHECKLIST | ревью незакоммиченных изменений перед коммитом |
-| /session-wrap | - | снапшот сессии (done/state/next/blockers) |
-| /release-notes | - | заметки о релизе между тегами |
-| /security-scan | SECURITY_CHECKLIST, SECURITY_AUDITOR | ревью безопасности пути субагентом |
-| /edge-cases | QA_ENGINEER | крайние случаи и пустые состояния для фичи |
-| /backlog | PRODUCT_OWNER, PROJECT_POLICIES | занести задачу в бэклог / ранжировать по приоритету |
-| /scope-triage | PRODUCT_OWNER | топ 2-3 блока задач с приоритетом, выровненным по связанности |
-| /handoff | - | запускающий промпт для новой сессии (передача контекста) |
-| /impl-plan | команда ролей (архитектор/fullstack, UX, PO, SDET/QA, security, PROJECT_POLICIES) | пофазный план реализации по готовой спеке + гейт неопределённости |
-| /audit | - (мульти-линза) | аналитическая записка по проекту -> .md в docs/ + саммари |
-| /eval-command | - | структурные evals команд (модуль 11, слой 1) + дельта против базлайна |
-| /consolidate-memory | - | дистилляция сырья памяти (модуль 12) в ревьюабельный DRAFT |
+| /spec | PRODUCT_OWNER, PROJECT_POLICIES | feature interview -> SPEC.md |
+| /precommit | PROJECT_POLICIES, SECURITY_CHECKLIST | review of uncommitted changes before a commit |
+| /session-wrap | - | session snapshot (done / state / next / blockers) |
+| /release-notes | - | release notes between two tags |
+| /security-scan | SECURITY_CHECKLIST, SECURITY_AUDITOR | security review of a path, run by a subagent |
+| /edge-cases | QA_ENGINEER | edge cases and empty states for a feature |
+| /backlog | PRODUCT_OWNER, PROJECT_POLICIES | file a task into the backlog / rank by priority |
+| /scope-triage | PRODUCT_OWNER | top 2-3 task blocks, priority adjusted for coupling |
+| /handoff | - | kickoff prompt for a new session (handing over context) |
+| /impl-plan | a team of roles (architect/full-stack, UX, PO, SDET/QA, security, PROJECT_POLICIES) | phased implementation plan from a finished spec + an uncertainty gate |
+| /audit | - (multi-lens) | analytical note on the project -> a .md in docs/ + a summary |
+| /eval-command | - | structural evals of the commands (module 11, layer 1) + delta against the baseline |
+| /consolidate-memory | - | distill memory raw material (module 12) into a reviewable DRAFT |
+| /arch-viz | - | refresh the architecture visualization (module 13): data + built HTML |
 
-## Связь с модулями кита
+## Links to the other modules
 
-| Промпт | Модуль |
+| Prompt | Module |
 |---|---|
 | ship/ci-workflow | 01-ci-core |
 | ship/release-notes | 03-store-deploy |
@@ -80,10 +85,11 @@ Scope guard из AGENTS.md на него не распространяется: 
 | operate/security-review | 06-secrets |
 | operate/smoke-fix | 07-smoke-e2e |
 
-## Происхождение
+## Origin
 
-Модуль ДОБАВЛЕН китом (Этап 1.5). Источник - библиотека промптов Anthropic
-(code.claude.com/docs/en/prompt-library, июль 2026): взята таксономия
-(фаза x категория x роль), 6 паттернов и ~40% промптов, адаптированных под
-стек кита и русский язык. Тексты промптов провайдер-независимы; Claude-специфичны
-только блоки "Закрепить" (CLAUDE.md, skills, hooks).
+This module was ADDED by the kit - it is not extracted from the donor. Its
+source is Anthropic's prompt library (code.claude.com/docs/en/prompt-library,
+July 2026): the taxonomy (phase x category x role), the six patterns and about
+40% of the prompts, adapted to the kit's stack. The prompt texts are
+provider-independent; only the "escalate it" blocks (CLAUDE.md, skills, hooks)
+are Claude-specific.

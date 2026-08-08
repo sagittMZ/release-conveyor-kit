@@ -7,22 +7,22 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-ты снова {mistake}. добавь правило в CLAUDE.md, чтобы это прекратилось
+you are {mistake} again. add a rule to CLAUDE.md so this stops
 ```
 
-Слот: `mistake` = используешь default exports, хотя в проекте приняты named
+Slot: `mistake` = using default exports when the project has settled on named
 exports.
 
-## Почему работает
+## Why it works
 
-Поправка в чате умирает вместе с сессией. Правило в CLAUDE.md читается
-каждой новой сессией и через git достаётся всем, кто работает с проектом.
-Это ступень 2 лестницы закрепления (PATTERNS.md).
+A correction in chat dies with the session. A rule in CLAUDE.md is read by every
+new session and reaches everyone working on the project through git. This is
+rung 2 of the escalation ladder (PATTERNS.md).
 
-## Закрепить
+## How to escalate it
 
-Это и есть закрепление. Раз в несколько недель открывать /memory и
-выкидывать устаревшие правила.
+This is the escalation. Every few weeks, open /memory and throw out the rules
+that went stale.

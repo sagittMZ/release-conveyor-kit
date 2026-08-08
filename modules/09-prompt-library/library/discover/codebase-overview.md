@@ -7,19 +7,20 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-дай обзор этой кодовой базы: архитектура, ключевые директории и как части
-связаны между собой
+give me an overview of this codebase: architecture, key directories and how the
+parts connect
 ```
 
-## Почему работает
+## Why it works
 
-Описываешь, что хочешь узнать, а не какие файлы читать. Агент сам обходит
-проект и возвращает картину целиком (паттерн 1: результат, а не шаги).
+You describe what you want to learn, not which files to read. The agent walks
+the project itself and returns the whole picture (pattern 1: outcome, not
+steps).
 
-## Закрепить
+## How to escalate it
 
-Запустить `/init`, чтобы итог осел в CLAUDE.md и каждая новая сессия
-начинала с этого контекста.
+Run `/init` so the result settles into CLAUDE.md and every new session starts
+with that context.

@@ -1,21 +1,21 @@
 #!/bin/bash
-# lib-transcripts.sh - переиспользуемое чтение транскриптов Claude Code
-# (~/.claude/projects/*.jsonl). Единый источник для usage-digest (модуль 09),
-# command-evals (модуль 11) и memory-consolidation (модуль 12) - чтобы логика
-# чтения истории не дублировалась в трёх местах.
+# lib-transcripts.sh - reusable reading of Claude Code transcripts
+# (~/.claude/projects/*.jsonl). One source for usage-digest (module 09),
+# command-evals (module 11) and memory-consolidation (module 12), so the
+# history-reading logic is not duplicated in three places.
 #
-# Секретов не содержит. Это sourced-библиотека: определяет функции и НЕ печатает
-# ничего при подключении, не выставляет set -e. Подключение:
-#   source "<путь>/lib-transcripts.sh"
+# Contains no secrets. This is a sourced library: it defines functions, prints
+# nothing when sourced, and does not set -e. Source it with:
+#   source "<path>/lib-transcripts.sh"
 #
-# Функции:
-#   lt_projects_dir             -> каталог проектов (env CLAUDE_PROJECTS_DIR)
-#   lt_find_files <days>        -> *.jsonl, изменённые за N дней (строка на файл)
-#   lt_cmd_counts   <files...>  -> "<count> <command>" слэш-команд, убыв.
-#   lt_skill_counts <files...>  -> "<count> <skill>" скиллов (Skill tool)
-#   lt_agent_counts <files...>  -> "<count> <subagent_type>" субагентов (Task)
-#   lt_typed_prompts <files...> -> user-печатанные промпты (строковый content),
-#                                  по строке, без служебных враппер-строк
+# Functions:
+#   lt_projects_dir             -> the projects directory (env CLAUDE_PROJECTS_DIR)
+#   lt_find_files <days>        -> *.jsonl modified within N days (one per line)
+#   lt_cmd_counts   <files...>  -> "<count> <command>" for slash commands, descending
+#   lt_skill_counts <files...>  -> "<count> <skill>" for skills (Skill tool)
+#   lt_agent_counts <files...>  -> "<count> <subagent_type>" for subagents (Task)
+#   lt_typed_prompts <files...> -> prompts the user typed themselves (string
+#                                  content), one per line, without wrapper lines
 
 LT_PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
 
@@ -44,9 +44,10 @@ lt_agent_counts() {
     | sed 's#"subagent_type":"##;s#"##' | sort | uniq -c | sort -rn || true
 }
 
-# Извлечь то, что пользователь печатал сам (строковый content user-сообщений),
-# отсекая tool-результаты, стдаут команд и служебные врапперы. Требует python3;
-# без него молча возвращает пусто (модуль 12 деградирует, digest не зависит).
+# Extract what the user typed themselves (the string content of user messages),
+# dropping tool results, command stdout and wrapper lines. Requires python3;
+# without it this returns empty silently (module 12 degrades, the digest does
+# not depend on it).
 lt_typed_prompts() {
   [ "$#" -eq 0 ] && return 0
   command -v python3 >/dev/null 2>&1 || return 0

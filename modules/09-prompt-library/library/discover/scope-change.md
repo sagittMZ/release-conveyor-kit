@@ -7,20 +7,20 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-какие файлы придётся затронуть, чтобы {change}?
+which files would have to be touched to {change}?
 ```
 
-Слот: `change` = добавить переключатель тёмной темы в настройки.
+Slot: `change` = add a dark theme toggle to the settings.
 
-## Почему работает
+## Why it works
 
-Оцениваешь размер работы ДО того, как она попала в план. Список файлов сразу
-показывает: это один компонент или сквозное изменение через полпроекта.
+You size the work BEFORE it enters a plan. The file list immediately shows
+whether this is one component or a change running through half the project.
 
-## Закрепить
+## How to escalate it
 
-Перед крупными изменениями включать plan mode (Shift+Tab) - файлы видны до
-любых правок.
+Turn on plan mode (Shift+Tab) before large changes - the files are visible
+before anything is edited.

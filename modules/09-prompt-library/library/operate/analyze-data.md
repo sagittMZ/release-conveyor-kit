@@ -7,22 +7,22 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-прочитай {file}, выдели ключевые паттерны и оформи результат как {output}
+read {file}, pull out the key patterns and present the result as {output}
 ```
 
-Слоты: `file` = @reports/q1-signups.csv; `output` = HTML-страница с
-графиками, открой её в браузере.
+Slots: `file` = @reports/q1-signups.csv; `output` = an HTML page with charts,
+open it in the browser.
 
-## Почему работает
+## Why it works
 
-Разовый вопрос не требует разового скрипта. Указываешь на файл (паттерн 5:
-артефакт) и формат ответа (паттерн 6) - агент читает данные напрямую и
-кладёт результат туда, где ты им воспользуешься.
+A one-off question does not need a one-off script. You point at the file
+(pattern 5: the artifact) and the answer's format (pattern 6) - the agent reads
+the data directly and puts the result where you will use it.
 
-## Закрепить
+## How to escalate it
 
-Если источник данных постоянный - подключить его через MCP вместо экспорта
-файлов.
+If the data source is permanent, connect it through MCP instead of exporting
+files.

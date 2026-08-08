@@ -7,21 +7,22 @@ needs: []
 module: 03-store-deploy
 ---
 
-## Промпт
+## Prompt
 
 ```
-сравни {from} и {to} и составь release notes, сгруппированные по разделам:
-фичи, фиксы, breaking changes
+compare {from} and {to} and write release notes grouped into sections: features,
+fixes, breaking changes
 ```
 
-Слоты: `from` = v1.2.0; `to` = v1.3.0 (теги или коммиты).
+Slots: `from` = v1.2.0; `to` = v1.3.0 (tags or commits).
 
-## Почему работает
+## Why it works
 
-Две точки отсчёта плюс структура ответа (паттерны 4 и 6). Агент читает
-git-лог между ними и выдаёт черновик, который остаётся отредактировать -
-для "What's new" в сторах (модуль 03) это 90% работы.
+Two reference points plus the structure of the answer (patterns 4 and 6). The
+agent reads the git log between them and produces a draft you only have to edit
+- for a store's "What's new" (module 03) that is 90% of the work.
 
-## Закрепить
+## How to escalate it
 
-Сохранить как скилл /release-notes - кандидат Этапа 1.5-B кита.
+Save it as the /release-notes skill - it ships with the kit as one of the 14
+commands.

@@ -7,19 +7,20 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-что сломается, если я удалю {target}?
+what breaks if I delete {target}?
 ```
 
-Слот: `target` = хелпер retryWithBackoff.
+Slot: `target` = the retryWithBackoff helper.
 
-## Почему работает
+## Why it works
 
-Спрашивай ДО удаления. Список вызовов и последствий сразу показывает, что
-перед тобой: чистка на одну строку или изменение, которое надо координировать.
+Ask BEFORE deleting. The list of call sites and consequences immediately shows
+what you are dealing with: a one-line cleanup, or a change that needs
+coordinating.
 
-## Закрепить
+## How to escalate it
 
-Не требуется - разовый вопрос по месту.
+Not needed - a one-off question asked in place.

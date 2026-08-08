@@ -7,21 +7,23 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-найди все места, где мы говорим "{copy}" или близкий вариант, покажи каждое
-в контексте, затем обнови все на "{new}". тесты и changelog не трогай
+find every place where we say "{copy}" or something close to it, show me each
+one in context, then update them all to "{new}". leave tests and the changelog
+alone
 ```
 
-Слоты: `copy` = Зарегистрируйтесь бесплатно; `new` = Начать пробный период.
+Slots: `copy` = Sign up for free; `new` = Start your trial.
 
-## Почему работает
+## Why it works
 
-Просишь варианты и говоришь, что пропустить. Агент находит формулировки,
-которые буквальный поиск не поймает, и не трогает фикстуры тестов и историю -
-ревьюишь только копирайт, который видят пользователи.
+You ask for variants and say what to skip. The agent finds phrasings a literal
+search would miss and leaves test fixtures and history untouched - so you only
+review the copy users actually see.
 
-## Закрепить
+## How to escalate it
 
-Не требуется - разовая операция; при регулярных заменах превратить в скилл.
+Not needed - a one-off operation; if the replacements become regular, turn it
+into a skill.

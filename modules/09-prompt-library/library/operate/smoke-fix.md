@@ -7,24 +7,26 @@ needs: []
 module: 07-smoke-e2e
 ---
 
-## Промпт
+## Prompt
 
 ```
-smoke-тест {test} падает - выясни почему и почини. если сломан сам тест,
-чини тест; если он поймал реальный баг, чини код и скажи мне об этом явно
+the smoke test {test} is failing - find out why and fix it. if the test itself is
+broken, fix the test; if it caught a real bug, fix the code and tell me so
+explicitly
 ```
 
-Слот: `test` = auth.spec.ts "логин с валидными данными".
+Slot: `test` = auth.spec.ts "login with valid credentials".
 
-## Почему работает
+## Why it works
 
-Описываешь симптом, не зная, какой файл сломан. Агент запускает тест, видит
-падение своими глазами и идёт по трейсу в исходники. Развилка "тест или код"
-названа заранее - иначе агент молча подгонит тест под сломанное поведение.
+You describe the symptom without knowing which file is broken. The agent runs
+the test, sees the failure with its own eyes and follows the trace into the
+sources. The "test or code" fork is named up front - otherwise the agent
+quietly bends the test to fit the broken behavior.
 
-Smoke-набор поставлен модулем 07 (Playwright, 5-8 сценариев).
+The smoke suite is installed by module 07 (Playwright, 5-8 scenarios).
 
-## Закрепить
+## How to escalate it
 
-Правило в CLAUDE.md: падение smoke никогда не чинится ослаблением ассерта
-без явного согласования.
+A rule in CLAUDE.md: a failing smoke test is never fixed by weakening an
+assertion without explicit agreement.

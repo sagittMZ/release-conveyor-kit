@@ -7,20 +7,19 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-просмотри мои незакоммиченные изменения и отметь всё рискованное до того,
-как я закоммичу
+review my uncommitted changes and flag anything risky before I commit
 ```
 
-## Почему работает
+## Why it works
 
-Проблемы ловятся, пока они дёшевы. Агент читает изменённые файлы целиком,
-а не только строки диффа, поэтому видит то, что беглый самопросмотр
-пропускает.
+Problems are caught while they are cheap. The agent reads the changed files in
+full rather than only the diff lines, so it sees what a quick self-review
+misses.
 
-## Закрепить
+## How to escalate it
 
-`/code-review` делает ту же проверку одной командой; в конвейере ту же роль
-на стороне CI играет модуль 01 (lint + typecheck + tests на PR).
+`/code-review` runs the same check in one command; on the CI side the same role
+is played by module 01 (lint + typecheck + tests on every PR).

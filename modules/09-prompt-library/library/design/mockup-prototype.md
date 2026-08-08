@@ -7,27 +7,26 @@ needs: [browser]
 module: null
 ---
 
-## Промпт
+## Prompt
 
-Вставь или @-упомяни картинку макета, затем:
+Paste or @-mention the mockup image, then:
 
 ```
-вот макет. собери рабочий прототип, по которому можно кликать, повторив
-лейаут и состояния с картинки. потом открой его в моём браузере
+here is the mockup. build a working prototype I can click through, reproducing
+the layout and states from the image. then open it in my browser
 ```
 
-## Почему работает
+## Why it works
 
-Кликабельный прототип отвечает на вопросы, на которые статичный макет не
-может. Рабочий код отдаётся разработке вместо документа с описанием
-интеракций.
+A clickable prototype answers questions a static mockup cannot. Development
+receives working code instead of a document describing interactions.
 
-`needs: browser` - агенту нужен способ отрендерить и проверить результат:
-desktop-приложение Claude, Chrome-расширение или Playwright MCP. Без этого
-прототип соберётся, но самопроверки скриншотом не будет.
+`needs: browser` - the agent needs a way to render and check the result: the
+Claude desktop app, the Chrome extension, or Playwright MCP. Without one the
+prototype still gets built, but there is no screenshot self-check.
 
-## Закрепить
+## How to escalate it
 
-Для точного совпадения с макетом добавить в промпт: "сделай скриншот
-результата, сравни с оригиналом и исправь расхождения" - это даёт агенту
-петлю самопроверки (паттерн 2).
+For an exact match with the mockup, add to the prompt: "take a screenshot of the
+result, compare it with the original and fix the differences" - that gives the
+agent a self-check loop (pattern 2).

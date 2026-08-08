@@ -7,21 +7,20 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-подведи итог: что мы сделали за сессию, и предложи, что из этого стоит
-добавить в CLAUDE.md
+summarize what we did this session, and suggest what of it belongs in CLAUDE.md
 ```
 
-## Почему работает
+## Why it works
 
-Спрашиваешь, пока не забылось. Агент сам знает, что ему пришлось выяснять
-по ходу сессии, и предлагает записи, с которыми следующая сессия начнёт
-не с нуля.
+You ask while it is still fresh. The agent knows what it had to figure out
+along the way and proposes the notes that let the next session start from
+somewhere other than zero.
 
-## Закрепить
+## How to escalate it
 
-Сделать финальным ритуалом каждой рабочей сессии (в проектах владельца эту
-роль играет снапшот docs/.session-current.md - промпт дополняет его
-предложениями именно для CLAUDE.md).
+Make it the closing ritual of every working session (in the owner's projects
+that role is played by the docs/.session-current.md snapshot - this prompt
+complements it with suggestions aimed specifically at CLAUDE.md).

@@ -7,21 +7,21 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-перечисли состояния ошибок, пустые состояния и крайние случаи для {feature},
-которые должен покрыть дизайн
+list the error states, empty states and edge cases for {feature} that the design
+has to cover
 ```
 
-Слот: `feature` = флоу загрузки файлов.
+Slot: `feature` = the file upload flow.
 
-## Почему работает
+## Why it works
 
-Спрашиваешь про то, чего НЕ хватает, а не про то, что есть. Happy-path-дизайн
-стабильно пропускает ошибки и пустые экраны - этот список закрывает дыру до
-того, как её найдут пользователи.
+You ask about what is MISSING rather than what is there. Happy-path design
+reliably skips errors and empty screens - this list closes the gap before users
+find it.
 
-## Закрепить
+## How to escalate it
 
-Не требуется - вопрос по месту перед каждой фичей.
+Not needed - a question asked in place before each feature.

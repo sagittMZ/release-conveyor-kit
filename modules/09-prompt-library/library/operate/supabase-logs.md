@@ -7,26 +7,26 @@ needs: [db]
 module: 04-staging
 ---
 
-## Промпт
+## Prompt
 
 ```
-покажи все {events} по {scope} за {timeframe}. напиши запрос, выполни его
-и скажи, что выделяется
+show me every {events} for {scope} over {timeframe}. write the query, run it and
+tell me what stands out
 ```
 
-Слоты: `events` = неудачные логины; `scope` = auth-сервису;
-`timeframe` = последние 24 часа.
+Slots: `events` = failed login; `scope` = the auth service;
+`timeframe` = the last 24 hours.
 
-## Почему работает
+## Why it works
 
-Задаёшь вопрос вместо написания SQL. Агент строит запрос, гоняет его по
-подключённым логам и показывает И запрос, И результат - что именно
-выполнялось, можно проверить.
+You ask a question instead of writing SQL. The agent builds the query, runs it
+against the connected logs and shows you BOTH the query and the result - what
+was actually executed is verifiable.
 
-`needs: db` - нужен доступ к логам: Supabase MCP-коннектор или CLI.
-Смотри, в какой проект смотришь: prod или staging (модуль 04).
+`needs: db` - access to the logs is required: the Supabase MCP connector or the
+CLI. Watch which project you are looking at: prod or staging (module 04).
 
-## Закрепить
+## How to escalate it
 
-Подключить Supabase MCP один раз - дальше любые вопросы к логам и данным
-задаются по-русски без экспорта файлов.
+Connect Supabase MCP once - after that any question about logs and data is asked
+in plain language, with no file exports.

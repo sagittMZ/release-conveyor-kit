@@ -7,23 +7,22 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-создай для этого проекта скилл /{name}, который {steps}
+create a /{name} skill for this project that {steps}
 ```
 
-Слоты: `name` = ship; `steps` = гоняет линтер и тесты, затем готовит
-черновик сообщения коммита.
+Slots: `name` = ship; `steps` = runs the linter and the tests, then drafts a
+commit message.
 
-## Почему работает
+## Why it works
 
-Шаги называются один раз - дальше это команда. Ступень 3 лестницы
-закрепления: цепочка, которую ты повторил трижды, не должна печататься
-в четвёртый.
+The steps are named once and become a command. Rung 3 of the escalation ladder:
+a chain you have repeated three times should not be typed a fourth.
 
-## Закрепить
+## How to escalate it
 
-Скилл в `.claude/skills/` коммитится в репо - команда достаётся всем.
-Следующая ступень (хук) - когда действие должно происходить всегда и без
-запроса.
+A skill in `.claude/skills/` is committed to the repo, so the command reaches
+everyone. The next rung, a hook, is for when the action must happen always and
+without being asked.

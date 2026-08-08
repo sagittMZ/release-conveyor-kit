@@ -1,167 +1,184 @@
-# Раскатка блока А в проект (ТЗ для сессии проекта)
+# Rolling the stack-independent layer into a project
 
-Полное внедрение стеко-независимого слоя кита (модули **09 + 11 + 12**) в целевой
-проект. Исполняется агентом в сессии САМОГО проекта - он берёт исходники из кита
-и интегрирует их ОРГАНИЧНО, по конвенциям проекта, а не «кусками кита».
+Full installation of the kit's stack-independent layer (modules **09 + 11 + 12
++ 13**) into a target project. It is executed by an agent in the session of the
+TARGET project itself: the agent takes the sources from the kit and integrates
+them ORGANICALLY, following the project's own conventions, rather than dropping
+"pieces of the kit" into it.
 
-Путь к киту на машине задаётся один раз: `KIT=<путь-к-клону-кита>`
-(например `KIT=~/projects/release-conveyor-kit`). Ниже везде используется `$KIT`.
+Set the path to the kit once: `KIT=<path-to-your-clone-of-the-kit>` (for
+example `KIT=~/projects/release-conveyor-kit`). Everything below uses `$KIT`.
 
-**Что входит и почему только это:**
-- 09 (команды + меню), 11 (evals), 12 (консолидация памяти) - стеко-независимы.
-- 01-08 - релизный пайплайн под React/Vite/Supabase, к другим стекам не едут.
-- 10 (coverage-matrix) - не построен, только в бэклоге. Раскатывать нечего.
+**What is included, and why only this:**
+- 09 (commands + menu), 11 (evals), 12 (memory consolidation), 13 (arch-viz) are
+  stack-independent.
+- 01-08 are the release pipeline for React/Vite/Supabase and do not travel to
+  other stacks.
+- 10 (coverage-matrix) is not built, only backlogged. There is nothing to roll
+  out.
 
-Вставь промпт ниже в сессию проекта.
+Paste the prompt below into the target project's session.
 
-## Промпт раскатки (любой стек)
+## Rollout prompt (any stack)
 
 ```
-Внедри в этот проект стеко-независимый слой релиз-кита (модули 09+11+12) из:
-<путь-к-клону-кита>
+Install the release kit's stack-independent layer (modules 09+11+12+13) into
+this project from: <path-to-your-clone-of-the-kit>
 
-Цель: проект должен стать САМОДОСТАТОЧНЫМ и ОРГАНИЧНЫМ - никаких «кусков кита»,
-всё лежит по конвенциям проекта. Ничего из прикладного кода не трогай. Покажи
-git diff и жди моего слова перед коммитом.
+Goal: this project must end up SELF-SUFFICIENT and ORGANIC - no "pieces of the
+kit", everything placed by this project's conventions. Do not touch any
+application code. Show me the git diff and wait for my word before committing.
 
-KIT=<путь-к-клону-кита>
+KIT=<path-to-your-clone-of-the-kit>
 KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F)"
 
-0. ПРОВЕНАНС (сквозное правило): каждый копируемый артефакт получает штамп
-   $KIT_STAMP - иначе при 3+ проектах копии разъедутся без шанса это заметить.
-   Как штамповать - в шагах ниже; сверка потом: tools/prompt-kit/check-provenance.sh.
+0. PROVENANCE (rule that applies throughout): every copied artifact gets the
+   $KIT_STAMP stamp - otherwise, across three or more projects, the copies drift
+   apart with no way to notice. How to stamp is in the steps below; reconciling
+   later: tools/prompt-kit/check-provenance.sh.
 
-1. КОМАНДЫ (14) -> .claude/commands/ РЕАЛЬНЫМИ файлами (не симлинки на кит):
-   скопируй $KIT/modules/09-prompt-library/commands/*.md.
-   Список: spec, precommit, session-wrap, release-notes, security-scan,
+1. COMMANDS (14) -> .claude/commands/ as REAL files (not symlinks into the kit):
+   copy $KIT/modules/09-prompt-library/commands/*.md.
+   The list: spec, precommit, session-wrap, release-notes, security-scan,
    edge-cases, backlog, scope-triage, handoff, impl-plan, audit, eval-command,
    consolidate-memory, arch-viz.
-   В каждый скопированный файл добавь во frontmatter (после description:)
-   строку:  provenance: $KIT_STAMP
+   Into every copied file add this line to the frontmatter (after description:):
+   provenance: $KIT_STAMP
 
-2. МЕНЮ-БИБЛИОТЕКА -> docs/prompts/library/ этого проекта:
-   скопируй $KIT/modules/09-prompt-library/PATTERNS.md и .../library/.
-   ИДЕМПОТЕНТНОСТЬ: если docs/prompts/ уже занят (напр. большими PROMPT_*.md) -
-   НЕ затирай, клади меню в отдельный docs/prompts/library/, только мержь.
-   В PATTERNS.md и каждый файл library/ добавь ПЕРВОЙ строкой:
+2. MENU LIBRARY -> this project's docs/prompts/library/:
+   copy $KIT/modules/09-prompt-library/PATTERNS.md and .../library/.
+   IDEMPOTENCY: if docs/prompts/ is already taken (for example by large
+   PROMPT_*.md files), do NOT overwrite - put the menu into a separate
+   docs/prompts/library/ and merge only.
+   Add this as the FIRST line of PATTERNS.md and of every file in library/:
    <!-- provenance: $KIT_STAMP -->
 
-3. ГАЙД -> docs/prompt-kit-guide.md: скопируй $KIT/docs/prompt-kit-guide.md
-   (то же относительное место, что и в ките) и добавь первой строкой тот же
-   <!-- provenance: $KIT_STAMP -->
+3. GUIDE -> docs/prompt-kit-guide.md: copy $KIT/docs/prompt-kit-guide.md (the
+   same relative location it has in the kit) and add the same
+   <!-- provenance: $KIT_STAMP --> as its first line.
 
-4. ТУЛИНГ (харнесс evals/консолидации) -> tools/prompt-kit/ ВЕНДОРИНГОМ:
+4. TOOLING (the evals and consolidation harness) -> tools/prompt-kit/, VENDORED:
    tools/prompt-kit/
      lib-transcripts.sh            <- $KIT/modules/09-prompt-library/usage-digest/lib-transcripts.sh
      usage-digest.sh               <- $KIT/modules/09-prompt-library/usage-digest/usage-digest.sh
-     command-evals/                <- всё из $KIT/modules/11-command-evals/
+     command-evals/                <- everything from $KIT/modules/11-command-evals/
        (eval.sh, expectations.tsv, RUBRIC.md, cases/, judge/)
-     memory-consolidation/         <- consolidate.sh, DISTILL_RUBRIC.md из $KIT/modules/12-memory-consolidation/
-     arch-viz/                     <- template.html, build-arch-viz.sh, freshness-hook.sh, README.md, checklist.md из $KIT/modules/13-arch-viz/
+     memory-consolidation/         <- consolidate.sh, DISTILL_RUBRIC.md from $KIT/modules/12-memory-consolidation/
+     arch-viz/                     <- template.html, build-arch-viz.sh, freshness-hook.sh, README.md, checklist.md from $KIT/modules/13-arch-viz/
      check-provenance.sh           <- $KIT/modules/09-prompt-library/check-provenance.sh
-     PROVENANCE                    <- две строки:
+     PROVENANCE                    <- two lines:
                                       vendored from $KIT_STAMP
                                       kit path: $KIT
 
-5. ПОДГОНИ ПУТИ в двух скопированных мета-командах (.claude/commands/):
-   в eval-command.md и consolidate-memory.md замени префиксы путей харнесса:
-     modules/11-command-evals/      -> tools/prompt-kit/command-evals/
+5. FIX THE PATHS in the two copied meta-commands (.claude/commands/): in
+   eval-command.md and consolidate-memory.md replace the harness path prefixes:
+     modules/11-command-evals/        -> tools/prompt-kit/command-evals/
      modules/12-memory-consolidation/ -> tools/prompt-kit/memory-consolidation/
-   (Скрипты сами находят корень проекта через git и lib рядом с собой - править
-   их не надо, только ссылки в текстах команд.)
+   (The scripts locate the project root through git and their lib next to
+   themselves - they need no edits, only the references inside the command
+   texts do.)
 
-6. ПРОВОДКА -> секция в AI_WORKFLOW.md проекта (по иерархии - именно там, не в
-   CLAUDE.md; если AI_WORKFLOW.md нет - строку в CLAUDE.md):
-   "Prompt-kit слой: гайд docs/prompt-kit-guide.md; меню docs/prompts/library/
-   (начни с PATTERNS.md); тулинг tools/prompt-kit/. Слэш-команды: /spec /precommit
-   /session-wrap /release-notes /security-scan /edge-cases /backlog /scope-triage
-   /handoff /impl-plan /audit /eval-command /consolidate-memory /arch-viz."
+6. WIRING -> a section in the project's AI_WORKFLOW.md (that is where it belongs
+   in the hierarchy, not CLAUDE.md; if there is no AI_WORKFLOW.md, add a line to
+   CLAUDE.md):
+   "Prompt-kit layer: guide docs/prompt-kit-guide.md; menu docs/prompts/library/
+   (start with PATTERNS.md); tooling tools/prompt-kit/. Slash commands: /spec
+   /precommit /session-wrap /release-notes /security-scan /edge-cases /backlog
+   /scope-triage /handoff /impl-plan /audit /eval-command /consolidate-memory
+   /arch-viz."
 
-7. GITIGNORE (публикуемость): добавь в .gitignore проекта, если ещё нет:
+7. GITIGNORE (publishability): add to the project's .gitignore if not there yet:
    docs/evals/
    docs/consolidation/
-   (docs/evals/ - карточки evals, приватно и регенерируемо. Сырьё консолидации
-   по умолчанию пишется ВНЕ дерева, в <claude-config>/projects/<enc>/consolidation/
-   (база: CLAUDE_CONFIG_DIR, иначе ~/.claude - едино на всех платформах);
-   строка docs/consolidation/ - страховка на случай CONSOLIDATE_OUT_DIR-override.)
+   (docs/evals/ holds the eval scorecards - private and reproducible.
+   Consolidation raw material is written OUTSIDE the tree by default, into
+   <claude-config>/projects/<enc>/consolidation/ (base: CLAUDE_CONFIG_DIR,
+   otherwise ~/.claude - identical on every platform); the docs/consolidation/
+   line is insurance against a CONSOLIDATE_OUT_DIR override pointing inside.)
 
-7b. ARCH-VIZ WORKFLOW: скопируй $KIT/modules/13-arch-viz/templates/arch-viz.yml
-   в .github/workflows/arch-viz.yml и подгони conveyor-маркеры: ветка main,
-   путь builder-а (tools/prompt-kit/arch-viz/build-arch-viz.sh), пути исходников
-   для staleness (напр. src/). Первичную генерацию данных сделай командой
-   /arch-viz в сессии (LLM-шаг, не CI) и закоммить docs/arch/ вместе с раскаткой.
-   АВТОТРИГГЕР (главный контур, без участия владельца): добавь в
-   .claude/settings.json проекта (мержем, не затирая существующие hooks)
+7b. ARCH-VIZ WORKFLOW: copy $KIT/modules/13-arch-viz/templates/arch-viz.yml to
+   .github/workflows/arch-viz.yml and adjust the conveyor markers: the branch,
+   the builder path (tools/prompt-kit/arch-viz/build-arch-viz.sh) and the source
+   paths watched for staleness (for example src/). Generate the data the first
+   time with the /arch-viz command in a session (that is the LLM step, not CI)
+   and commit docs/arch/ together with the rollout.
+   AUTO-TRIGGER (the main loop, no owner involvement): add to the project's
+   .claude/settings.json (merging, without clobbering existing hooks)
    hooks.UserPromptSubmit -> command:
    ARCHVIZ_SRC_PATHS="src/" bash tools/prompt-kit/arch-viz/freshness-hook.sh
-   (пути = те же, что в workflow). Хук при устаревании сам ставит сессии
-   задачу обновить визуализацию в текущем ходе; нудж не чаще раза в сутки.
-   ЖЁСТКАЯ ГАРАНТИЯ СВЕЖЕСТИ (внешняя страховка, шаг владельца): положи в
-   Settings -> Secrets and variables -> Actions три секрета -
-   TELEGRAM_BOT_TOKEN (бот владельца), TELEGRAM_CHAT_ID (id форум-группы),
-   TELEGRAM_THREAD_ID (топик ЭТОГО проекта в форум-группе). Тогда CI при
-   устаревании визуализации шлёт пинг прямо в топик проекта (один раз на
-   эпизод). Проверка связки: Run workflow с test_notify=true.
+   (same paths as in the workflow). When the visualization goes stale the hook
+   gives the running session the task of refreshing it in the current turn; it
+   nudges at most once a day.
+   HARD FRESHNESS GUARANTEE (external backstop, an owner step): put three
+   secrets into Settings -> Secrets and variables -> Actions -
+   TELEGRAM_BOT_TOKEN (the owner's bot), TELEGRAM_CHAT_ID (the forum group id),
+   TELEGRAM_THREAD_ID (THIS project's topic in that forum group). CI then pings
+   the project's topic directly when the visualization is stale, once per
+   episode. To test the wiring: Run workflow with test_notify=true.
 
-8. БЛОК Б -> BACKLOG проекта (план масштабирования, НЕ реализовывать):
-   - Multi-agent оркестрация (координатор + параллельные sub-agents) - под широкие
-     декомпозируемые задачи (аудиты, research). Условие: появление таких задач.
-   - Облачные Managed Agents + Dreaming-as-service + hosted-evals - при
-     деньгах+масштабе и потребности в unattended-агентах.
+8. SCALING PLAN -> the project's BACKLOG (do NOT implement):
+   - Multi-agent orchestration (a coordinator plus parallel subagents) for wide
+     decomposable tasks (audits, research). Condition: such tasks appearing.
+   - Cloud managed agents + dreaming-as-a-service + hosted evals - when there is
+     money, scale, and a need for unattended agents.
 
-9. ВЕРИФИКАЦИЯ (прогони и покажи результат):
-   - bash tools/prompt-kit/command-evals/eval.sh --all  -> слой 1 = 100% по
-     13 командам кита (харнесс сам читает .claude/commands этого проекта);
-     СВОИ команды проекта попадут в раздел «вне ожиданий» - это норма, не
-     провал; чтобы включить их в скоринг, добавь им строки в
-     tools/prompt-kit/command-evals/expectations.tsv. Строка «слой 2» честно
-     скажет «не прогнан» - поведенческий прогон в целевом проекте по желанию
-     (/eval-command --judge);
-   - bash tools/prompt-kit/memory-consolidation/consolidate.sh --days 7  ->
-     создаёт material-<дата>.md в <claude-config>/projects/<enc>/consolidation/
-     (путь печатает сам скрипт) без ошибок, В ДЕРЕВЕ проекта файл не появляется;
-   - git status  -> чист от артефактов evals/консолидации (docs/evals/ скрыт
-     gitignore-ом, сырьё консолидации физически вне дерева);
-   - bash tools/prompt-kit/check-provenance.sh --strict  -> все артефакты со
-     штампом, дрейфа нет (свежая раскатка = на HEAD кита);
-   - машинный уровень обвязки на месте: инструменты из реестра владельца
-     отвечают на `--version` (если нет - поставить ДО работы в проекте);
-   - чек-листы: $KIT/modules/09-prompt-library/checklist.md,
+9. VERIFICATION (run it and show the result):
+   - bash tools/prompt-kit/command-evals/eval.sh --all -> layer 1 = 100% across
+     the kit's 14 commands (the harness reads this project's .claude/commands by
+     itself); this project's OWN commands land in the "outside expectations"
+     section - that is normal, not a failure; to bring them into scoring, add
+     rows for them to tools/prompt-kit/command-evals/expectations.tsv. The
+     "layer 2" line will honestly say "not run" - the behavioral pass in the
+     target project is optional (/eval-command --judge);
+   - bash tools/prompt-kit/memory-consolidation/consolidate.sh --days 7 ->
+     creates material-<date>.md in <claude-config>/projects/<enc>/consolidation/
+     (the script prints the path) without errors, and NO file appears inside the
+     project tree;
+   - git status -> clean of eval and consolidation artifacts (docs/evals/ hidden
+     by gitignore, consolidation raw material physically outside the tree);
+   - bash tools/prompt-kit/check-provenance.sh --strict -> every artifact
+     stamped, no drift (a fresh rollout sits on the kit's HEAD);
+   - the machine-level wrapping is in place: the tools in the owner's registry
+     answer to `--version` (if not, install them BEFORE working in the project);
+   - checklists: $KIT/modules/09-prompt-library/checklist.md,
      $KIT/modules/11-command-evals/checklist.md,
      $KIT/modules/12-memory-consolidation/checklist.md.
 
-10. ОТЧЁТ: что скопировано куда, результат верификации, что ушло в BACKLOG.
-    Стеко-специфичные команды оставь как есть (security-scan сам определит
-    Supabase; release-notes работает с любым git). Команде, которой в этом
-    проекте нечего делать, - отметь в отчёте, не удаляй. Жди моего слова перед
-    коммитом.
+10. REPORT: what was copied where, the verification results, what went to the
+    BACKLOG. Leave stack-specific commands as they are (security-scan detects
+    Supabase by itself; release-notes works with any git). If a command has
+    nothing to do in this project, note that in the report - do not delete it.
+    Wait for my word before committing.
 ```
 
-## Агентная среда проекта - принцип нулевой обвязки
+## The project's agent environment - the zero-wrapping principle
 
-Кит - аккумулятор принятых наработок: КАЖДЫЙ проект (новый или существующий)
-при обвязке получает весь принятый инфра-слой. Иначе находки теряются со
-сменой повестки. Два уровня:
+The kit is the accumulator of accepted improvements: EVERY project, new or
+existing, receives the whole accepted infrastructure layer when it is wrapped.
+Otherwise findings are lost as soon as attention moves on. Two levels:
 
-- **Проектный** (вендорится раскаткой в репо проекта): команды, меню, гайд,
-  тулинг (шаги 1-9), принятые плагины - через enabledPlugins в
-  `.claude/settings.json` проекта.
-- **Машинный** (ставится один раз на машину, раскатка только ПРОВЕРЯЕТ):
-  общий тулинг, локальные клоны-пины плагинов.
+- **Project level** (vendored into the project's repo by the rollout): commands,
+  menu, guide, tooling (steps 1-9), accepted plugins - through `enabledPlugins`
+  in the project's `.claude/settings.json`.
+- **Machine level** (installed once per machine; the rollout only VERIFIES it):
+  shared tooling, locally pinned plugin clones.
 
-Владелец кита ведёт свой **реестр обвязки** - таблицу «компонент / уровень /
-статус» - и держит её вне публичного репо (`docs/private/`), потому что это
-состояние конкретной машины и конкретных проектов, а не часть продукта.
-Шаблон строки: `| <компонент> | проект \| машина | в обвязке \| пилот до <дата> |`.
+The kit's owner keeps their own **wrapping registry** - a table of component /
+level / status - outside the public repository (`docs/private/`), because it is
+the state of one machine and one set of projects, not part of the product.
+Row template: `| <component> | project \| machine | in the wrapping \| pilot until <date> |`.
 
-Вход нового компонента в обвязку - только через вердикт пилота или аудит, не
-через хайп. Принято = добавлено в реестр и в промпт раскатки.
+A new component enters the registry only through a pilot verdict or an audit,
+never through enthusiasm. Accepted means added both to the registry and to the
+rollout prompt.
 
-## После раскатки
+## After the rollout
 
-- Через неделю-две - `tools/prompt-kit/usage-digest.sh`: что реально пошло в дело.
-- Обновление кита -> проекта: `bash tools/prompt-kit/check-provenance.sh` -
-  покажет отставание штампов от HEAD кита и какие исходники изменились;
-  перенеси нужные правки и обнови штампы (вендоринг, не submodule - проект
-  владеет своей копией).
-- Схема выше одинакова для всех проектов - это и есть «та же схема» раскатки.
+- A week or two later, run `tools/prompt-kit/usage-digest.sh`: what actually got
+  used.
+- Updating the kit -> the project: `bash tools/prompt-kit/check-provenance.sh`
+  shows how far the stamps lag behind the kit's HEAD and which sources changed;
+  port the changes you want and update the stamps (this is vendoring, not a
+  submodule - the project owns its copy).
+- The scheme above is identical for every project - that is the whole point of
+  having one.

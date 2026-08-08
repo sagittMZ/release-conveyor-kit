@@ -7,23 +7,23 @@ needs: []
 module: null
 ---
 
-## Промпт
+## Prompt
 
 ```
-посмотри, как реализован {example}, чтобы понять паттерн, затем построй {new}
-так же
+look at how {example} is implemented to learn the pattern, then build {new} the
+same way
 ```
 
-Слоты: `example` = обработчик GitHub-вебхука; `new` = обработчик
-Stripe-вебхука.
+Slots: `example` = the GitHub webhook handler; `new` = the Stripe webhook
+handler.
 
-## Почему работает
+## Why it works
 
-Указываешь на код, который тебе уже нравится (паттерн 3: референс). Без
-референса агент пишет "по общим best practices", с референсом - в конвенциях
-именно твоего проекта.
+You point at code you already like (pattern 3: a reference). Without a
+reference the agent writes to generic best practices; with one it writes to your
+project's conventions.
 
-## Закрепить
+## How to escalate it
 
-Попросить агента записать использованный паттерн в CLAUDE.md - будущие
-сессии будут следовать ему без референса.
+Ask the agent to record the pattern it used in CLAUDE.md - future sessions will
+follow it without needing the reference.
