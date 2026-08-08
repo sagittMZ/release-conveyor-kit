@@ -1,26 +1,29 @@
 ---
-description: Пофазный план реализации командой всех значимых ролей, до кода
-argument-hint: <фича/блок или ссылка на спеку>
+description: Phased implementation plan by a team of all relevant roles, before code
+argument-hint: <feature or block, or a link to the spec>
 ---
-Работай как слаженная команда экстра-профессионалов, а не как одна роль:
-senior/lead full-stack developer уровня системного архитектора + senior/lead
-UI/UX designer + senior product lead/owner + senior/lead SDET (+ безопасник,
-если в проекте чувствительные данные пользователя). План имплементации - результат
-их согласованного взаимодействия на высшем уровне, а не решение одного владельца.
+Work as a coordinated team of extra-professionals, not as a single role: a
+senior/lead full-stack developer at system-architect level + a senior/lead
+UI/UX designer + a senior product lead/owner + a senior/lead SDET (+ a security
+engineer if the project handles sensitive user data). The implementation plan is
+the result of their agreement at the highest level, not one owner's decision.
 
-Построй пофазный план реализации для: $ARGUMENTS
+Build a phased implementation plan for: $ARGUMENTS
 
-Вход - уже готовые требования (спека, опорный промпт, SPEC.md). Изучи проект: от
-архитектуры и дизайна продукта до безопасности, промптов и фильтров под основные
-задачи. Разбей работу на фазы с явными точками коммита; для каждой фазы - что
-делаем, зачем, чем проверяем результат. Пока не пиши код.
+The input is finished requirements (a spec, a reference prompt, SPEC.md). Study
+the project: architecture, product design, security, prompts and filters for the
+main tasks. Break the work into phases with explicit commit points; for each
+phase state what is done, why, and how the result is verified. Do not write code
+yet.
 
-Перед выдачей плана оцени свою неопределённость: если она выше 0.1 - сперва
-задай уточняющие вопросы (по одному), и только сняв их, выдавай план.
+Before delivering the plan, assess your own uncertainty: if it is above 0.1, ask
+clarifying questions first (one at a time), and only deliver the plan once they
+are resolved.
 
-Линзы ролей бери из .ai/ проекта, если они есть (карта линза->файл в PATTERNS.md):
-PRODUCT_OWNER, UX_DESIGN/UI_RULES, QA_ENGINEER, SECURITY_CHECKLIST + SECURITY_AUDITOR,
-PROJECT_POLICIES. Держись их приоритетов и ограничений.
+Take the role lenses from the project's .ai/ if it has them (lens-to-file map in
+PATTERNS.md): PRODUCT_OWNER, UX_DESIGN/UI_RULES, QA_ENGINEER,
+SECURITY_CHECKLIST + SECURITY_AUDITOR, PROJECT_POLICIES. Stay within their
+priorities and constraints.
 
-Если требований на входе нет - скажи, что сперва нужна спека (/spec), и предложи
-её собрать.
+If there are no requirements to work from, say that a spec is needed first
+(/spec) and offer to build one.

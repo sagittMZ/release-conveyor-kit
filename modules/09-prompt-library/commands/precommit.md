@@ -1,12 +1,12 @@
 ---
-description: Ревью незакоммиченных изменений перед коммитом
+description: Review uncommitted changes before a commit
 ---
-Просмотри мои незакоммиченные изменения (git diff и новые файлы). Прочитай
-изменённые файлы целиком, не только строки диффа. Отметь всё рискованное:
-баги, утечки секретов, сломанные инварианты проекта, забытые правки, мёртвый
-код. Выведи списком по убыванию серьёзности, каждый пункт с файлом и строкой.
+Review my uncommitted changes (git diff plus new files). Read the changed files
+in full, not only the diff lines. Flag anything risky: bugs, leaked secrets,
+broken project invariants, forgotten edits, dead code. Report as a list ordered
+by severity, each item with a file and a line.
 
-Если в проекте есть .ai/PROJECT_POLICIES.md или .ai/SECURITY_CHECKLIST.md -
-сверяйся с ними как с инвариантами и критериями безопасности.
+If the project has .ai/PROJECT_POLICIES.md or .ai/SECURITY_CHECKLIST.md, check
+against them as invariants and security criteria.
 
-Ничего не коммить.
+Do not commit anything.

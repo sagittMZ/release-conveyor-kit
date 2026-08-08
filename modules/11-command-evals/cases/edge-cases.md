@@ -1,23 +1,24 @@
 # Cases: /edge-cases
-# Выдуманные примеры (публикуемость). Каждый кейс: вход ($ARGUMENTS) + ожидаемые
-# свойства хорошего ответа (expect) и анти-свойства (avoid).
+# Invented examples (so they are safe to publish). Each case: the input
+# ($ARGUMENTS) plus the properties a good answer must have (expect) and the
+# anti-properties it must not have (avoid).
 
-## case: экспорт отчёта в PDF
-input: экспорт месячного отчёта пользователя в PDF по кнопке
+## case: export a report to PDF
+input: exporting a user's monthly report to PDF from a button
 expect:
-- ответ сгруппирован по категориям (ввод/валидация, сеть/загрузка, права/доступ, пустые/граничные данные, гонки/повторы)
-- есть пустое состояние (нет данных за период)
-- есть случай прав доступа (запрос чужого отчёта)
-- есть сетевой/таймаут-случай для генерации файла
+- the answer is grouped by category (input/validation, network/loading, permissions/access, empty/boundary data, races/retries)
+- an empty state is covered (no data for the period)
+- a permissions case is covered (requesting somebody else's report)
+- a network or timeout case is covered for the file generation
 avoid:
-- писать код или конкретную реализацию
-- скатываться в happy-path без ошибок и пустых состояний
+- writing code or a concrete implementation
+- drifting into the happy path with no errors and no empty states
 
-## case: загрузка аватара
-input: загрузка аватара профиля с кропом
+## case: avatar upload
+input: uploading a profile avatar with cropping
 expect:
-- граничные данные (слишком большой файл, неподдерживаемый формат)
-- сеть/загрузка (обрыв аплоада, повтор)
-- пустое/дефолтное состояние (нет аватара)
+- boundary data (file too large, unsupported format)
+- network and loading (upload interrupted, retry)
+- an empty or default state (no avatar)
 avoid:
-- код
+- code

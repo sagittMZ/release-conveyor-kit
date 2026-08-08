@@ -1,16 +1,18 @@
-# Чек-лист верификации: 11-command-evals
+# Verification checklist: 11-command-evals
 
-1. `bash modules/11-command-evals/eval.sh --all` печатает карточку баллов по
-   всем командам и завершается без ошибок.
-2. На чистом наборе команд слой 1 даёт 100% (`--strict` -> код выхода 0). Если
-   меньше 100% - проваленные проверки перечислены с именем команды и причиной.
-3. Регресс ловится: временно внеси em-dash в любую команду - балл этой команды
-   падает, `--strict` -> код выхода 1; после отката снова 100%.
-4. Базлайн/дельта: `eval.sh --all --baseline` фиксирует базлайн; следующий
-   прогон показывает колонку дельты (`d:=` без изменений, `d:-N` регресс).
-5. Каждая команда в `modules/09-prompt-library/commands/` имеет строку в
-   `expectations.tsv` (команда без строки - FAIL «нет ожиданий»).
-6. Артефакты не в гите: `git status` не показывает `docs/evals/` (каталог в
-   `.gitignore`).
-7. Ранжирование по использованию: при наличии транскриптов колонка `use=` у
-   часто вызываемых команд больше, они выше в списке.
+1. `bash modules/11-command-evals/eval.sh --all` prints a scorecard for every
+   command and exits without errors.
+2. On a clean set of commands layer 1 gives 100% (`--strict` -> exit code 0).
+   Below 100%, every failed check is listed with the command name and the
+   reason.
+3. Regressions are caught: temporarily put an em dash into any command - that
+   command's score drops and `--strict` exits 1; after reverting, 100% again.
+4. Baseline and delta: `eval.sh --all --baseline` records the baseline; the next
+   run shows the delta column (`d:=` unchanged, `d:-N` regression).
+5. Every command in `modules/09-prompt-library/commands/` has a row in
+   `expectations.tsv` (a command without one is a deliberate FAIL, "no
+   expectations").
+6. Artifacts stay out of git: `git status` does not show `docs/evals/` (the
+   directory is in `.gitignore`).
+7. Ranking by usage: when transcripts are available, frequently invoked commands
+   show a higher `use=` count and sort to the top.

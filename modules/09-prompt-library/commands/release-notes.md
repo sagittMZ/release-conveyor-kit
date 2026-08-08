@@ -1,10 +1,10 @@
 ---
-description: Release notes между двумя точками, сгруппированные по типу
+description: Release notes between two points, grouped by type
 argument-hint: <from-ref> <to-ref>
 ---
-Сравни $1 и $2 (теги или коммиты) и составь release notes на основе git-лога
-между ними. Сгруппируй по разделам: Новое, Исправления, Breaking changes.
-Пиши от лица продукта, кратко, готово к вставке в "What's new" сторов.
+Compare $1 and $2 (tags or commits) and write release notes from the git log
+between them. Group into: New, Fixes, Breaking changes. Write in the product's
+voice, briefly, ready to paste into a store's "What's new".
 
-Если $1 или $2 не заданы - возьми два последних тега (git tag --sort=-creatordate)
-и скажи, какие взял.
+If $1 or $2 is not given, take the two most recent tags
+(git tag --sort=-creatordate) and say which ones you took.

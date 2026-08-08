@@ -1,23 +1,26 @@
 ---
-description: Дистилляция собранного сырья памяти в ревьюабельный DRAFT
+description: Distill collected memory raw material into a reviewable DRAFT
 ---
-Каталог консолидации проекта (единое правило для всех проектов и платформ):
-`<claude-config>/projects/<enc>/consolidation/`, где база = `$CLAUDE_CONFIG_DIR`
-или `~/.claude`, а `<enc>` - абсолютный путь корня репо с заменой `/` на `-`
-(та же схема, что у памяти; вычислить:
+The project's consolidation directory (one rule across all projects and
+platforms): `<claude-config>/projects/<enc>/consolidation/`, where the base is
+`$CLAUDE_CONFIG_DIR` or `~/.claude`, and `<enc>` is the absolute path of the
+repo root with `/` replaced by `-` (the same scheme memory uses; compute it
+with:
 `echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(git rev-parse --show-toplevel | sed 's#/#-#g')/consolidation"`).
-Сырьё и DRAFT живут там, ВНЕ git-дерева: в них приватные снапшоты и промпты.
+Raw material and DRAFTs live there, OUTSIDE the git tree: they contain private
+snapshots and prompts.
 
-Прочитай самый свежий material-<дата>.md из этого каталога (если его нет -
-скажи прогнать modules/12-memory-consolidation/consolidate.sh, он соберёт сырьё).
-Дистиллируй сырьё в структурированные инсайты строго по
+Read the most recent material-<date>.md from that directory (if there is none,
+say to run modules/12-memory-consolidation/consolidate.sh, which collects the
+raw material). Distill it into structured insights strictly per
 modules/12-memory-consolidation/DISTILL_RUBRIC.md.
 
-Оформи результат как ПРЕДЛОЖЕННЫЙ дифф в DRAFT-<дата>.md в том же каталоге с
-секциями «Добавить», «Обновить», «Противоречия»: что внести в память или .ai/,
-что смержить с существующим, где расхождение с текущими записями. Относительные
-даты приводи к абсолютным, дедупь против того, что уже есть, ставь источник.
-Путь созданного DRAFT назови в ответе явно.
+Present the result as a PROPOSED diff in DRAFT-<date>.md in the same directory,
+with sections "Add", "Update" and "Conflicts": what to write into memory or
+.ai/, what to merge with what is already there, and where it disagrees with
+existing records. Convert relative dates to absolute ones, deduplicate against
+what already exists, cite the source. State the path of the created DRAFT
+explicitly in your answer.
 
-Ничего не меняй в MEMORY.md, файлах памяти или .ai/ напрямую - только DRAFT.
-Я прочитаю DRAFT и приму или помержу вручную.
+Do not change MEMORY.md, the memory files or .ai/ directly - only the DRAFT.
+I will read the DRAFT and accept or merge it by hand.

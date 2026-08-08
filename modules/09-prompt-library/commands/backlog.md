@@ -1,17 +1,18 @@
 ---
-description: Занести задачу в бэклог или ранжировать бэклог по приоритету
-argument-hint: <задача, либо "приоритеты" для ранжирования>
+description: File a task into the backlog, or rank the backlog by priority
+argument-hint: <task, or "priorities" to rank>
 ---
-Если $ARGUMENTS - это задача: заведи её в бэклог проекта по его конвенции
-(docs/backlog/ или BACKLOG.md) - кратко и структурно: суть, зачем, 2-3 варианта
-решения. Реализацию не начинай.
+If $ARGUMENTS is a task: file it into the project's backlog following the
+project's own convention (docs/backlog/ or BACKLOG.md) - short and structured:
+what it is, why, 2-3 possible approaches. Do not start the implementation.
 
-Если $ARGUMENTS = "приоритеты" (или пусто, а бэклог уже существует): пройди по
-бэклогу и выдай список в порядке убывания приоритета - коротко, сюда в чат.
+If $ARGUMENTS is "priorities" (or empty and a backlog already exists): walk the
+backlog and return it ordered by descending priority - briefly, here in chat.
 
-Гигиена: сделанное переезжает из бэклога в реестр фич проекта, если он есть.
+Hygiene: anything done moves out of the backlog into the project's feature
+registry, if it has one.
 
-Если в проекте есть .ai/PRODUCT_OWNER.md или .ai/PROJECT_POLICIES.md - держись
-их приоритетов и конвенций.
+If the project has .ai/PRODUCT_OWNER.md or .ai/PROJECT_POLICIES.md, stay within
+their priorities and conventions.
 
-Если непонятно, задачу заводить или ранжировать - спроси.
+If it is unclear whether to file or to rank, ask.

@@ -1,32 +1,34 @@
 ---
-description: Обновить интерактивную визуализацию архитектуры (данные + HTML)
+description: Refresh the interactive architecture visualization (data + HTML)
 ---
-Проанализируй в глубину код и структуру этого репозитория и актуализируй
-архитектурную визуализацию (модуль 13 кита).
+Analyze this repository's code and structure in depth and bring the
+architecture visualization up to date (module 13 of the kit).
 
-1. ДАННЫЕ (канонический язык - АНГЛИЙСКИЙ, это публичный артефакт
-   портфолио): обнови docs/arch/arch-data.json по схеме из README модуля
-   (в ките modules/13-arch-viz/README.md, в вендоренном проекте
+1. DATA (canonical language is ENGLISH - this is a public portfolio artifact):
+   update docs/arch/arch-data.json per the schema in the module README (in the
+   kit modules/13-arch-viz/README.md, in a vendored project
    tools/prompt-kit/arch-viz/README.md): meta (project, updated, commit),
-   groups (слои с цветами), nodes (id, label, group, desc, files, tech),
-   edges (from, to, label, kind), flows (ключевые потоки с шагами по нодам).
-   Если файл уже есть - обнови его инкрементально: сохрани прижившиеся id
-   (на них завязаны сохранённые позиции), добавь новое, удали исчезнувшее,
-   поправь описания. Держи граф обозримым: 20-60 нод, компонент = модуль или
-   связная единица, не каждый файл.
+   groups (layers with colors), nodes (id, label, group, desc, files, tech),
+   edges (from, to, label, kind), flows (key flows with steps across nodes).
+   If the file already exists, update it incrementally: keep the ids that
+   stuck (saved positions are bound to them), add what is new, drop what is
+   gone, fix the descriptions. Keep the graph readable: 20-60 nodes, a
+   component is a module or a coherent unit, not every file.
 
-2. ПРИВАТНОСТЬ: в данные попадает только то, что есть в самом репозитории.
-   Никаких абсолютных путей машины, имён других проектов и личных данных.
+2. PRIVACY: only what exists in the repository itself goes into the data. No
+   absolute machine paths, no names of other projects, no personal data.
 
-3. СБОРКА: прогони build-arch-viz.sh (в ките modules/13-arch-viz/, в
-   вендоренном проекте tools/prompt-kit/arch-viz/) - он валидирует инварианты
-   и соберёт самодостаточный docs/arch/index.html. Ошибки инвариантов исправь
-   в данных и пересобери.
+3. BUILD: run build-arch-viz.sh (in the kit modules/13-arch-viz/, in a vendored
+   project tools/prompt-kit/arch-viz/) - it validates the invariants and builds
+   a self-contained docs/arch/index.html. Fix invariant errors in the data and
+   rebuild.
 
-4. РУССКАЯ ВЕРСИЯ (опционально, если просят или файл уже есть в
-   docs/arch/arch-data.ru.json): обнови её переводом канонических данных
-   (meta.lang: ru) и собери --data docs/arch/arch-data.ru.json
-   --out docs/arch/index.ru.html. Эти файлы в .gitignore - не коммить.
+4. TRANSLATED VERSION (optional, if asked for or if
+   docs/arch/arch-data.<lang>.json already exists): update it by translating
+   the canonical data (meta.lang) and build with
+   --data docs/arch/arch-data.<lang>.json --out docs/arch/index.<lang>.html.
+   Those files are git-ignored - do not commit them.
 
-5. ОТЧЁТ: покажи сводку - сколько нод/рёбер/потоков, что добавилось или
-   ушло относительно прошлой версии данных, и путь к собранному HTML.
+5. REPORT: show a summary - how many nodes/edges/flows, what was added or
+   removed relative to the previous version of the data, and the path to the
+   built HTML.

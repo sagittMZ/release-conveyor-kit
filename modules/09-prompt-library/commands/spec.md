@@ -1,15 +1,15 @@
 ---
-description: Интервью по фиче, затем запись спеки в SPEC.md
-argument-hint: <что за фича>
+description: Interview about a feature, then write the spec to SPEC.md
+argument-hint: <what the feature is>
 ---
-Я хочу построить: $ARGUMENTS
+I want to build: $ARGUMENTS
 
-Интервьюируй меня про реализацию, UX, крайние случаи и трейдоффы. Задавай
-вопросы по одному, пока не покроем всё. Когда требования полны - запиши
-результат в SPEC.md. Пока не пиши код.
+Interview me about implementation, UX, edge cases and trade-offs. Ask one
+question at a time until everything is covered. When the requirements are
+complete, write the result to SPEC.md. Do not write code yet.
 
-Если в проекте есть .ai/PRODUCT_OWNER.md или .ai/PROJECT_POLICIES.md -
-прочитай их и держись их приоритетов и ограничений (это моя продуктовая роль
-и правила проекта).
+If the project has .ai/PRODUCT_OWNER.md or .ai/PROJECT_POLICIES.md, read them
+and stay within their priorities and constraints (those are my product role and
+the project's rules).
 
-Если фича выше не задана - спроси, что специфицировать, и начни интервью.
+If the feature above is not given, ask what to specify and start the interview.

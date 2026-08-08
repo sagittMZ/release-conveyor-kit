@@ -1,15 +1,14 @@
 ---
-description: Аналитическая записка по проекту - разбор под ролевыми линзами
-argument-hint: <область, опц.>
+description: Analytical note on the project - a review through role lenses
+argument-hint: <area, optional>
 ---
-Сделай глубокий разбор проекта ($ARGUMENTS если задана область, иначе весь
-проект): архитектура, дизайн продукта, тесты, промпты и конфиги - что уместно.
-Смотри под несколькими ролевыми линзами (продакт, QA, безопасность - карта
-линза->.ai/ в PATTERNS.md).
+Do a deep review of the project ($ARGUMENTS if an area is given, otherwise the
+whole project): architecture, product design, tests, prompts and configs -
+whatever is relevant. Look through several role lenses (product, QA, security -
+lens-to-.ai/ map in PATTERNS.md).
 
-На выходе - аналитическая записка в docs/ отдельным .md (диагностика, оценка,
-рекомендации по приоритету), а сюда в чат - краткое саммари. Ничего не меняй в
-коде: это разбор, не правка.
+The output is an analytical note in docs/ as its own .md file (diagnosis,
+assessment, recommendations by priority), plus a short summary here in chat.
+Do not change anything in the code: this is a review, not an edit.
 
-Если в проекте есть .ai/-файлы соответствующих ролей - опирайся на них как на
-критерии.
+If the project has .ai/ files for the relevant roles, use them as criteria.

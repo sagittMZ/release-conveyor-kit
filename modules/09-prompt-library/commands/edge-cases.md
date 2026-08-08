@@ -1,15 +1,15 @@
 ---
-description: Состояния ошибок, пустые состояния и крайние случаи для фичи
-argument-hint: <что за фича/флоу>
+description: Error states, empty states and edge cases for a feature
+argument-hint: <the feature or flow>
 ---
-Для: $ARGUMENTS
+For: $ARGUMENTS
 
-Перечисли состояния ошибок, пустые состояния и крайние случаи, которые
-happy-path-реализация обычно пропускает. Сгруппируй по: ввод и валидация,
-сеть и загрузка, права и доступ, пустые и граничные данные, гонки и повторы.
-Не пиши код - это чек-лист для дизайна и тестов.
+List the error states, empty states and edge cases a happy-path implementation
+usually misses. Group them by: input and validation, network and loading,
+permissions and access, empty and boundary data, races and retries.
+Do not write code - this is a checklist for design and tests.
 
-Если в проекте есть .ai/QA_ENGINEER.md - сверься с ним и учти его требования
-к тестовому покрытию и крайним случаям.
+If the project has .ai/QA_ENGINEER.md, check against it and honor its
+requirements for test coverage and edge cases.
 
-Если фича не задана - спроси, для чего строить список.
+If the feature is not given, ask what to build the list for.

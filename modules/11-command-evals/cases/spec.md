@@ -1,20 +1,21 @@
 # Cases: /spec
-# Выдуманные примеры. /spec ведёт интервью, потом пишет SPEC.md. Оцениваем ПЕРВЫЙ
-# ответ команды (начало интервью), не финальную спеку.
+# Invented examples. /spec runs an interview and only then writes SPEC.md. We
+# score the command's FIRST answer (the start of the interview), not the final
+# spec.
 
-## case: тёмная тема
-input: добавить тёмную тему в настройки приложения
+## case: dark theme
+input: add a dark theme to the app settings
 expect:
-- команда НАЧИНАЕТ интервью: задаёт уточняющие вопросы
-- вопросы идут по одному (не вываливает список из 15 сразу)
-- покрывает реализацию/UX/крайние случаи/трейдоффы по ходу
+- the command STARTS an interview: it asks clarifying questions
+- questions come one at a time (not a dump of fifteen at once)
+- implementation, UX, edge cases and trade-offs get covered as it goes
 avoid:
-- сразу писать код
-- сразу выдавать готовый SPEC.md, не спросив ничего
+- writing code immediately
+- producing a finished SPEC.md without asking anything
 
-## case: без аргумента
+## case: no argument
 input:
 expect:
-- спрашивает, что специфицировать, и начинает интервью
+- asks what to specify and starts the interview
 avoid:
-- молча ничего не делать или писать код
+- silently doing nothing, or writing code

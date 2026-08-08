@@ -1,24 +1,25 @@
 # Cases: /impl-plan
-# Выдуманная готовая спека во входе. Проверяем пофазный план + гейт неопределённости.
+# An invented finished spec as the input. We check the phased plan and the
+# uncertainty gate.
 
-## case: план по готовой спеке
+## case: a plan from a finished spec
 input: |
-  Спека готова: добавить экспорт списка задач в CSV. Кнопка на странице списка,
-  экспортирует текущие отфильтрованные задачи, файл tasks-YYYY-MM-DD.csv,
-  колонки: название, статус, срок. Права: только свои задачи.
+  The spec is ready: add CSV export of the task list. A button on the list page
+  exports the currently filtered tasks into tasks-YYYY-MM-DD.csv with columns
+  title, status, due date. Permissions: own tasks only.
 expect:
-- пофазный план с явными точками коммита
-- у каждой фазы: что делаем, зачем, чем проверяем
-- смотрит командой ролей (не только product owner)
-- НЕ пишет код
+- a phased plan with explicit commit points
+- for each phase: what is done, why, and how it is verified
+- looks through a team of roles, not only the product owner
+- does NOT write code
 avoid:
-- писать код сразу
-- решать всё как один owner без архитектора/QA/UX
+- writing code straight away
+- deciding everything as a single owner, with no architect, QA or UX lens
 
-## case: неполные требования - гейт неопределённости
-input: сделай уведомления
+## case: incomplete requirements - the uncertainty gate
+input: build notifications
 expect:
-- неопределённость высокая -> сперва задаёт уточняющие вопросы (по одному), не выдаёт план вслепую
+- uncertainty is high, so it asks clarifying questions first (one at a time) instead of producing a plan blindly
 avoid:
-- выдавать детальный план по домыслам, не спросив ничего
-- писать код
+- producing a detailed plan from assumptions without asking anything
+- writing code

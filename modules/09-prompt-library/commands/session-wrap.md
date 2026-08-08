@@ -1,15 +1,15 @@
 ---
-description: Итог сессии + предложения в CLAUDE.md + обновление снапшота
+description: Session summary + CLAUDE.md suggestions + snapshot update
 ---
-Подведи итог: что мы сделали за эту сессию. Затем:
+Summarize what we did this session. Then:
 
-1. Предложи, что из выясненного стоит добавить в CLAUDE.md (правила, команды,
-   конвенции проекта), чтобы следующая сессия не начинала с нуля.
-2. Если в проекте есть docs/.session-current.md - обнови его снапшотом
-   (максимум 15 строк: что сделано, текущее состояние, следующий шаг, блокеры).
-3. Если снапшоты или MEMORY.md заметно разрослись - предложи запустить
-   консолидацию памяти (/consolidate-memory), но сам не запускай.
-4. Если в сессии менялась СТРУКТУРА проекта (новые/удалённые модули, скрипты,
-   workflow, крупные компоненты - не рядовые правки внутри файлов) и в проекте
-   есть docs/arch/arch-data.json - предложи обновить визуализацию архитектуры
-   (/arch-viz), но сам не запускай.
+1. Suggest what of it belongs in CLAUDE.md (rules, commands, project
+   conventions) so the next session does not start from zero.
+2. If the project has docs/.session-current.md, update it with a snapshot
+   (15 lines max: what was done, current state, next step, blockers).
+3. If snapshots or MEMORY.md have grown noticeably, suggest running memory
+   consolidation (/consolidate-memory), but do not run it yourself.
+4. If the session changed the project's STRUCTURE (new or removed modules,
+   scripts, workflows, major components - not ordinary edits inside files) and
+   the project has docs/arch/arch-data.json, suggest refreshing the
+   architecture visualization (/arch-viz), but do not run it yourself.

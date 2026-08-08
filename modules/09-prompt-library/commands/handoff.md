@@ -1,15 +1,17 @@
 ---
-description: Запускающий промпт для новой сессии - передача контекста
-argument-hint: <что взять следующим, опц.>
+description: Kickoff prompt for a new session - handing over context
+argument-hint: <what to take next, optional>
 ---
-Собери исполнимый вводный промпт для СВЕЖЕЙ сессии агента, который продолжит
-работу с чистого контекста. Включи: что уже сделано (кратко, с коммитами), что
-отложено и почему, какой блок брать следующим ($ARGUMENTS если задан приоритет),
-ссылки на нужные доки и роли (.ai/, docs/). Промпт должен быть самодостаточным -
-новый агент входит в контекст, не читая всю историю.
+Assemble an executable kickoff prompt for a FRESH agent session that will
+continue this work from a clean context. Include: what is already done (briefly,
+with commits), what is deferred and why, which block to take next
+($ARGUMENTS if a priority is given), links to the docs and roles that matter
+(.ai/, docs/). The
+prompt must be self-sufficient - a new agent gets into context without reading
+the whole history.
 
-Выведи промпт сюда в чат; если в проекте есть docs/NEW_SESSION_PROMPT.md -
-предложи обновить его этим промптом.
+Output the prompt here in chat; if the project has docs/NEW_SESSION_PROMPT.md,
+offer to update it with this prompt.
 
-Это не снапшот состояния (для него /session-wrap) и не план фичи (для него
-/impl-plan) - это передача работы через границу сессии.
+This is not a state snapshot (that is /session-wrap) and not a feature plan
+(that is /impl-plan) - it is handing work across a session boundary.

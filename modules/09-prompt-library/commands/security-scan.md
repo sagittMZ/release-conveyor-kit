@@ -1,16 +1,16 @@
 ---
-description: Ревью безопасности пути субагентом
-argument-hint: <путь, напр. src/api/>
+description: Security review of a path, run by a subagent
+argument-hint: <path, e.g. src/api/>
 ---
-Запусти субагент, который проверит $ARGUMENTS на проблемы безопасности:
-захардкоженные секреты, инъекции, ошибки контроля доступа, небезопасные
-дефолты. Если проект на Supabase - дополнительно проверь обход RLS и
-использование service role key в пользовательских флоу.
+Launch a subagent to review $ARGUMENTS for security problems: hardcoded
+secrets, injection, access control mistakes, unsafe defaults. If the project
+uses Supabase, additionally check for RLS bypasses and service role key usage
+in user-facing flows.
 
-Если в проекте есть .ai/SECURITY_CHECKLIST.md или .ai/SECURITY_AUDITOR.md -
-сверяйся с ними как с критериями (это моя регуляторка безопасности).
+If the project has .ai/SECURITY_CHECKLIST.md or .ai/SECURITY_AUDITOR.md, check
+against them as criteria (those are my security rules).
 
-Доложи находки списком по убыванию серьёзности, каждая с файлом, строкой и
-как чинить. Ничего не меняй без моего явного слова.
+Report findings as a list ordered by severity, each with a file, a line and how
+to fix it. Do not change anything without my explicit word.
 
-Если путь не задан - проверь основной код приложения (src/ или аналог).
+If no path is given, review the main application code (src/ or equivalent).

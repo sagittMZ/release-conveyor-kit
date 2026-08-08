@@ -1,19 +1,19 @@
 # Cases: /scope-triage
-# Выдуманный скоуп во входе. Проверяем приоритизацию с учётом связанности.
+# An invented scope as the input. We check prioritization with coupling.
 
-## case: связанность поднимает приоритет
+## case: coupling raises priority
 input: |
-  Бэклог (выдуманный):
-  1. [высокий] Ввести таблицу sessions в БД
-  2. [низкий] Экран истории входов пользователя (читает sessions)
-  3. [высокий] Оптимизировать главную страницу
-  4. [средний] Рефактор навигации
-  5. [низкий] Поправить опечатку в футере
+  Backlog (invented):
+  1. [high] Introduce a sessions table in the database
+  2. [low] A user login history screen (reads sessions)
+  3. [high] Optimize the landing page
+  4. [medium] Refactor navigation
+  5. [low] Fix a typo in the footer
 expect:
-- выделяет 2-3 БЛОКА взаимосвязанных задач (напр. 1+2 связаны через sessions)
-- задача 2 (низкий) поднимается по приоритету из-за связи с задачей 1 (высокий) - это явно объяснено
-- итоговый список в порядке убывания приоритета с учётом выравнивания
-- несвязанные мелочи (5) не тащатся в топ-блоки
+- picks out 2-3 BLOCKS of coupled tasks (for example 1+2 are coupled through sessions)
+- task 2 (low) is raised in priority because of its coupling to task 1 (high), and this is stated explicitly
+- the final list is ordered by descending priority, adjusted for coupling
+- unrelated small items (5) are not dragged into the top blocks
 avoid:
-- начинать реализацию
-- игнорировать связанность и сортировать чисто по исходному приоритету
+- starting the implementation
+- ignoring coupling and sorting purely by the original priority

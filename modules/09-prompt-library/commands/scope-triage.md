@@ -1,17 +1,17 @@
 ---
-description: Приоритизация скоупа с учётом связанности - топ 2-3 блока задач
-argument-hint: <область/скоуп, опц.>
+description: Scope prioritization with coupling in mind - the top 2-3 blocks
+argument-hint: <area or scope, optional>
 ---
-Проанализируй текущий скоуп проекта ($ARGUMENTS если задано, иначе весь бэклог
-или открытые задачи) на приоритеты И взаимосвязанности. Вытащи первые по
-приоритету 2-3 блока взаимосвязанных задач; несвязанные с ними задачи в идеале
-остаются вне выборки.
+Analyze the project's current scope ($ARGUMENTS if given, otherwise the whole
+backlog or the open tasks) for both priority AND coupling. Pull out the top 2-3
+blocks of coupled tasks; tasks unrelated to them should ideally stay out of the
+selection.
 
-Правило связанности: если у задачи низкий собственный приоритет, но она тесно
-связана с задачей более высокого приоритета (их логичнее делать вместе или друг
-за другом) - её приоритет выравнивается вверх, по старшей задаче блока.
+Coupling rule: if a task has low priority of its own but is tightly coupled to
+a higher-priority task (they are better done together or back to back), its
+priority is raised to match the senior task of the block.
 
-Выведи результирующий список этих 2-3 блоков сюда в чат, в порядке убывания
-приоритета (уже с учётом выравнивания по связанности). Реализацию не начинай.
+Return those 2-3 blocks here in chat, ordered by descending priority (already
+adjusted for coupling). Do not start the implementation.
 
-Если в проекте есть .ai/PRODUCT_OWNER.md - держись его приоритетов.
+If the project has .ai/PRODUCT_OWNER.md, stay within its priorities.
