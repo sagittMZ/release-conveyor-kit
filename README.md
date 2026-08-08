@@ -1,59 +1,98 @@
 # Release Conveyor Kit (v0)
 
-Поставляемый релизный конвейер для стека React/TS + Vite + Capacitor + Supabase +
-Vercel + GitHub Actions + Codemagic. Применяется AI-агентом владельца проекта к
-уже существующему приложению. Источник паттернов - работающий продакшн-пайплайн
-приватного проекта-донора.
+A release pipeline you hand to an AI agent, which applies it to an app you have
+already built. Target stack: React/TS + Vite + Capacitor + Supabase + Vercel +
+GitHub Actions + Codemagic. The patterns were extracted from a working
+production pipeline of a private donor project, not invented for a demo.
 
-Объяснения "что/как/зачем" на разных уровнях + сценарий "есть только идея":
-[docs/EXPLAIN.md](docs/EXPLAIN.md).
+Four of the modules do not depend on that stack at all. They are about how a
+human and an agent work together on a repository, and they apply to any project
+in any language - see [the stack-independent layer](#stack-independent-layer).
 
-## Модули
+- What this is, at four levels of detail, plus the "I only have an idea"
+  scenario: [docs/EXPLAIN.md](docs/EXPLAIN.md)
+- How it is put together and why: [ARCHITECTURE.md](ARCHITECTURE.md)
+- Live example: [the kit's own architecture](docs/arch/index.html), a single
+  self-contained HTML file
 
-| # | Модуль | Что даёт |
+## Modules
+
+| # | Module | What it gives you |
 |---|---|---|
-| 1 | [ci-core](modules/01-ci-core/) | Lint + typecheck + unit + build на PR |
-| 2 | [mobile-build](modules/02-mobile-build/) | Android AAB/APK (Actions) + iOS (Codemagic, Capacitor 8 SPM) |
-| 3 | [store-deploy](modules/03-store-deploy/) | Google Play + TestFlight: автоматизация и пошаговые инструкции |
-| 4 | [staging](modules/04-staging/) | Окружения для Supabase: второй проект или QA-аккаунты на free tier |
-| 5 | [monitoring](modules/05-monitoring/) | Sentry: init, release-теги, sourcemaps, алерты; health-чек |
-| 6 | [secrets](modules/06-secrets/) | .env-паттерны, .gitignore, gitleaks в CI |
-| 7 | [smoke-e2e](modules/07-smoke-e2e/) | Playwright smoke (5-8 сценариев) как шаблон |
-| 8 | [agent-layer](modules/08-agent-layer/) | Промпты применения: интервью -> детект -> применение -> верификация |
-| 9 | [prompt-library](modules/09-prompt-library/) | Библиотека стартовых промптов владельцу: 6 паттернов + 21 промпт по фазам + 14 слэш-команд. Стеко-независимый - применим к ЛЮБОМУ проекту |
-| 10 | coverage-matrix | Матрица покрытия автотестами. Номер зарезервирован, модуль не построен |
-| 11 | [command-evals](modules/11-command-evals/) | Измеримое качество команд: структурные проверки + LLM-судья. Стеко-независимый |
-| 12 | [memory-consolidation](modules/12-memory-consolidation/) | Консолидация памяти в ревьюабельные инсайты (файловый аналог Dreaming). Стеко-независимый |
-| 13 | [arch-viz](modules/13-arch-viz/) | Интерактивная визуализация архитектуры одним самодостаточным HTML: данные обновляет /arch-viz в сессии, CI следит за свежестью. Стеко-независимый. [Живой пример - архитектура кита](docs/arch/index.html) |
+| 1 | [ci-core](modules/01-ci-core/) | Lint + typecheck + unit + build on every PR |
+| 2 | [mobile-build](modules/02-mobile-build/) | Android AAB/APK via Actions, iOS via Codemagic (Capacitor 8, SPM) |
+| 3 | [store-deploy](modules/03-store-deploy/) | Google Play and TestFlight: what is automated, and step-by-step instructions for what cannot be |
+| 4 | [staging](modules/04-staging/) | Staging for Supabase: a second project, or QA accounts on the free tier |
+| 5 | [monitoring](modules/05-monitoring/) | Sentry: init, release tags, sourcemaps, alerts, health check |
+| 6 | [secrets](modules/06-secrets/) | `.env` patterns, `.gitignore`, gitleaks in CI, a map of every secret |
+| 7 | [smoke-e2e](modules/07-smoke-e2e/) | Playwright smoke suite (5-8 scenarios) as a template |
+| 8 | [agent-layer](modules/08-agent-layer/) | The application prompts: interview -> stack detection -> apply -> verify |
+| 9 | [prompt-library](modules/09-prompt-library/) | 6 prompt patterns + 21 prompts by project phase + 14 slash commands. Stack-independent |
+| 10 | coverage-matrix | Test coverage matrix. Number reserved, module not built |
+| 11 | [command-evals](modules/11-command-evals/) | Command quality as a number: structural checks + an LLM judge. Stack-independent |
+| 12 | [memory-consolidation](modules/12-memory-consolidation/) | Distilling session history into reviewable insights, on files, for free. Stack-independent |
+| 13 | [arch-viz](modules/13-arch-viz/) | Interactive architecture visualization as one self-contained HTML file; CI watches it for staleness. Stack-independent |
 
-Стеко-независимый слой (09 + 11 + 12 + 13) и как им пользоваться - в
-[docs/prompt-kit-guide.md](docs/prompt-kit-guide.md) (юзергайд + витрина).
+## Quick start
 
-## Применение (кратко)
+1. Copy `conveyor.config.example.json` into your project root as
+   `conveyor.config.json` and fill it in.
+2. Give your agent the prompt from `modules/08-agent-layer/`. It detects the
+   stack, applies modules 1-7 and 9 according to the config, and runs
+   verification.
+3. Or apply a single module by hand: each one is self-contained, with the
+   secrets it needs and a `checklist.md` that defines what "applied" means.
 
-1. Скопировать `conveyor.config.example.json` в корень целевого проекта как
-   `conveyor.config.json`, заполнить.
-2. Дать агенту промпт из `modules/08-agent-layer/` - он применит модули 1-7 и 9
-   по конфигу и прогонит верификацию.
-3. Каждый модуль самостоятелен: можно применять по одному, в каждом README -
-   список нужных секретов и чек-лист верификации.
+## Stack-independent layer
 
-## Секреты
+Modules 09, 11, 12 and 13 have nothing to do with React or Supabase. They can be
+applied alone, to any repository:
 
-Сводная карта всех секретов конвейера (что, где хранится, какому модулю
-нужно) - в [modules/06-secrets/README.md](modules/06-secrets/README.md).
-В репозитории кита и целевого проекта - только плейсхолдеры.
+- **Commands and prompts** - 14 slash commands for the recurring moments of
+  work (spec, pre-commit review, release notes, security scan, handoff,
+  implementation plan, audit), plus a menu of prompts organized by project
+  phase.
+- **Evals** - command quality measured in two layers: deterministic structural
+  checks that are free to run as a CI gate, and an LLM judge over recorded
+  cases for behavior. The score is always reported as both, so partial
+  evaluation is never mistaken for full evaluation.
+- **Memory consolidation** - session history distilled into reviewable
+  insights. Collection is deterministic bash and costs nothing; the raw
+  material is written outside the git tree, because transcripts contain
+  whatever was discussed.
+- **Architecture visualization** - an LLM updates the data in-session, a script
+  deterministically builds a self-contained page, CI reports when it goes
+  stale.
 
-## Что остаётся руками (владелец)
+Guide and worked examples: [docs/prompt-kit-guide.md](docs/prompt-kit-guide.md).
+Rollout into an existing project:
+[modules/09-prompt-library/ROLLOUT.md](modules/09-prompt-library/ROLLOUT.md).
 
-Создание аккаунтов и оплаты (Google Play $25, Apple Developer $99/год,
-Codemagic, Sentry), ввод секретов в GitHub/Codemagic/Vercel, кнопки в
-консолях сторов и Submit на ревью, алерт-правила в Sentry UI. На каждый
-такой шаг модули выдают короткую нумерованную инструкцию.
+## Secrets
 
-## Что взято из донора, а что добавлено китом
+A map of every secret the pipeline uses - what it is, where it is stored, which
+module needs it - is in
+[modules/06-secrets/README.md](modules/06-secrets/README.md). Neither this
+repository nor your project ever holds a real value: only placeholders, and the
+instruction for where the owner puts the real one.
 
-Каждый README модуля содержит раздел "Происхождение": что извлечено из
-работающего донора (проверено в бою), а что добавлено китом (помечено
-"не проверено"). Это сквозное правило: кит не выдаёт непроверенное за
-обкатанное.
+## What stays manual
+
+Creating accounts and paying for them (Google Play $25, Apple Developer $99/yr,
+Codemagic, Sentry), entering secrets into GitHub / Codemagic / Vercel, the
+buttons in store consoles and Submit for review, alert rules in the Sentry UI.
+For each of these the modules produce a short numbered instruction instead of
+pretending to automate it.
+
+## Proven vs added
+
+Every module README has an "Origin" section that splits its content in two:
+what was extracted from the working donor project (proven in production) and
+what was added by the kit (marked "not verified" until it has actually run).
+This is a hard rule throughout: the kit never presents an unrun template as
+battle-tested. It is why the modules read as less finished than they could -
+you can tell which parts to trust.
+
+## License
+
+MIT - see [LICENSE](LICENSE).
