@@ -1,5 +1,5 @@
 // Release Conveyor Kit - module 07-smoke-e2e
-// Origin: proven the donor project tests/e2e/playwright.config.ts, simplified for a
+// Origin: proven donor tests/e2e/playwright.config.ts, simplified for a
 // 5-8 scenario smoke suite (1 worker, no sharding).
 // Lives in tests/e2e/ as a standalone package (own package.json).
 

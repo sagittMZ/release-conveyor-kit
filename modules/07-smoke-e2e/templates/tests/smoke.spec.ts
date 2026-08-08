@@ -1,6 +1,6 @@
 // Release Conveyor Kit - module 07-smoke-e2e
 // Minimal smoke suite: launch, login/session, navigation, core CRUD, logout.
-// Pattern origin: the donor project e2e suite (auth.spec.ts, navigation.spec.ts,
+// Pattern origin: donor e2e suite (auth.spec.ts, navigation.spec.ts,
 // tasks.spec.ts), trimmed to the kit's 5-8 scenario core.
 //
 // Every TODO(kit) marks a place the applying agent MUST adapt to the target

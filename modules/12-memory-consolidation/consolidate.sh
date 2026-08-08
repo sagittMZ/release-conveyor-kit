@@ -11,7 +11,7 @@
 #   consolidate.sh [--days N] [--with-prompts]
 # Вывод: ~/.claude/projects/<encoded-root>/consolidation/material-<дата>.md -
 # ВНЕ рабочего дерева репозитория (по образцу MEMORY_DIR): сырьё содержит
-# приватные снапшоты/промпты (для project-beta - PHI-риск), git-дерево
+# приватные снапшоты/промпты (в медицинских проектах - PHI-риск), git-дерево
 # ему не дом. gitignore на docs/consolidation/ остаётся страховкой на случай
 # CONSOLIDATE_OUT_DIR-override внутрь дерева.
 #
@@ -36,7 +36,7 @@ done
 # самого Claude Code: CLAUDE_CONFIG_DIR, иначе ~/.claude - одинаково работает
 # на Linux/macOS/Windows(git-bash/WSL). Сырьё РЕГЕНЕРИРУЕМО (собирается из
 # транскриптов заново), поэтому переезд на другую платформу/путь ничего
-# ценного не теряет: долговечное - только принятый the owner дистиллят в
+# ценного не теряет: долговечное - только принятый владельцем дистиллят в
 # MEMORY.md/.ai/, а он живёт в самом проекте.
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 _enc="$(printf '%s' "$PROJECT_ROOT" | sed 's#/#-#g')"

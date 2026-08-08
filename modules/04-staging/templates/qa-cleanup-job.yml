@@ -1,6 +1,6 @@
 # Release Conveyor Kit - module 04-staging (variant B)
 # CI job that wipes QA account data BEFORE the e2e suite runs.
-# Origin: "prepare" job of the proven the donor project playwright.yml.
+# Origin: "prepare" job of the proven donor playwright.yml.
 # Use as the first job in the e2e workflow (module 07 wires it via needs:).
 #
 # Auth model: QA user's own credentials + anon key. No service role in CI.

@@ -5,7 +5,7 @@ create/edit/delete основной сущности, logout) как шабло�
 
 ## Происхождение
 
-- **Из работающего the donor project (проверено):** playwright.config (таймауты,
+- **Из работающего донора (проверено):** playwright.config (таймауты,
   storageState, webServer, blob/html-репортеры), auth.setup через Supabase
   REST (без UI - быстрее и стабильнее), паттерны спеков, кэш браузеров по
   версии Playwright, отключённый автотриггер ради минут Actions.

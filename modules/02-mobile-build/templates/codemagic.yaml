@@ -1,5 +1,5 @@
 # Release Conveyor Kit - module 02-mobile-build (iOS via Codemagic)
-# Origin: extracted from the donor project codemagic.yaml.
+# Origin: extracted from the donor's codemagic.yaml.
 #   ios-bootstrap  - PROVEN in the donor: generates ios/ (Capacitor 8 = SPM,
 #                    no CocoaPods, no xcworkspace) + unsigned compile check.
 #   ios-testflight - SKELETON: signing and publishing were still TODO in the

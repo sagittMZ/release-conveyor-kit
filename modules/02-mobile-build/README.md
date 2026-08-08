@@ -5,7 +5,7 @@
 
 ## Происхождение
 
-- **Из работающего the donor project (проверено):** android-build.yml целиком
+- **Из работающего донора (проверено):** android-build.yml целиком
   (включая подпись через injected-параметры gradle и опциональную выгрузку в
   Firebase App Distribution); codemagic workflow `ios-bootstrap` (генерация
   ios/ + unsigned compile check); сниппет версионирования build.gradle.

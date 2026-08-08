@@ -1,6 +1,6 @@
 # Release Conveyor Kit - module 01-ci-core
 # Jobs: lint -> unit -> build, triggered on push/PR to the main branches.
-# Origin: "unit" job is extracted from a proven the donor project workflow (unit-tests.yml);
+# Origin: "unit" job is extracted from a proven donor workflow (unit-tests.yml);
 # "lint" and "build" jobs are added by the kit (the donor ran them only locally).
 #
 # Parameterization (edit values, markers reference conveyor.config.json keys):

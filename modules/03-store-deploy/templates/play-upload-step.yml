@@ -2,7 +2,7 @@
 # Append this job to .github/workflows/android-build.yml (module 02) to upload
 # the AAB to a Google Play testing track automatically.
 #
-# ADDED BY THE KIT - NOT used in the donor project (the donor project uploaded manually
+# ADDED BY THE KIT - NOT used in the donor project (the donor uploaded manually
 # and used Firebase App Distribution for QA). Verify on a non-production track.
 #
 # Prerequisites (see google-play.md, "Опция: автозагрузка"):

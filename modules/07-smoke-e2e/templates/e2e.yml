@@ -1,5 +1,5 @@
 # Release Conveyor Kit - module 07-smoke-e2e
-# E2E smoke workflow. Origin: proven the donor project playwright.yml, simplified:
+# E2E smoke workflow. Origin: proven donor playwright.yml, simplified:
 # 1 shard (smoke is small), html report straight to artifact - the donor's
 # blob-merge machinery is only needed with sharding.
 # Auto-trigger is commented out to save Actions minutes (donor practice);

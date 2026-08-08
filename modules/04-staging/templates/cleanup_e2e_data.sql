@@ -1,5 +1,5 @@
 -- Release Conveyor Kit - module 04-staging (variant B)
--- E2E/QA test data cleanup RPC. Origin: proven the donor project migration
+-- E2E/QA test data cleanup RPC. Origin: proven donor migration
 -- (20260326020000_e2e_cleanup_rpc.sql), generalized.
 --
 -- Why an RPC: Playwright cleanup hooks must NOT hold a service role key.

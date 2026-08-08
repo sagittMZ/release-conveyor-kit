@@ -1,5 +1,5 @@
 // Release Conveyor Kit - module 07-smoke-e2e
-// Origin: proven the donor project auth.setup.ts, generalized.
+// Origin: proven donor auth.setup.ts, generalized.
 // Sign in via Supabase REST API instead of UI:
 //  - fails immediately with a clear error if credentials are wrong
 //  - does not depend on UI selectors or page load timing

@@ -8,7 +8,7 @@ Sentry (ошибки + release-теги + sourcemaps) и периодическ�
 
 ## Происхождение
 
-- **Из работающего the donor project (проверено):** templates/sentry.ts - init c
+- **Из работающего донора (проверено):** templates/sentry.ts - init c
   enabled-только-в-PROD, tracesSampleRate 0.1, редакцией apikey в breadcrumbs;
   Telegram-алерт паттерн.
 - **Добавлено китом (НЕ проверено в доноре, гэпы найдены аудитом):**

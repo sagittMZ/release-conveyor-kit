@@ -1,6 +1,6 @@
 # Release Conveyor Kit - module 02-mobile-build (Android)
 # Signed AAB + APK on a version tag (v*) or manual dispatch.
-# Origin: extracted from a proven the donor project workflow (android-build.yml).
+# Origin: extracted from a proven donor workflow (android-build.yml).
 # The Firebase App Distribution step is optional - delete it if unused.
 #
 # Prerequisites in the target project:

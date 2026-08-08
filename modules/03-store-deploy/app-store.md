@@ -1,6 +1,6 @@
 # App Store / TestFlight - пошаговый сценарий
 
-Источник: процесс the donor project (волны A-C). Статус честно: волна A проверена в
+Источник: процесс донора (волны A-C). Статус честно: волна A проверена в
 доноре, волны B-C в доноре были В РАБОТЕ на момент извлечения - сценарий
 собран из плейбука донора и документации Codemagic, помечен "не проверено".
 
@@ -10,7 +10,7 @@
 ## Волна A - подготовка кода (Агент, без Apple Developer) - ПРОВЕРЕНО в доноре
 
 - [ ] Блок `ios` в capacitor.config.ts (contentInset: 'never',
-      backgroundColor под сплэш - см. паттерн донора в AUDIT.md).
+      backgroundColor под сплэш - паттерн донора).
 - [ ] Платформо-зависимые вызовы (StatusBar и т.п.) - только под Android-гардом.
 - [ ] `public/.well-known/apple-app-site-association` + Content-Type заголовок
       в vercel.json - скопируй шаблон кита

@@ -2,8 +2,8 @@
 
 Отвечает на вопрос «какие промпты/скиллы реально используются», который
 голая библиотека-меню не решает. Меряет вызовы слэш-команд по транскриптам
-Claude Code - параллель к недельному `rtk gain --history`, только про
-использование команд, а не про экономию токенов.
+Claude Code и даёт недельный срез: что реально пошло в дело, а что лежит
+мёртвым грузом.
 
 ## Как работает
 
@@ -20,11 +20,10 @@ bash usage-digest.sh                 # отчёт в stdout, окно 7 дней
 DIGEST_DAYS=30 bash usage-digest.sh  # окно 30 дней
 ```
 
-## По расписанию (как rtk-отчёт)
+## По расписанию
 
-У the owner rtk-дайджест ходит по cron воскресеньями (`0 16 * * 0
-~/rtk-telegram-report.sh`). Дайджест использования вешается тем же способом
-ОТДЕЛЬНОЙ обёрткой вне репозитория (чтобы токен не попал в git):
+Дайджест вешается на cron ОТДЕЛЬНОЙ обёрткой вне репозитория - чтобы токен
+не попал в git:
 
 ```bash
 # ~/prompt-usage-digest.sh  (вне репозитория, chmod 600)
@@ -32,11 +31,12 @@ DIGEST_DAYS=30 bash usage-digest.sh  # окно 30 дней
 export TG_BOT_TOKEN="<токен>"
 export TG_CHAT_ID="<chat_id>"
 export DIGEST_DAYS=7
-bash $KIT/modules/09-prompt-library/usage-digest/usage-digest.sh
+KIT=<путь-к-клону-кита>
+bash "$KIT/modules/09-prompt-library/usage-digest/usage-digest.sh"
 ```
 
 ```
-# crontab: воскресенье, через 5 минут после rtk-отчёта
+# crontab: воскресенье
 5 16 * * 0 ~/prompt-usage-digest.sh
 ```
 
