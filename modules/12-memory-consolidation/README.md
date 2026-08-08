@@ -1,73 +1,80 @@
-# Модуль 12 - memory-consolidation-lite
+# Module 12 - memory-consolidation-lite
 
-Файловый аналог Dreaming на текущем стеке (bash + Claude Code), без облака и
-платных джобов. Периодически дистиллирует сырьё (снапшоты сессий + индекс памяти
-+ .ai/ + использование) в структурированные инсайты, чтобы память не росла
-сыростью. Закрывает главный пробел файловой памяти: она копится сырьём и
-никогда не пересматривается.
+A file-based equivalent of dreaming on the stack already in use (bash + Claude
+Code), with no cloud and no paid jobs. It periodically distills raw material
+(session snapshots + the memory index + .ai/ + usage) into structured insights,
+so memory does not just accumulate as raw sediment. It closes the main gap of
+file-based memory: it piles up and never gets revisited.
 
-## Поток (дёшево, ревьюабельно)
+## The flow (cheap, reviewable)
 
-1. **Сбор (bash, 0 стоимости):** `consolidate.sh` собирает разрозненные
-   источники в один файл `material-<дата>.md` в ПРИВАТНОЙ зоне проекта
-   (вне git-дерева, по образцу каталога памяти). Единое правило места для
-   всех проектов и платформ (Linux/macOS/Windows):
-   `<claude-config>/projects/<enc>/consolidation/`, база - как у самого
-   Claude Code (`CLAUDE_CONFIG_DIR`, иначе `~/.claude`). Сам не дистиллирует.
-2. **Дистилляция (в текущей сессии):** `/consolidate-memory` читает материал и
-   по `DISTILL_RUBRIC.md` оформляет ПРЕДЛОЖЕННЫЙ дифф `DRAFT-<дата>.md` в том
-   же приватном каталоге (Добавить / Обновить / Противоречия).
-   Не отдельный платный прогон - работает внутри уже идущей сессии.
-3. **Приёмка (вручную):** Владелец читает DRAFT и мержит принятое в MEMORY.md/.ai/
-   сама. Автоматической записи в боевые файлы нет.
+1. **Collection (bash, zero cost):** `consolidate.sh` gathers the scattered
+   sources into one `material-<date>.md` file in the project's PRIVATE zone,
+   outside the git tree, following the pattern of the memory directory. One
+   placement rule for every project and platform (Linux/macOS/Windows):
+   `<claude-config>/projects/<enc>/consolidation/`, with the same base as Claude
+   Code itself (`CLAUDE_CONFIG_DIR`, otherwise `~/.claude`). It does no
+   distillation of its own.
+2. **Distillation (inside the current session):** `/consolidate-memory` reads
+   the material and, following `DISTILL_RUBRIC.md`, writes a PROPOSED diff,
+   `DRAFT-<date>.md`, into the same private directory (Add / Update /
+   Conflicts). It is not a separate paid run - it works inside a session that is
+   already going.
+3. **Acceptance (by hand):** the owner reads the DRAFT and merges what they
+   accept into MEMORY.md and .ai/ themselves. Nothing is ever written to the
+   live files automatically.
 
-## Безопасность (не затирать ручное)
+## Safety (never clobber what was written by hand)
 
-- Вывод только в приватную зону `<claude-config>/projects/<enc>/consolidation/` -
-  сырьё (снапшоты, промпты; для health-проектов - PHI) в git-дерево не попадает
-  физически. `.gitignore` на `docs/consolidation/` остаётся страховкой на случай
-  `CONSOLIDATE_OUT_DIR`-override внутрь дерева. `--with-prompts` - явный opt-in,
-  файл получает PHI-предупреждение в шапке.
-- Боевые MEMORY.md / файлы памяти / .ai/ автоматически не переписываются.
-- Противоречия с ручными записями выносятся отдельной секцией на решение владельца,
-  не «исправляются».
-- Относительные даты приводятся к абсолютным (правило auto-memory).
+- Output goes only to the private zone
+  `<claude-config>/projects/<enc>/consolidation/`, so the raw material
+  (snapshots, prompts; in health projects, PHI) physically cannot reach the git
+  tree. The `.gitignore` entry for `docs/consolidation/` remains as insurance
+  against a `CONSOLIDATE_OUT_DIR` override pointing back inside. `--with-prompts`
+  is an explicit opt-in, and the resulting file gets a PHI warning in its header.
+- The live MEMORY.md, memory files and .ai/ are never rewritten automatically.
+- Conflicts with hand-written records go into their own section for the owner to
+  decide, rather than being "fixed".
+- Relative dates are converted to absolute ones.
 
-## Запуск
+## Running it
 
 ```
 bash modules/12-memory-consolidation/consolidate.sh [--days N] [--with-prompts]
 ```
 
-Затем в сессии: `/consolidate-memory`.
+Then, in a session: `/consolidate-memory`.
 
-Env: `MEMORY_DIR` (каталог памяти проекта, по умолчанию выводится из пути репо),
-`CONSOLIDATE_OUT_DIR` (куда писать сырьё; по умолчанию приватная зона проекта),
-`CONSOLIDATE_DAYS` (окно, по умолчанию 7).
+Env: `MEMORY_DIR` (the project's memory directory, derived from the repo path by
+default), `CONSOLIDATE_OUT_DIR` (where to write the raw material; the project's
+private zone by default), `CONSOLIDATE_DAYS` (the window, 7 by default).
 
-## Переезд между машинами/платформами
+## Moving between machines and platforms
 
-Сырьё и DRAFT - РЕГЕНЕРИРУЕМЫЕ артефакты: material собирается заново из
-транскриптов одной командой, непринятый DRAFT переживать переезд не обязан.
-Долговечное - только принятый дистиллят (MEMORY.md / .ai/), а он живёт в самом
-проекте и едет вместе с репозиторием. Поэтому смена платформы или пути проекта
-(меняется `<enc>`) ничего ценного не теряет - просто прогони consolidate.sh
-заново на новой машине.
+The raw material and the DRAFT are REPRODUCIBLE artifacts: material is
+regathered from the transcripts with one command, and an unaccepted DRAFT does
+not have to survive a move. The only durable thing is the accepted distillate
+(MEMORY.md / .ai/), and that lives in the project itself and travels with the
+repository. So changing platform or project path (which changes `<enc>`) loses
+nothing of value - just run consolidate.sh again on the new machine.
 
-## Cadence (без платного cron)
+## Cadence (without a paid cron)
 
-Два триггера (решение владельца):
-- ручной вызов `/consolidate-memory` в конце крупного блока или когда
-  снапшоты/MEMORY.md разрослись;
-- напоминание в конце `/session-wrap` («пора консолидировать?») - просто текст.
+Two triggers:
+- calling `/consolidate-memory` by hand at the end of a large block, or when
+  the snapshots and MEMORY.md have grown;
+- a reminder at the end of `/session-wrap` ("time to consolidate?") - just text.
 
-## Состав
+## Contents
 
-| Файл | Что это |
+| File | What it is |
 |---|---|
-| consolidate.sh | Детерминированный сбор сырья -> <claude-config>/projects/<enc>/consolidation/material-<дата>.md |
-| DISTILL_RUBRIC.md | Правила дистилляции: атомарность, дедуп, категории, не затирать ручное |
-| checklist.md | Верификация |
-| commands/ -> /consolidate-memory в modules/09-prompt-library/commands/ (единый дом) |
+| consolidate.sh | Deterministic collection of raw material -> <claude-config>/projects/<enc>/consolidation/material-<date>.md |
+| DISTILL_RUBRIC.md | The distillation rules: atomicity, dedup, categories, never clobber hand-written records |
+| checklist.md | Verification |
 
-Читает транскрипты через общий `lib-transcripts.sh` (модуль 09), как evals и digest.
+The `/consolidate-memory` command lives in `modules/09-prompt-library/commands/`
+- commands have one home.
+
+Transcripts are read through the shared `lib-transcripts.sh` (module 09), the
+same as evals and the digest.

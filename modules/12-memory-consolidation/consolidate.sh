@@ -1,43 +1,45 @@
 #!/bin/bash
-# consolidate.sh - модуль 12, детерминированный СБОР сырья для консолидации памяти.
-# Сам НЕ дистиллирует (это делает /consolidate-memory внутри сессии). Только
-# собирает разрозненные источники в один ревьюабельный файл.
+# consolidate.sh - module 12, deterministic COLLECTION of raw material for
+# memory consolidation. It does NOT distill (that is /consolidate-memory, inside
+# a session). It only gathers the scattered sources into one reviewable file.
 #
-# Источники: снапшоты docs/.session-current.md (текущий + история из git),
-# индекс памяти MEMORY.md, инвентарь .ai/, сводка использования (команды/скиллы/
-# субагенты за окно), опционально выборка печатанных промптов.
+# Sources: the docs/.session-current.md snapshots (the current one plus history
+# from git), the MEMORY.md index, an inventory of .ai/, a usage summary
+# (commands / skills / subagents over the window) and, optionally, a sample of
+# the prompts the user typed.
 #
-# Использование:
+# Usage:
 #   consolidate.sh [--days N] [--with-prompts]
-# Вывод: ~/.claude/projects/<encoded-root>/consolidation/material-<дата>.md -
-# ВНЕ рабочего дерева репозитория (по образцу MEMORY_DIR): сырьё содержит
-# приватные снапшоты/промпты (в медицинских проектах - PHI-риск), git-дерево
-# ему не дом. gitignore на docs/consolidation/ остаётся страховкой на случай
-# CONSOLIDATE_OUT_DIR-override внутрь дерева.
+# Output: ~/.claude/projects/<encoded-root>/consolidation/material-<date>.md -
+# OUTSIDE the repository working tree (following MEMORY_DIR): the raw material
+# holds private snapshots and prompts (in medical projects, a PHI risk), and the
+# git tree is no home for it. The docs/consolidation/ gitignore entry remains as
+# insurance against a CONSOLIDATE_OUT_DIR override pointing inside the tree.
 #
 # Env:
-#   MEMORY_DIR  каталог памяти проекта (по умолчанию выводится из PWD)
-#   CONSOLIDATE_OUT_DIR  куда писать сырьё (по умолчанию приватная зона выше)
-#   CONSOLIDATE_DAYS  окно в днях (по умолчанию 7; флаг --days важнее)
+#   MEMORY_DIR  the project's memory directory (derived from PWD by default)
+#   CONSOLIDATE_OUT_DIR  where to write the raw material (the private zone above by default)
+#   CONSOLIDATE_DAYS  the window in days (7 by default; the --days flag wins)
 
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Корень проекта: git-топлевел, иначе текущий каталог (переносимо: кит и
-# вендоренный tools/prompt-kit/memory-consolidation/).
+# Project root: the git toplevel, otherwise the current directory (portable
+# across the kit and a vendored tools/prompt-kit/memory-consolidation/).
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-# lib-transcripts: override, иначе рядом с харнессом (вендоринг), иначе в ките.
+# lib-transcripts: override, otherwise next to the harness (vendored), otherwise in the kit.
 LIB=""
 for _c in "${CONSOLIDATE_LIB:-}" "$HERE/../lib-transcripts.sh" "$PROJECT_ROOT/modules/09-prompt-library/usage-digest/lib-transcripts.sh"; do
   [ -n "$_c" ] && [ -f "$_c" ] && { LIB="$_c"; break; }
 done
-# ЕДИНОЕ ПРАВИЛО ХРАНЕНИЯ СЫРЬЯ (все проекты, все платформы): рядом с памятью
-# проекта - <claude-config>/projects/<enc>/consolidation/. База берётся как у
-# самого Claude Code: CLAUDE_CONFIG_DIR, иначе ~/.claude - одинаково работает
-# на Linux/macOS/Windows(git-bash/WSL). Сырьё РЕГЕНЕРИРУЕМО (собирается из
-# транскриптов заново), поэтому переезд на другую платформу/путь ничего
-# ценного не теряет: долговечное - только принятый владельцем дистиллят в
-# MEMORY.md/.ai/, а он живёт в самом проекте.
+# ONE STORAGE RULE FOR THE RAW MATERIAL (every project, every platform): next
+# to the project's memory, at <claude-config>/projects/<enc>/consolidation/. The
+# base is taken the same way Claude Code takes it: CLAUDE_CONFIG_DIR, otherwise
+# ~/.claude - which works identically on Linux, macOS and Windows (git-bash or
+# WSL). The raw material is REPRODUCIBLE (regathered from the transcripts), so
+# moving to another platform or path loses nothing of value: the only durable
+# thing is the distillate the owner accepted into MEMORY.md / .ai/, and that
+# lives in the project itself.
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 _enc="$(printf '%s' "$PROJECT_ROOT" | sed 's#/#-#g')"
 OUT_DIR="${CONSOLIDATE_OUT_DIR:-$CLAUDE_DIR/projects/$_enc/consolidation}"
@@ -47,11 +49,11 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --days) DAYS="${2:-7}"; shift 2 ;;
     --with-prompts) WITH_PROMPTS=1; shift ;;
-    *) echo "неизвестный аргумент: $1" >&2; exit 2 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
-# каталог памяти проекта: ~/.claude/projects/<encoded-PWD>/memory
+# the project's memory directory: ~/.claude/projects/<encoded-PWD>/memory
 if [ -z "${MEMORY_DIR:-}" ]; then
   MEMORY_DIR="$CLAUDE_DIR/projects/$_enc/memory"
 fi
@@ -61,68 +63,68 @@ DATE="$(date '+%Y-%m-%d')"
 OUT="$OUT_DIR/material-$DATE.md"
 
 {
-  echo "# Материал для консолидации памяти - $DATE"
+  echo "# Memory consolidation material - $DATE"
   echo
-  echo "Окно: последние $DAYS дн. Собрано consolidate.sh (детерминированно)."
-  echo "Это СЫРЬЁ для /consolidate-memory, не дистиллят. Не редактируй вручную."
+  echo "Window: the last $DAYS day(s). Gathered by consolidate.sh, deterministically."
+  echo "This is RAW MATERIAL for /consolidate-memory, not a distillate. Do not edit by hand."
   if [ "$WITH_PROMPTS" -eq 1 ]; then
     echo
-    echo "> ВНИМАНИЕ (приватность/PHI): файл содержит выборку печатанных промптов"
-    echo "> из транскриптов. Не переноси его в git-дерево и не цитируй в коммитах."
+    echo "> WARNING (privacy/PHI): this file contains a sample of typed prompts"
+    echo "> from the transcripts. Do not move it into the git tree or quote it in commits."
   fi
   echo
 
-  echo "## 1. Снапшоты сессий (docs/.session-current.md)"
+  echo "## 1. Session snapshots (docs/.session-current.md)"
   echo
   SNAP="$PROJECT_ROOT/docs/.session-current.md"
   if [ -f "$SNAP" ]; then
-    echo "### Текущий"; echo '```'; cat "$SNAP"; echo '```'; echo
-    echo "### История коммитов снапшота (последние 8)"
-    git -C "$PROJECT_ROOT" log -8 --format='- %ad %h %s' --date=short -- docs/.session-current.md 2>/dev/null || echo "(git недоступен)"
+    echo "### Current"; echo '```'; cat "$SNAP"; echo '```'; echo
+    echo "### Snapshot commit history (last 8)"
+    git -C "$PROJECT_ROOT" log -8 --format='- %ad %h %s' --date=short -- docs/.session-current.md 2>/dev/null || echo "(git unavailable)"
   else
-    echo "(снапшота нет)"
+    echo "(no snapshot)"
   fi
   echo
 
-  echo "## 2. Индекс памяти (MEMORY.md)"
+  echo "## 2. Memory index (MEMORY.md)"
   echo
   if [ -f "$MEMORY_DIR/MEMORY.md" ]; then
     echo '```'; cat "$MEMORY_DIR/MEMORY.md"; echo '```'; echo
-    echo "Файлы памяти: $(find "$MEMORY_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l) шт."
+    echo "Memory files: $(find "$MEMORY_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)"
   else
-    echo "(MEMORY.md не найден: $MEMORY_DIR)"
+    echo "(MEMORY.md not found: $MEMORY_DIR)"
   fi
   echo
 
-  echo "## 3. Инвентарь .ai/"
+  echo "## 3. Inventory of .ai/"
   echo
   if [ -d "$PROJECT_ROOT/.ai" ]; then
     find "$PROJECT_ROOT/.ai" -maxdepth 1 -name '*.md' -printf '- %f\n' 2>/dev/null
   else
-    echo "(в этом проекте .ai/ нет - у кита роли в AGENTS.md модуля 08)"
+    echo "(this project has no .ai/ - in the kit the roles live in module 08 AGENTS.md)"
   fi
   echo
 
-  echo "## 4. Сводка использования за окно"
+  echo "## 4. Usage summary over the window"
   echo
   if [ -f "$LIB" ]; then
     # shellcheck source=/dev/null
     source "$LIB"
     mapfile -t F < <(lt_find_files "$DAYS")
-    echo "Сессий в окне: ${#F[@]}"
+    echo "Sessions in the window: ${#F[@]}"
     if [ "${#F[@]}" -gt 0 ]; then
-      echo; echo "Команды:"; lt_cmd_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
-      echo; echo "Скиллы:"; lt_skill_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
-      echo; echo "Субагенты:"; lt_agent_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
+      echo; echo "Commands:"; lt_cmd_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
+      echo; echo "Skills:"; lt_skill_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
+      echo; echo "Subagents:"; lt_agent_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
       if [ "$WITH_PROMPTS" -eq 1 ]; then
-        echo; echo "## 5. Выборка печатанных промптов (до 200 строк, окно $DAYS дн.)"
+        echo; echo "## 5. Sample of typed prompts (up to 200 lines, $DAYS day window)"
         echo '```'; lt_typed_prompts "${F[@]}" | grep -v '^$' | head -200; echo '```'
       fi
     fi
   else
-    echo "(lib-transcripts.sh недоступен)"
+    echo "(lib-transcripts.sh unavailable)"
   fi
 } > "$OUT"
 
-echo "Сырьё собрано: $OUT"
-echo "Дальше: в сессии вызови /consolidate-memory - он дистиллирует в DRAFT (в том же каталоге) на твоё ревью."
+echo "Raw material collected: $OUT"
+echo "Next: run /consolidate-memory in a session - it distills this into a DRAFT (same directory) for your review."

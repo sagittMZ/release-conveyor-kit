@@ -1,15 +1,16 @@
-# arch-viz: детерминированная пересборка визуализации архитектуры + staleness
-# с ЖЁСТКОЙ гарантией: уведомление в Telegram-топик проекта, когда данные
-# устарели (исходники моложе arch-data.json). Анти-спам: пинг один раз на
-# эпизод устаревания (когда оно ПОЯВИЛОСЬ в этом пуше), summary - всегда.
+# arch-viz: deterministic rebuild of the architecture visualization plus a
+# staleness check with a HARD guarantee - a notification to the project's
+# Telegram topic when the data goes stale (sources newer than arch-data.json).
+# Anti-spam: one ping per staleness episode (when it STARTED in this push);
+# the summary is always written.
 #
-# Секреты (Settings -> Secrets and variables -> Actions):
-#   TELEGRAM_BOT_TOKEN   токен бота
-#   TELEGRAM_CHAT_ID     id группы/чата
-#   TELEGRAM_THREAD_ID   id топика проекта в форум-группе (пусто = без топика)
-# Без секретов workflow работает, уведомление тихо пропускается (см. summary).
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   TELEGRAM_BOT_TOKEN   the bot token
+#   TELEGRAM_CHAT_ID     the group or chat id
+#   TELEGRAM_THREAD_ID   the project's topic id in a forum group (empty = no topic)
+# Without the secrets the workflow still runs; the notification is skipped quietly.
 #
-# Догфуд кита. Источник шаблона: modules/13-arch-viz/templates/arch-viz.yml.
+# The kit dogfooding itself. Template source: modules/13-arch-viz/templates/arch-viz.yml.
 name: arch-viz
 
 on:
@@ -23,7 +24,7 @@ on:
         default: 'false'
 
 permissions:
-  contents: write   # только ради автокоммита пересобранного HTML; обычно no-op
+  contents: write   # only for auto-committing the rebuilt HTML; usually a no-op
 
 concurrency:
   group: arch-viz-${{ github.ref }}
@@ -41,19 +42,19 @@ jobs:
         run: |
           set -euo pipefail
           if [ ! -f docs/arch/arch-data.json ]; then
-            echo "нет docs/arch/arch-data.json - визуализация ещё не генерировалась (/arch-viz)" >> "$GITHUB_STEP_SUMMARY"
+            echo "no docs/arch/arch-data.json - the visualization has never been generated (/arch-viz)" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           bash modules/13-arch-viz/build-arch-viz.sh
           if git diff --quiet -- docs/arch/index.html; then
-            echo "HTML актуален (no-op)" >> "$GITHUB_STEP_SUMMARY"
+            echo "HTML is current (no-op)" >> "$GITHUB_STEP_SUMMARY"
           else
             git config user.name "arch-viz-bot"
             git config user.email "actions@users.noreply.github.com"
             git add docs/arch/index.html
             git commit -m "chore(arch-viz): rebuild HTML from committed data [skip ci]"
             git push
-            echo "HTML отставал от данных - пересобран и закоммичен" >> "$GITHUB_STEP_SUMMARY"
+            echo "HTML lagged behind the data - rebuilt and committed" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Staleness check + Telegram guarantee
@@ -65,9 +66,9 @@ jobs:
           TEST_NOTIFY: ${{ inputs.test_notify }}
         run: |
           set -euo pipefail
-          notify() { # notify <текст>; возвращает 0 только при подтверждённой доставке
+          notify() { # notify <text>; returns 0 only on confirmed delivery
             if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
-              echo "(TG-уведомление пропущено: секреты TELEGRAM_* не настроены)" >> "$GITHUB_STEP_SUMMARY"
+              echo "(Telegram notification skipped: the TELEGRAM_* secrets are not configured)" >> "$GITHUB_STEP_SUMMARY"
               return 1
             fi
             local resp
@@ -77,22 +78,22 @@ jobs:
               --data-urlencode "text=$1" \
               "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" 2>&1)" || resp="curl failed: $resp"
             if printf '%s' "$resp" | grep -q '"ok":true'; then
-              echo "(TG-уведомление доставлено)" >> "$GITHUB_STEP_SUMMARY"
+              echo "(Telegram notification delivered)" >> "$GITHUB_STEP_SUMMARY"
               return 0
             fi
-            echo "(TG-уведомление НЕ доставлено, ответ API: ${resp})" >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::arch-viz: TG-уведомление не доставлено: ${resp}"
+            echo "(Telegram notification NOT delivered, API response: ${resp})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::arch-viz: Telegram notification not delivered: ${resp}"
             return 1
           }
           if [ "${TEST_NOTIFY:-false}" = "true" ]; then
-            # тестовый режим строгий: нет доставки - красный прогон
-            notify "arch-viz: тестовое уведомление из ${GITHUB_REPOSITORY} - связка CI -> Telegram работает."
+            # test mode is strict: no delivery means a red run
+            notify "arch-viz: test notification from ${GITHUB_REPOSITORY} - the CI -> Telegram wiring works."
             exit $?
           fi
           [ -f docs/arch/arch-data.json ] || exit 0
-          # кит: следим за modules/
+          # the kit: we watch modules/
           SRC_PATHS="modules/"
-          stale_at() { # stale_at <rev> -> 0 если данные устарели на этой ревизии
+          stale_at() { # stale_at <rev> -> 0 if the data is stale at that revision
             local d s
             d="$(git log -1 --format=%ct "$1" -- docs/arch/arch-data.json 2>/dev/null || echo 0)"
             s="$(git log -1 --format=%ct "$1" -- $SRC_PATHS 2>/dev/null || echo 0)"
@@ -100,17 +101,17 @@ jobs:
           }
           if stale_at HEAD; then
             {
-              echo "### Визуализация архитектуры устарела"
-              echo "Исходники менялись позже arch-data.json. Прогони \`/arch-viz\` в сессии проекта."
+              echo "### The architecture visualization is stale"
+              echo "Sources changed later than arch-data.json. Run \`/arch-viz\` in the project session."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::notice::arch-viz: данные старее исходников - прогони /arch-viz"
-            # пинг только в начале эпизода: до этого пуша устаревания не было
+            echo "::notice::arch-viz: the data is older than the sources - run /arch-viz"
+            # ping only at the start of an episode: before this push it was not stale
             if [ -n "${BEFORE_SHA:-}" ] && [ "${BEFORE_SHA}" != "0000000000000000000000000000000000000000" ] \
                && git cat-file -e "${BEFORE_SHA}" 2>/dev/null && stale_at "${BEFORE_SHA}"; then
-              echo "(эпизод устаревания уже шёл - TG-пинг не дублируем)" >> "$GITHUB_STEP_SUMMARY"
+              echo "(the staleness episode was already running - not duplicating the Telegram ping)" >> "$GITHUB_STEP_SUMMARY"
             else
-              notify "arch-viz: в ${GITHUB_REPOSITORY} визуализация архитектуры устарела - исходники новее arch-data.json. Прогони /arch-viz в сессии проекта." || true
+              notify "arch-viz: the architecture visualization in ${GITHUB_REPOSITORY} is stale - the sources are newer than arch-data.json. Run /arch-viz in the project session." || true
             fi
           else
-            echo "Данные визуализации не старее исходников" >> "$GITHUB_STEP_SUMMARY"
+            echo "The visualization data is not older than the sources" >> "$GITHUB_STEP_SUMMARY"
           fi

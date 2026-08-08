@@ -1,24 +1,28 @@
-# Чек-лист верификации: 13-arch-viz
+# Verification checklist: 13-arch-viz
 
-Структурно (агентом, каждая сборка):
+Structural (by the agent, on every build):
 
-1. `build-arch-viz.sh` на валидных данных: `ok: ... (N нод, M рёбер, K потоков)`,
-   HTML создан, плейсхолдер `__ARCH_DATA__` заменён.
-2. Битые данные (несуществующая группа/нода в ребре или шаге flow, дубль id,
-   flow короче 2 шагов) - exit 1 с перечнем проблем.
-3. HTML самодостаточен: нет внешних URL в src/href (кроме `#`-якорей),
-   один файл открывается с диска и по http.
-4. eval.sh --all зелёный: команда arch-viz в expectations.tsv.
+1. `build-arch-viz.sh` on valid data prints `ok: ... (N nodes, M edges, K
+   flows)`, the HTML is created, and the `__ARCH_DATA__` placeholder is
+   replaced.
+2. Broken data (a group or node that does not exist, referenced from an edge or
+   a flow step; a duplicate id; a flow shorter than 2 steps) exits 1 with the
+   problems listed.
+3. The HTML is self-contained: no external URLs in src/href (other than `#`
+   anchors), and the single file opens both from disk and over http.
+4. `eval.sh --all` is green: the arch-viz command has its row in
+   expectations.tsv.
 
-Браузерный смоук (раз на значимое изменение шаблона; прогнан 2026-08-04 на
-данных кита, 29 нод - всё зелёное, фиксов не потребовалось):
+Browser smoke test (once per meaningful change to the template):
 
-5. Клик ноды: подсветка входящих/исходящих, затемнение остального, карточка
-   справа (описание, группа, технологии, файлы, кликабельные связи).
-6. Клик пункта меню: центрирование на ноде + активная подсветка пункта.
-7. Поток: жёлтый путь, нумерация шагов на диаграмме = списку «Шаги» в панели.
-8. Поиск: живая фильтрация оглавления с подсветкой совпадения.
-9. Tooltip при наведении: описание + ключевые файлы.
-10. Pan/zoom/drag работают; Fit to screen / Reset zoom / Reset layout на месте;
-    позиции нод переживают перезагрузку (localStorage).
-11. Консоль браузера без ошибок.
+5. Clicking a node highlights its incoming and outgoing edges, dims the rest,
+   and fills the card on the right (description, group, technologies, files,
+   clickable relations).
+6. Clicking a menu item centers the view on that node and marks the item active.
+7. A flow: a yellow path, with the step numbering on the diagram matching the
+   "Steps" list in the panel.
+8. Search: live filtering of the contents with the match highlighted.
+9. Hover tooltip: description plus key files.
+10. Pan, zoom and drag work; Fit to screen / Reset zoom / Reset layout are
+    present; node positions survive a reload (localStorage).
+11. The browser console is free of errors.

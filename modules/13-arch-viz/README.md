@@ -1,88 +1,92 @@
-# Модуль 13 - arch-viz
+# Module 13 - arch-viz
 
-Интерактивная визуализация архитектуры проекта: один самодостаточный HTML
-(SVG + vanilla JS, тёмная тема, без внешних зависимостей и CDN). Человек за
-10 секунд понимает структуру системы и прыгает к любому компоненту через
-боковое меню.
+An interactive architecture visualization of a project: one self-contained HTML
+file (SVG + vanilla JS, dark theme, no external dependencies and no CDN). A
+person understands the structure of the system in ten seconds and can jump to
+any component through the sidebar.
 
-Стеко-независим (как 09/11/12): работает для любого репозитория.
+Stack-independent (like 09/11/12): it works for any repository.
 
-## Гибридная механика (решение владельца)
+## The hybrid mechanism
 
-Семантический анализ кода - LLM-работа, она бесплатна в сессии и платна в CI.
-Поэтому:
+Semantic analysis of code is LLM work: free inside a session, paid in CI. So:
 
-1. **Данные** (`docs/arch/arch-data.json`) обновляет слэш-команда `/arch-viz`
-   внутри сессии: глубокий анализ репо -> nodes/edges/flows.
-2. **Сборка** детерминирована и бесплатна: `build-arch-viz.sh` инлайнит JSON в
-   `template.html` -> самодостаточный `docs/arch/index.html`. Запускается
-   командой сразу после обновления данных и в CI.
-3. **CI** (`templates/arch-viz.yml`): при пуше в main пересобирает HTML из
-   JSON (автокоммит только если HTML отстал от JSON; обычно no-op) и проверяет
-   СВЕЖЕСТЬ: если исходники проекта менялись позже arch-data.json - пишет в
-   summary «визуализация устарела, прогони /arch-viz». Ручной запуск -
-   workflow_dispatch. В проектах с develop: авто на main, dispatch на develop.
+1. **The data** (`docs/arch/arch-data.json`) is updated by the `/arch-viz` slash
+   command inside a session: a deep read of the repo -> nodes/edges/flows.
+2. **The build** is deterministic and free: `build-arch-viz.sh` inlines the JSON
+   into `template.html` -> a self-contained `docs/arch/index.html`. The command
+   runs it right after updating the data, and CI runs it too.
+3. **CI** (`templates/arch-viz.yml`): on a push to main it rebuilds the HTML
+   from the JSON (auto-committing only when the HTML lags behind the JSON -
+   usually a no-op) and checks FRESHNESS: if the project's sources changed later
+   than arch-data.json, it writes "the visualization is stale, run /arch-viz"
+   into the run summary. Manual runs go through workflow_dispatch. In projects
+   with a develop branch: automatic on main, dispatch on develop.
 
-## Схема данных (arch-data.json)
+## Data schema (arch-data.json)
 
 ```json
 {
   "meta":  { "project": "...", "updated": "YYYY-MM-DD", "commit": "sha7" },
-  "groups": [ { "id": "layer-id", "label": "Слой/категория", "color": "#8fbfa3" } ],
-  "nodes": [ { "id": "node-id", "label": "Имя", "group": "layer-id",
-               "desc": "1-3 предложения ответственности",
+  "groups": [ { "id": "layer-id", "label": "Layer or category", "color": "#8fbfa3" } ],
+  "nodes": [ { "id": "node-id", "label": "Name", "group": "layer-id",
+               "desc": "1-3 sentences on what it is responsible for",
                "files": ["path/one", "path/two"], "tech": ["bash", "SVG"] } ],
-  "edges": [ { "from": "node-id", "to": "node-id", "label": "что течёт",
+  "edges": [ { "from": "node-id", "to": "node-id", "label": "what flows",
                "kind": "data|control|build" } ],
-  "flows": [ { "id": "flow-id", "name": "Имя потока", "desc": "зачем",
-               "steps": [ { "node": "node-id", "text": "что происходит" } ] } ]
+  "flows": [ { "id": "flow-id", "name": "Flow name", "desc": "why it matters",
+               "steps": [ { "node": "node-id", "text": "what happens" } ] } ]
 }
 ```
 
-Инварианты (builder проверяет, битое = exit 1): id уникальны; group каждой
-ноды существует в groups; from/to каждого ребра и node каждого шага flow
-существуют в nodes.
+Invariants (the builder checks them; broken data means exit 1): ids are unique;
+every node's group exists in groups; every edge's from/to and every flow step's
+node exist in nodes.
 
-## Состав
+## Contents
 
-| Файл | Что это |
+| File | What it is |
 |---|---|
-| template.html | UI-шаблон: sidebar с поиском и сворачиванием, SVG-граф (pan/zoom/drag, позиции в localStorage), tooltips, карточки компонентов, панель flows с подсветкой пути и нумерацией шагов, легенда, тёмная тема, responsive. Плейсхолдер `__ARCH_DATA__` |
-| build-arch-viz.sh | Детерминированная сборка: валидация инвариантов + инлайн JSON в шаблон -> docs/arch/index.html (python3 stdlib, без node) |
-| templates/arch-viz.yml | GitHub Actions: rebuild на push в main + staleness-репорт + workflow_dispatch |
-| checklist.md | Верификация (структурная + браузерный смоук) |
-| команда /arch-viz | единый дом - modules/09-prompt-library/commands/arch-viz.md |
+| template.html | The UI template: a sidebar with search and collapsing, the SVG graph (pan/zoom/drag, positions kept in localStorage), tooltips, component cards, a flows panel with path highlighting and numbered steps, a legend, a dark theme, responsive layout. Placeholder: `__ARCH_DATA__` |
+| build-arch-viz.sh | The deterministic build: invariant validation + inlining the JSON into the template -> docs/arch/index.html (python3 stdlib, no node) |
+| freshness-hook.sh | The UserPromptSubmit hook that keeps the data fresh automatically |
+| templates/arch-viz.yml | GitHub Actions: rebuild on push to main + staleness report + workflow_dispatch |
+| checklist.md | Verification (structural plus a browser smoke test) |
 
-## Триггеры обновления (полный контур, от сильного к страховочному)
+The `/arch-viz` command lives in `modules/09-prompt-library/commands/arch-viz.md`
+- commands have one home.
 
-1. **freshness-hook.sh (главный, полностью автоматический):** UserPromptSubmit-
-   хук в .claude/settings.json проекта. При каждом промпте (2 быстрых git log)
-   сверяет свежесть; если данные устарели - сам ставит сессии задачу выполнить
-   /arch-viz в текущем ходе. Владелец ничего не делает. Нудж максимум раз в
-   сутки (маркер в приватной зоне проекта).
-2. **/session-wrap** предлагает /arch-viz, если в сессии менялась структура.
-3. **CI-страховка:** workflow на каждый пуш в main - staleness-репорт в summary
-   + Telegram-пинг в топик проекта (секреты TELEGRAM_*, один пинг на эпизод,
-   доставка подтверждается ответом API; тест: dispatch с test_notify=true).
-4. **Ручной:** /arch-viz (в TG-меню - /kit_arch_viz).
+## Refresh triggers (the full loop, from strongest to backstop)
 
-## Языки (решение владельца)
+1. **freshness-hook.sh (primary, fully automatic):** a UserPromptSubmit hook in
+   the project's .claude/settings.json. On every prompt (two fast git log calls)
+   it compares freshness; if the data is stale it gives the session the task of
+   running /arch-viz in the current turn. The owner does nothing. It nudges at
+   most once a day (the marker lives in the project's private zone).
+2. **/session-wrap** offers /arch-viz when the session changed the structure.
+3. **The CI backstop:** the workflow on every push to main - a staleness report
+   in the summary plus a Telegram ping to the project's topic (TELEGRAM_*
+   secrets, one ping per episode, delivery confirmed by the API response; test
+   it with a dispatch and test_notify=true).
+4. **Manual:** /arch-viz.
 
-Каноника - АНГЛИЙСКАЯ: docs/arch/arch-data.json (meta.lang: en) и
-docs/arch/index.html - это часть портфолио и публичного репо. UI шаблона
-двуязычный: словарь EN/RU внутри, переключается полем meta.lang данных.
-Русская версия - личный слой владельца: arch-data.ru.json + index.ru.html,
-в .gitignore, регенерируются по запросу
+## Languages
+
+The canonical version is ENGLISH: docs/arch/arch-data.json (meta.lang: en) and
+docs/arch/index.html are part of the public repository. The template's UI is
+bilingual: it carries an EN/RU dictionary inside, switched by the data's
+meta.lang field. A translated version is the owner's personal layer -
+arch-data.<lang>.json + index.<lang>.html, git-ignored and regenerated on demand
 (`build-arch-viz.sh --data docs/arch/arch-data.ru.json --out docs/arch/index.ru.html`).
 
-## Публикуемость
+## Publishability
 
-В данных - только то, что есть в самом репозитории. Никаких приватных путей
-машины, имён других проектов и личных данных (правило зашито в команду;
-для кита это условие паблика).
+The data contains only what exists in the repository itself. No private machine
+paths, no names of other projects, no personal data. The rule is baked into the
+command.
 
-## Испытание (полигон - сам кит)
+## Field test
 
-Статус: в работе с 2026-08-04. Данные кита -> docs/arch/index.html, браузерная
-верификация по чек-листу, затем вход в реестр обвязки (ROLLOUT) и раскатка
-в проекты по «го» владельца. Вердикт испытания фиксируется здесь.
+The kit itself is the proving ground: the kit's own data lives in
+docs/arch/index.html, verified in a browser against the checklist, and the
+module is part of what a rollout installs into a project.

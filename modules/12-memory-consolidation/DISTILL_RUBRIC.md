@@ -1,36 +1,41 @@
-# DISTILL_RUBRIC - что такое хороший дистиллят памяти
+# DISTILL_RUBRIC - what a good memory distillate looks like
 
-Правила, по которым `/consolidate-memory` превращает сырьё
-(`material-<дата>.md`) в предложенный дифф (`DRAFT-<дата>.md`). Владелец читает
-DRAFT и мержит вручную.
+The rules by which `/consolidate-memory` turns raw material
+(`material-<date>.md`) into a proposed diff (`DRAFT-<date>.md`). The owner reads
+the DRAFT and merges it by hand.
 
-## Что делаем
+## What to do
 
-1. **Атомарность.** Один инсайт = один факт. Не слепляй разнородное в абзац.
-2. **Дедуп.** Если факт уже есть в MEMORY.md или файлах памяти - не дублируй;
-   предложи ОБНОВЛЕНИЕ существующей записи, а не новую.
-3. **Актуализация.** Относительные даты («вчера», «на прошлой неделе») приводи к
-   абсолютным. Устаревшее помечай как устаревшее, не удаляй молча.
-4. **Категория.** Каждому инсайту - тип: user / feedback / project / reference
-   (как в auto-memory). Для feedback/project добавляй «Почему» и «Как применять».
-5. **Связи.** Ставь ссылки `[[имя-другой-записи]]` между связанными инсайтами.
-6. **Источник.** Для каждого инсайта - откуда взят (снапшот/коммит/промпт), чтобы
-   владелец мог проверить.
+1. **Atomicity.** One insight is one fact. Do not glue unrelated things into a
+   paragraph.
+2. **Dedup.** If a fact is already in MEMORY.md or the memory files, do not
+   duplicate it - propose an UPDATE to the existing record instead of a new one.
+3. **Currency.** Convert relative dates ("yesterday", "last week") to absolute
+   ones. Mark what went stale as stale; never delete it silently.
+4. **Category.** Give every insight a type: user / feedback / project /
+   reference. For feedback and project entries add "Why" and "How to apply".
+5. **Links.** Put `[[name-of-another-record]]` links between related insights.
+6. **Source.** For every insight, where it came from (a snapshot, a commit, a
+   prompt), so the owner can verify it.
 
-## Чего НЕ делаем
+## What NOT to do
 
-- **Не затираем ручное.** Записи, сделанные владельцем руками, не переписываем.
-  Противоречие с ручной записью - выносим отдельным пунктом «Противоречия», не
-  «исправляем».
-- **Не пишем в боевые файлы.** Результат только в DRAFT-<дата>.md. Мерж в
-  MEMORY.md/.ai/ - ручной, с ведома владельца.
-- **Не раздуваем.** Сырое, разовое, уже неактуальное - не тащим в память. Память
-  для того, что переживает сессию и не выводится из кода/гита.
-- **Не додумываем.** Нет опоры в сырье - не инсайт. Гадать не надо.
+- **Do not clobber hand-written records.** Entries the owner wrote by hand are
+  never rewritten. A conflict with one goes into its own "Conflicts" item rather
+  than being "corrected".
+- **Do not write to the live files.** The result goes only into
+  DRAFT-<date>.md. Merging into MEMORY.md and .ai/ is manual, with the owner's
+  knowledge.
+- **Do not inflate.** Raw, one-off or already irrelevant things do not go into
+  memory. Memory is for what outlives a session and cannot be derived from the
+  code or git.
+- **Do not invent.** No support in the raw material means it is not an insight.
+  Guessing is not the job.
 
-## Формат DRAFT-<дата>.md
+## The format of DRAFT-<date>.md
 
-Три секции:
-- **Добавить** - новые инсайты (с категорией, источником, связями).
-- **Обновить** - какие существующие записи и как поменять.
-- **Противоречия** - где дистиллят расходится с текущей памятью (на решение владельца).
+Three sections:
+- **Add** - new insights (with category, source and links).
+- **Update** - which existing records change, and how.
+- **Conflicts** - where the distillate disagrees with current memory (for the
+  owner to decide).

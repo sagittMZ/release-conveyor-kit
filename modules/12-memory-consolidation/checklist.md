@@ -1,16 +1,19 @@
-# Чек-лист верификации: 12-memory-consolidation
+# Verification checklist: 12-memory-consolidation
 
-1. `bash modules/12-memory-consolidation/consolidate.sh --days 7` создаёт
-   `material-<дата>.md` в `<claude-config>/projects/<enc>/consolidation/` (путь
-   печатается скриптом) и завершается без ошибок.
-2. Материал содержит секции: снапшоты сессий (текущий + история из git), индекс
-   памяти MEMORY.md (если доступен), инвентарь .ai/, сводку использования.
-3. Артефакты не в гите: сырьё лежит вне рабочего дерева (`git status` чист);
-   `docs/consolidation/` в `.gitignore` как страховка на случай override.
-4. `/consolidate-memory` в сессии читает свежий материал и пишет ТОЛЬКО
-   `DRAFT-<дата>.md` в том же приватном каталоге (секции Добавить / Обновить /
-   Противоречия); MEMORY.md, файлы памяти и .ai/ не тронуты.
-5. DRAFT соответствует DISTILL_RUBRIC.md: атомарные инсайты, категории, дедуп
-   против существующего, относительные даты приведены к абсолютным, источник у
-   каждого пункта.
-6. Напоминание: `/session-wrap` в конце предлагает консолидацию (не запускает сам).
+1. `bash modules/12-memory-consolidation/consolidate.sh --days 7` creates
+   `material-<date>.md` in `<claude-config>/projects/<enc>/consolidation/` (the
+   script prints the path) and exits without errors.
+2. The material contains the sections: session snapshots (the current one plus
+   history from git), the MEMORY.md index (when available), an inventory of
+   .ai/, and a usage summary.
+3. The artifacts stay out of git: the raw material lives outside the working
+   tree (`git status` is clean); `docs/consolidation/` is in `.gitignore` as
+   insurance against an override.
+4. `/consolidate-memory` in a session reads the freshest material and writes
+   ONLY `DRAFT-<date>.md` into the same private directory (sections Add /
+   Update / Conflicts); MEMORY.md, the memory files and .ai/ are untouched.
+5. The DRAFT follows DISTILL_RUBRIC.md: atomic insights, categories, dedup
+   against what exists, relative dates converted to absolute ones, and a source
+   on every item.
+6. The reminder works: `/session-wrap` offers consolidation at the end (without
+   running it).
