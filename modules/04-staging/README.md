@@ -1,68 +1,70 @@
-# Модуль 4 - staging
+# Module 04 - staging
 
-Паттерн окружений для Supabase-проектов. Два варианта, выбор -
-`staging.variant` в conveyor.config.json.
+The environment pattern for Supabase projects. Two variants; the choice is
+`staging.variant` in conveyor.config.json.
 
-## Вариант A - отдельное окружение (платно или второй free-проект)
+## Variant A - a separate environment (paid, or a second free project)
 
-НЕ из донора (донор живёт на free tier с вариантом Б) - инструкция:
+NOT from the donor (the donor lives on the free tier with variant B) - these are
+instructions:
 
-1. **Второй Supabase-проект** (отдельный free-проект допустим: 2 проекта на
-   аккаунт): дублировать миграции через `supabase db push` на второй project-ref,
-   завести STAGING_SUPABASE_URL/ANON_KEY в секреты, в Vercel - preview env
-   переменные указывают на staging-проект.
-2. **Или Supabase Branching** (платный план): ветки БД на PR, переменные
-   подставляет интеграция Vercel x Supabase.
+1. **A second Supabase project** (a second free project is acceptable: two per
+   account): push the migrations to the second project-ref with `supabase db
+   push`, add STAGING_SUPABASE_URL/ANON_KEY to the secrets, and point Vercel's
+   preview env variables at the staging project.
+2. **Or Supabase Branching** (a paid plan): database branches per PR, with the
+   variables injected by the Vercel x Supabase integration.
 
-Плюсы: полная изоляция. Минусы: цена/синхронизация миграций. Для пилотных
-vibe-coded проектов кит рекомендует начинать с варианта Б.
+Upside: full isolation. Downside: cost and keeping migrations in sync. For pilot
+vibe-coded projects the kit recommends starting with variant B.
 
-## Вариант Б - QA-аккаунты на проде (free tier) - ПРОВЕРЕНО донором
+## Variant B - QA accounts on production (free tier) - PROVEN by the donor
 
-Идея: стейджинга нет, но e2e и ручная QA ходят в production-проект под
-выделенными тегироваными аккаунтами, чьи данные изолированы и вычищаются.
+The idea: there is no staging, but e2e and manual QA go against the production
+project under dedicated tagged accounts whose data is isolated and cleaned up.
 
-Составные части (все из работающего донора):
+The parts (all from the working donor):
 
-1. **Пул QA-аккаунтов** с единой конвенцией email: `qa-<role>@<домен>`.
-   Минимум один (`qa-smoke@...`), у донора четыре: smoke, onboarding (без
-   данных, для сценария первого входа), member, admin (защищённый пул фикстур).
-   Пароли - в менеджере паролей и секретах QA_*_EMAIL / QA_*_PASSWORD.
-2. **Префикс тестовых данных:** всё, что создают тесты, начинается с "E2E"
-   (видно глазами, легко чистить).
-3. **RPC cleanup_e2e_data** (templates/cleanup_e2e_data.sql) - чистка данных
-   вызывающего пользователя БЕЗ service role key в CI. Кит добавил guard по
-   email-конвенции qa-% (в доноре его не было - помечено в файле).
-4. **CI-job очистки перед прогоном** (templates/qa-cleanup-job.yml) -
-   подключается первым job-ом в e2e workflow модуля 7.
-5. **Флаги исключения из аналитики/мониторинга:** в донорском паттерне -
-   VITE_CI=true в e2e-прогонах; приложение по нему не шлёт события аналитики
-   и помечает сессии. При применении: найти init аналитики и обернуть
-   гардом `if (import.meta.env.VITE_CI) return;` (аналогично Sentry - см.
-   модуль 5: enabled только в PROD).
+1. **A pool of QA accounts** with one email convention: `qa-<role>@<domain>`. At
+   least one (`qa-smoke@...`); the donor had four: smoke, onboarding (no data,
+   for the first-login scenario), member, admin (a protected fixture pool).
+   Passwords live in a password manager and in the QA_*_EMAIL / QA_*_PASSWORD
+   secrets.
+2. **A test data prefix:** everything the tests create starts with "E2E" -
+   visible to the eye, easy to clean.
+3. **The cleanup_e2e_data RPC** (templates/cleanup_e2e_data.sql) - cleans the
+   calling user's data WITHOUT a service role key in CI. The kit added a guard
+   on the qa-% email convention (the donor had none - noted in the file).
+4. **A CI cleanup job before the run** (templates/qa-cleanup-job.yml) - wired in
+   as the first job of module 07's e2e workflow.
+5. **Flags that exclude CI from analytics and monitoring:** in the donor's
+   pattern, VITE_CI=true during e2e runs; the app then sends no analytics events
+   and tags the session. When applying: find the analytics init and wrap it in a
+   guard, `if (import.meta.env.VITE_CI) return;` (same idea as Sentry - see
+   module 05: enabled in PROD only).
 
-## Файлы
+## Files
 
-| Файл | Куда |
+| File | Where |
 |---|---|
-| templates/cleanup_e2e_data.sql | supabase/migrations/<timestamp>_e2e_cleanup_rpc.sql (адаптировать таблицы под схему!) |
-| templates/qa-cleanup-job.yml | вмержить job в e2e workflow модуля 7 |
+| templates/cleanup_e2e_data.sql | supabase/migrations/<timestamp>_e2e_cleanup_rpc.sql (adapt the tables to your schema) |
+| templates/qa-cleanup-job.yml | merge the job into module 07's e2e workflow |
 
-## Требуемые секреты
+## Required secrets
 
-QA_TEST_EMAIL, QA_TEST_PASSWORD (+ пары для других ролей, если нужны),
+QA_TEST_EMAIL, QA_TEST_PASSWORD (plus pairs for other roles if needed),
 VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY.
 
-## Применение (для агента)
+## Application (for the agent)
 
-1. Спросить владельца: вариант A или Б (дефолт Б).
-2. Для Б: создать QA-аккаунты через стандартный signup приложения (агент не
-   лезет в auth.users напрямую), адаптировать SQL-шаблон под реальные таблицы
-   (детект: главная пользовательская таблица из схемы), применить миграцию
-   `supabase db push` или через MCP/SQL-редактор.
-3. Идемпотентность: CREATE OR REPLACE + проверка существования миграции с
-   таким именем.
+1. Ask the owner: variant A or B (B is the default).
+2. For B: create the QA accounts through the app's normal signup (the agent does
+   not touch auth.users directly), adapt the SQL template to the real tables
+   (detect the main user-facing table from the schema), and apply the migration
+   with `supabase db push` or through MCP / the SQL editor.
+3. Idempotency: CREATE OR REPLACE, plus a check for an existing migration with
+   the same name.
 
-## Чек-лист верификации
+## Verification checklist
 
-См. [checklist.md](checklist.md).
+See [checklist.md](checklist.md).

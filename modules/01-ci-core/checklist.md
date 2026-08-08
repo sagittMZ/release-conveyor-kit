@@ -1,18 +1,19 @@
-# Чек-лист верификации - модуль 1 ci-core
+# Verification checklist - module 01 ci-core
 
-Локально (до пуша):
+Locally, before pushing:
 
-- [ ] YAML валиден: `node -e "require('js-yaml')"` недоступен - достаточно
-      `npx --yes yaml-lint .github/workflows/ci.yml` или `actionlint` если установлен.
-- [ ] `npm run lint` проходит локально.
-- [ ] `npx vitest run` проходит локально (или job unit отключён с TODO).
-- [ ] `npm run build` проходит локально.
+- [ ] The YAML is valid: `npx --yes yaml-lint .github/workflows/ci.yml`, or
+      `actionlint` if it is installed.
+- [ ] `npm run lint` passes locally.
+- [ ] `npx vitest run` passes locally (or the unit job is disabled with a TODO).
+- [ ] `npm run build` passes locally.
 
-В CI (после пуша ветки/PR):
+In CI, after pushing the branch or opening the PR:
 
-- [ ] Workflow "CI" запустился на PR.
-- [ ] Все три job (Lint, Unit tests, Build) зелёные.
-- [ ] В summary прогона виден отчёт "N/N tests passed".
-- [ ] Повторный прогон использует кэш npm (шаг setup-node: "Cache restored").
-- [ ] (Опционально) В Settings -> Branches добавить required status checks:
-      Lint, Unit tests (Vitest), Build.
+- [ ] The "CI" workflow ran on the PR.
+- [ ] All three jobs (Lint, Unit tests, Build) are green.
+- [ ] The run summary shows the "N/N tests passed" report.
+- [ ] A repeat run uses the npm cache (the setup-node step says "Cache
+      restored").
+- [ ] (Optional) In Settings -> Branches, add required status checks: Lint,
+      Unit tests (Vitest), Build.

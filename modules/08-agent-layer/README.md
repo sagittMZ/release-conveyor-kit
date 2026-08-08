@@ -1,23 +1,23 @@
-# Модуль 8 - agent-layer (главный)
+# Module 08 - agent-layer (the main one)
 
-Слой применения кита AI-агентом владельца проекта. Владелец кита (или тот, кто его продаёт)
-не получает доступ к чужому коду: владелец даёт своему агенту этот модуль +
-путь к читаемой копии кита.
+The layer through which the project owner's AI agent applies the kit. Whoever
+provides the kit never gets access to somebody else's code: the owner gives
+their own agent this module plus a readable copy of the kit.
 
-## Состав
+## Contents
 
-| Файл | Что это |
+| File | What it is |
 |---|---|
-| AGENTS.md | Правила-инварианты для агента (скоуп-гард, секреты, идемпотентность, гейты верификации, честный отчёт). Подключается как CLAUDE.md/AGENTS.md сессии |
-| prompts/apply-kit.md | Мастер-сценарий: интервью -> детект -> применение по порядку -> сквозная верификация -> отчёт -> передача владельцу |
-| templates/REPORT.template.md | Скелет финального отчёта (applied+verified / applied+unverified / ручные шаги / skipped / секреты) |
+| AGENTS.md | The invariant rules for the agent (scope guard, secrets, idempotency, verification gates, honest reporting). Loaded as the session's CLAUDE.md/AGENTS.md |
+| prompts/apply-kit.md | The master scenario: interview -> detection -> application in order -> end-to-end verification -> report -> handover to the owner |
+| templates/REPORT.template.md | The skeleton of the final report (applied+verified / applied+unverified / manual steps / skipped / secrets) |
 
-## Как запустить применение (владелец)
+## How the owner starts the application
 
-1. Получить кит (git clone или копия папки).
-2. Открыть агентную сессию В СВОЁМ проекте (например `claude` в корне),
-   подключить кит как читаемую директорию.
-3. Промпт сессии:
+1. Get the kit (git clone, or a copy of the folder).
+2. Open an agent session IN YOUR OWN project (for example `claude` in its root)
+   and give it the kit as a readable directory.
+3. The session prompt:
 
 ```
 Apply the Release Conveyor Kit from <path-to-kit>.
@@ -26,21 +26,21 @@ Scenario: <path-to-kit>/modules/08-agent-layer/prompts/apply-kit.md
 Work in branch conveyor-kit. Start with Phase 0 (interview).
 ```
 
-4. Ответить на вопросы интервью, дальше агент работает сам; ручные шаги
-   (секреты, консоли сторов) он выдаст списком в конце.
+4. Answer the interview questions; after that the agent works on its own, and
+   the manual steps (secrets, store consoles) arrive as a list at the end.
 
-## Порядок применения модулей (зашит в AGENTS.md)
+## Module application order (baked into AGENTS.md)
 
 ci-core -> secrets -> staging -> smoke-e2e -> monitoring -> mobile-build ->
-store-deploy. Сначала CI и гигиена секретов (на них едет всё остальное),
-мобильное и сторы - последними (самые длинные петли с участием владельца).
+store-deploy. CI and secret hygiene first, because everything else rides on
+them; mobile and stores last, because they have the longest owner-side loops.
 
-## Происхождение
+## Origin
 
-Модуль целиком ДОБАВЛЕН китом (в доноре аналога нет; паттерн "правила +
-сценарий + отчёт" близок к .ai/-агентам донора по духу). Проверяется
-Этапом 1 ТЗ - применением к чистому скелету.
+This module was ADDED by the kit in full (the donor has no equivalent, though
+the "rules + scenario + report" pattern is close in spirit to the donor's .ai/
+agents). It is verified by applying the kit to a clean skeleton.
 
-## Чек-лист верификации
+## Verification checklist
 
-См. [checklist.md](checklist.md).
+See [checklist.md](checklist.md).

@@ -1,13 +1,15 @@
-# Чек-лист верификации - модуль 8 agent-layer
+# Verification checklist - module 08 agent-layer
 
-Проверяется применением кита к чистому скелету (Этап 1 ТЗ):
+Verified by applying the kit to a clean skeleton:
 
-- [ ] Агент по AGENTS.md + apply-kit.md прошёл интервью и создал валидный
-      conveyor.config.json.
-- [ ] Детект корректно описал стек скелета; на проекте вне скоупа - отказ.
-- [ ] Модули применены в зашитом порядке, по коммиту на модуль.
-- [ ] Ни одного реального секрета в diff (gitleaks модуля 6 зелёный).
-- [ ] Повторный прогон применения - no-op (идемпотентность).
-- [ ] CONVEYOR-REPORT.md создан, каждая позиция в одной из четырёх категорий,
-      ручные шаги - нумерованным списком.
-- [ ] PR-пайплайн скелета зелёный (критерий 7.1 ТЗ).
+- [ ] Following AGENTS.md + apply-kit.md, the agent ran the interview and
+      produced a valid conveyor.config.json.
+- [ ] Detection described the skeleton's stack correctly; on an out-of-scope
+      project it refuses.
+- [ ] The modules were applied in the baked-in order, one commit per module.
+- [ ] Not a single real secret appears in the diff (module 06's gitleaks is
+      green).
+- [ ] Re-running the application is a no-op (idempotency).
+- [ ] CONVEYOR-REPORT.md exists, every item falls into one of the four
+      categories, and the manual steps are a numbered list.
+- [ ] The skeleton's PR pipeline is green.

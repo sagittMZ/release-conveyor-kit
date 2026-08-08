@@ -1,60 +1,62 @@
-# Модуль 5 - monitoring
+# Module 05 - monitoring
 
-Sentry (ошибки + release-теги + sourcemaps) и периодический health-чек прода.
+Sentry (errors + release tags + sourcemaps) and a periodic production health
+check.
 
-Это единственный модуль, которому разрешено трогать прикладной код - строго
-по шаблону: импорт + вызов `initSentry()` в main.tsx (исключение из принципа
-4 ТЗ, оговорено там же).
+This is the only module allowed to touch application code, and strictly to a
+template: the import plus the `initSentry()` call in main.tsx (the one
+documented exception to "do not touch application code").
 
-## Происхождение
+## Origin
 
-- **Из работающего донора (проверено):** templates/sentry.ts - init c
-  enabled-только-в-PROD, tracesSampleRate 0.1, редакцией apikey в breadcrumbs;
-  Telegram-алерт паттерн.
-- **Добавлено китом (НЕ проверено в доноре, гэпы найдены аудитом):**
-  - define VITE_APP_VERSION в vite.config (в доноре release-тег был пустым);
-  - sourcemaps upload через @sentry/vite-plugin;
-  - templates/health-check.yml (cron-пинг web + Supabase REST).
+- **From the working donor (proven):** templates/sentry.ts - init with
+  enabled-in-PROD-only, tracesSampleRate 0.1, and apikey redaction in
+  breadcrumbs; the Telegram alert pattern.
+- **Added by the kit (NOT verified in the donor - gaps found during the audit):**
+  - the VITE_APP_VERSION define in vite.config (the donor's release tag was
+    empty);
+  - sourcemap upload through @sentry/vite-plugin;
+  - templates/health-check.yml (a cron ping of the web app and the Supabase
+    REST endpoint).
 
-## Файлы
+## Files
 
-| Файл | Куда |
+| File | Where |
 |---|---|
-| templates/sentry.ts | src/shared/lib/sentry.ts (путь подогнать под проект) |
-| templates/vite-sentry.snippet.ts | вмержить в vite.config.ts (2 блока, второй опционален) |
+| templates/sentry.ts | src/shared/lib/sentry.ts (adjust the path to the project) |
+| templates/vite-sentry.snippet.ts | merge into vite.config.ts (2 blocks, the second is optional) |
 | templates/health-check.yml | .github/workflows/health-check.yml |
 
-## Применение (для агента)
+## Application (for the agent)
 
-1. `npm i @sentry/react` (+ `npm i -D @sentry/vite-plugin` для sourcemaps).
-2. Положить sentry.ts; в src/main.tsx добавить две строки СТРОГО по шаблону:
-   `import { initSentry } from '<путь>/sentry'` и `initSentry();` до рендера.
-   Идемпотентность: если Sentry.init уже есть где-то - не дублировать,
-   только сверить паттерн (enabled, release, beforeSend).
-3. Вмержить define-блок в vite.config.ts.
-4. ErrorBoundary: если в приложении его нет - предложить Sentry.ErrorBoundary
-   вокруг корня (опционально, записать в отчёт).
-5. VITE_SENTRY_DSN добавить в .env.example (модуль 6) и в env прод-сборок
-   (Vercel env, секреты Android-workflow, Codemagic group).
+1. `npm i @sentry/react` (plus `npm i -D @sentry/vite-plugin` for sourcemaps).
+2. Add sentry.ts; in src/main.tsx add two lines STRICTLY as in the template:
+   `import { initSentry } from '<path>/sentry'` and `initSentry();` before the
+   render. Idempotency: if a Sentry.init already exists somewhere, do not
+   duplicate it - only check the pattern (enabled, release, beforeSend).
+3. Merge the define block into vite.config.ts.
+4. ErrorBoundary: if the app has none, offer Sentry.ErrorBoundary around the
+   root (optional, record it in the report).
+5. Add VITE_SENTRY_DSN to .env.example (module 06) and to the env of production
+   builds (Vercel env, the Android workflow secrets, the Codemagic group).
 
-## Настройка Sentry (Владелец, в UI - агент не может)
+## Sentry setup (Owner, in the UI - the agent cannot do this)
 
-1. sentry.io -> создать проект (react). DSN -> в env/секреты.
-2. Алерты: Alerts -> Create Alert -> "Issues": new issue в production ->
-   email/Telegram-интеграция. Рекомендуемый минимум: алерт на новые ошибки
-   и на всплеск (>10 событий/час).
-3. Для sourcemaps: Settings -> Auth Tokens -> токен со scope project:releases
-   -> секрет SENTRY_AUTH_TOKEN (в CI, НЕ с префиксом VITE_).
+1. sentry.io -> create a project (react). Put the DSN into env/secrets.
+2. Alerts: Alerts -> Create Alert -> "Issues": a new issue in production ->
+   email or a Telegram integration. Recommended minimum: an alert on new errors
+   and one on a spike (>10 events per hour).
+3. For sourcemaps: Settings -> Auth Tokens -> a token with the project:releases
+   scope -> the SENTRY_AUTH_TOKEN secret (in CI, NOT prefixed with VITE_).
 
-## Требуемые секреты/env
+## Required secrets and env
 
-| Имя | Где |
+| Name | Where |
 |---|---|
 | VITE_SENTRY_DSN | Vercel env + GH secrets + Codemagic group |
-| SENTRY_AUTH_TOKEN | GH secrets (только если sourcemaps) |
-| TELEGRAM_BOT_TOKEN_REPORTS, TELEGRAM_CHAT_ID_REPORTS | опционально, алерт health-чека |
+| SENTRY_AUTH_TOKEN | GH secrets (only with sourcemaps) |
+| TELEGRAM_BOT_TOKEN_REPORTS, TELEGRAM_CHAT_ID_REPORTS | optional, for the health check alert |
 
-## Чек-лист верификации
+## Verification checklist
 
-См. [checklist.md](checklist.md). Ключевая проверка из критериев ТЗ:
-Sentry ловит тестовую ошибку.
+See [checklist.md](checklist.md). The key check: Sentry catches a test error.

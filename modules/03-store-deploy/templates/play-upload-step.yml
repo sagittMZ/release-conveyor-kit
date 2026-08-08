@@ -5,7 +5,7 @@
 # ADDED BY THE KIT - NOT used in the donor project (the donor uploaded manually
 # and used Firebase App Distribution for QA). Verify on a non-production track.
 #
-# Prerequisites (see google-play.md, "Опция: автозагрузка"):
+# Prerequisites (see google-play.md, "Option: automatic upload"):
 #   - service account JSON in secret PLAY_SERVICE_ACCOUNT_JSON
 #   - service account invited in Play Console with release permission
 #   - at least one release uploaded manually before the API works

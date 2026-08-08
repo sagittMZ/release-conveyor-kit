@@ -36,7 +36,7 @@ flutter/, react-native deps, .gitlab-ci.yml as the only CI.
 
 Order and gating per AGENTS.md. For each module:
 
-1. Read `modules/<NN>/README.md` section "Применение".
+1. Read the "Application" section of `modules/<NN>/README.md`.
 2. Copy/merge templates, replace every `# conveyor:` marker and TODO(kit)
    using conveyor.config.json values and Phase 1 findings.
 3. Run the local part of `checklist.md`.

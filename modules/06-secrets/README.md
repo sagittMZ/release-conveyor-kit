@@ -1,59 +1,61 @@
-# Модуль 6 - secrets
+# Module 06 - secrets
 
-Гигиена секретов: .env-паттерн, .gitignore-набор, скан утечек в CI.
+Secret hygiene: the .env pattern, the .gitignore set, leak scanning in CI.
 
-## Происхождение
+## Origin
 
-- **Из работающего донора (проверено):** структура .env.example
-  (Required / Optional с комментариями "где живут значения"), секретный
-  поднабор .gitignore.
-- **Добавлено китом (НЕ было в доноре):** gitleaks workflow + .gitleaks.toml.
+- **From the working donor (proven):** the structure of .env.example (Required /
+  Optional with comments on where the values live), and the secrets-related
+  subset of .gitignore.
+- **Added by the kit (the donor had none):** the gitleaks workflow and
+  .gitleaks.toml.
 
-## Файлы
+## Files
 
-| Файл | Куда |
+| File | Where |
 |---|---|
-| templates/.env.example | .env.example (дополнить переменными проекта) |
-| templates/gitignore.snippet | вмержить в .gitignore (без дублей) |
+| templates/.env.example | .env.example (extend with the project's variables) |
+| templates/gitignore.snippet | merge into .gitignore (without duplicates) |
 | templates/gitleaks.yml | .github/workflows/gitleaks.yml |
-| templates/.gitleaks.toml | .gitleaks.toml (корень) |
+| templates/.gitleaks.toml | .gitleaks.toml (root) |
 
-## Карта секретов конвейера (все модули, сводно)
+## The conveyor's secret map (all modules, in one place)
 
-| Секрет | Хранилище | Модуль |
+| Secret | Storage | Module |
 |---|---|---|
 | VITE_SUPABASE_URL / ANON_KEY | GH secrets + Vercel + Codemagic | 1,2,4,5 |
-| ANDROID_KEYSTORE_BASE64 / _PASSWORD, ANDROID_KEY_ALIAS / _PASSWORD | GH secrets (+ keystore в менеджере паролей) | 2 |
-| GOOGLE_SERVICES_JSON | GH secrets (если Firebase) | 2 |
-| FIREBASE_APP_ID / FIREBASE_SERVICE_ACCOUNT | GH secrets (если App Distribution) | 2 |
-| PLAY_SERVICE_ACCOUNT_JSON | GH secrets (если автозагрузка в Play) | 3 |
-| APNs .p8, App Store Connect API key | менеджер паролей + Codemagic интеграция | 3 |
-| QA_TEST_EMAIL / QA_TEST_PASSWORD (и доп. роли) | GH secrets | 4,7 |
+| ANDROID_KEYSTORE_BASE64 / _PASSWORD, ANDROID_KEY_ALIAS / _PASSWORD | GH secrets (+ the keystore in a password manager) | 2 |
+| GOOGLE_SERVICES_JSON | GH secrets (with Firebase) | 2 |
+| FIREBASE_APP_ID / FIREBASE_SERVICE_ACCOUNT | GH secrets (with App Distribution) | 2 |
+| PLAY_SERVICE_ACCOUNT_JSON | GH secrets (with automatic Play upload) | 3 |
+| APNs .p8, App Store Connect API key | password manager + the Codemagic integration | 3 |
+| QA_TEST_EMAIL / QA_TEST_PASSWORD (and extra roles) | GH secrets | 4,7 |
 | VITE_SENTRY_DSN | Vercel + GH + Codemagic | 5 |
-| SENTRY_AUTH_TOKEN | GH secrets (без VITE_!) | 5 |
-| TELEGRAM_BOT_TOKEN_REPORTS / TELEGRAM_CHAT_ID_REPORTS | GH secrets (опционально) | 5,7 |
+| SENTRY_AUTH_TOKEN | GH secrets (no VITE_ prefix) | 5 |
+| TELEGRAM_BOT_TOKEN_REPORTS / TELEGRAM_CHAT_ID_REPORTS | GH secrets (optional) | 5,7 |
 
-Правила:
+Rules:
 
-- Префикс VITE_ = значение попадает в клиентский бандл. Токены с правами
-  записи (SENTRY_AUTH_TOKEN, service accounts) - НИКОГДА с VITE_.
-- Anon key Supabase - публичный по дизайну (защита = RLS), но в репо не
-  коммитится, чтобы не приучать к плохому.
-- Service role key в CI и фронтенде не используется вообще (см. модуль 4 -
-  очистка через RPC под JWT пользователя).
+- The VITE_ prefix means the value ends up in the client bundle. Tokens with
+  write access (SENTRY_AUTH_TOKEN, service accounts) are NEVER prefixed with
+  VITE_.
+- The Supabase anon key is public by design (RLS is the protection), but it
+  still does not get committed - no point teaching bad habits.
+- The service role key is not used in CI or in the frontend at all (see module
+  04 - cleanup runs through an RPC under the user's own JWT).
 
-## Применение (для агента)
+## Application (for the agent)
 
-1. Вмержить gitignore.snippet; проверить, что уже закоммиченные секретные
-   файлы не остались в индексе (`git ls-files | grep -E '\.env$|\.jks'`) -
-   если остались, сообщить владельцу (нужна ротация, не просто удаление).
-2. Создать/дополнить .env.example по фактическим переменным проекта
+1. Merge gitignore.snippet; check that already-committed secret files are not
+   still tracked (`git ls-files | grep -E '\.env$|\.jks'`) - if they are, tell
+   the owner (that needs rotation, not just deletion).
+2. Create or extend .env.example from the project's actual variables
    (`grep -rh "import.meta.env" src/ | sort -u`).
-3. Положить gitleaks.yml и .gitleaks.toml, прогнать gitleaks локально, если
-   установлен: `gitleaks detect --source . -v`.
-4. Если скан нашёл утечку в истории - НЕ переписывать историю автоматически:
-   отчёт владельцу + ротация ключа.
+3. Install gitleaks.yml and .gitleaks.toml, and run gitleaks locally if it is
+   installed: `gitleaks detect --source . -v`.
+4. If the scan finds a leak in history, do NOT rewrite history automatically:
+   report to the owner and rotate the key.
 
-## Чек-лист верификации
+## Verification checklist
 
-См. [checklist.md](checklist.md).
+See [checklist.md](checklist.md).

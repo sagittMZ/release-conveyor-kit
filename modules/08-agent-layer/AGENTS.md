@@ -55,7 +55,7 @@ stopping.
 ## Where things are
 
 - Module templates: `modules/<NN-name>/templates/`
-- Per-module application notes: `modules/<NN-name>/README.md` ("Применение")
+- Per-module application notes: `modules/<NN-name>/README.md` (the "Application" section)
 - Per-module verification: `modules/<NN-name>/checklist.md`
 - Master scenario: `prompts/apply-kit.md`
 - Report skeleton: `templates/REPORT.template.md`

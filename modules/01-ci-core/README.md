@@ -1,53 +1,57 @@
-# Модуль 1 - ci-core
+# Module 01 - ci-core
 
-PR-конвейер: lint + unit-тесты + сборка на каждый push/PR в основные ветки.
-Кэширование npm, concurrency-отмена устаревших прогонов, summary по тестам.
+The PR pipeline: lint + unit tests + build on every push and PR to the main
+branches. npm caching, concurrency cancellation of stale runs, a test summary.
 
-## Происхождение
+## Origin
 
-- **Из работающего донора (проверено):** job `unit` - один в один логика
-  unit-tests.yml донора (vitest c JSON-репортером, summary-скрипт, артефакт,
-  паттерн continue-on-error + явный fail).
-- **Добавлено китом (в доноре не было в CI):** jobs `lint` и `build`.
-  Typecheck не отдельный шаг: `npm run build` = `tsc -b && vite build`,
-  то есть сборка и есть проверка типов (паттерн донора).
+- **From the working donor (proven):** the `unit` job - the exact logic of the
+  donor's unit-tests.yml (vitest with the JSON reporter, the summary script, the
+  artifact, the continue-on-error plus explicit fail pattern).
+- **Added by the kit (the donor had no CI for this):** the `lint` and `build`
+  jobs. Typecheck is not a separate step: `npm run build` is `tsc -b && vite
+  build`, so the build is the type check (the donor's pattern).
 
-## Файлы
+## Files
 
-| Файл | Куда кладётся в целевом проекте |
+| File | Where it goes in the target project |
 |---|---|
 | templates/ci.yml | .github/workflows/ci.yml |
 
-## Параметризация (conveyor.config.json)
+## Parameterization (conveyor.config.json)
 
-Маркеры `# conveyor: <key>` в шаблоне показывают, что менять:
+The `# conveyor: <key>` markers in the template show what to change:
 
-- `ci.mainBranch`, `ci.developBranch` - ветки триггеров (по умолчанию main, develop; если develop нет - убрать).
-- `project.nodeVersion` - версия Node (по умолчанию 24).
-- `ci.lintCommand`, `ci.buildCommand` - команды, если отличаются от npm run lint / npm run build.
-- path-фильтры в `on.push.paths` - подогнать под структуру проекта (или удалить блок целиком, чтобы гонять всегда).
+- `ci.mainBranch`, `ci.developBranch` - the trigger branches (main, develop by
+  default; if there is no develop, remove it).
+- `project.nodeVersion` - the Node version (24 by default).
+- `ci.lintCommand`, `ci.buildCommand` - the commands, if they differ from
+  npm run lint / npm run build.
+- the path filters in `on.push.paths` - adjust to the project's structure (or
+  delete the block entirely to always run).
 
-## Требуемые секреты (GitHub -> Settings -> Secrets and variables -> Actions)
+## Required secrets (GitHub -> Settings -> Secrets and variables -> Actions)
 
-| Секрет | Обязателен | Зачем |
+| Secret | Required | Why |
 |---|---|---|
-| VITE_SUPABASE_URL | нет* | если unit-тесты или сборка читают env |
-| VITE_SUPABASE_ANON_KEY | нет* | то же |
+| VITE_SUPABASE_URL | no* | if the unit tests or the build read env |
+| VITE_SUPABASE_ANON_KEY | no* | same |
 
-*Сборка Vite проходит и с пустыми значениями; секреты нужны, когда тесты
-реально ходят в Supabase. Anon key - публичный по дизайну Supabase, но в
-репозиторий всё равно не коммитится.
+*A Vite build succeeds with empty values; the secrets are needed when the tests
+actually talk to Supabase. The anon key is public by Supabase's design, but it
+still never gets committed to the repository.
 
-## Применение (для агента)
+## Application (for the agent)
 
-1. Если в `.github/workflows/` уже есть CI с lint/test/build - НЕ дублировать:
-   сравнить покрытие, дополнить недостающие jobs в существующий файл
-   (идемпотентность, принцип 2 ТЗ).
-2. Скопировать шаблон, заменить значения по маркерам `# conveyor:`.
-3. Проверить, что команды package.json существуют: `lint`, `build`, и что
-   vitest установлен. Если unit-тестов нет вообще - закомментировать job
-   `unit` и записать TODO в отчёт применения (не падать на пустом проекте).
+1. If `.github/workflows/` already has CI with lint/test/build, do NOT
+   duplicate it: compare the coverage and add the missing jobs to the existing
+   file (idempotency).
+2. Copy the template and replace the values at the `# conveyor:` markers.
+3. Check that the package.json scripts exist - `lint`, `build` - and that vitest
+   is installed. If there are no unit tests at all, comment out the `unit` job
+   and record a TODO in the application report (do not fail on an empty
+   project).
 
-## Чек-лист верификации
+## Verification checklist
 
-См. [checklist.md](checklist.md). Ничего не пушится в main без зелёного прогона.
+See [checklist.md](checklist.md). Nothing is pushed to main without a green run.

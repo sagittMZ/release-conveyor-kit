@@ -1,22 +1,24 @@
-# App Store / TestFlight - пошаговый сценарий
+# App Store / TestFlight - step-by-step playbook
 
-Источник: процесс донора (волны A-C). Статус честно: волна A проверена в
-доноре, волны B-C в доноре были В РАБОТЕ на момент извлечения - сценарий
-собран из плейбука донора и документации Codemagic, помечен "не проверено".
+Source: the donor's process (waves A-C). Honest status: wave A is proven in the
+donor; waves B and C were STILL IN PROGRESS there when the kit was extracted, so
+this scenario is assembled from the donor's playbook plus the Codemagic
+documentation and is marked "not verified".
 
-Ограничение, под которое построен процесс: Mac НЕ нужен вообще -
-вся сборка и подпись в облаке Codemagic.
+The constraint the whole process is built around: no Mac is needed at all - the
+build and the signing happen in the Codemagic cloud.
 
-## Волна A - подготовка кода (Агент, без Apple Developer) - ПРОВЕРЕНО в доноре
+## Wave A - preparing the code (Agent, no Apple Developer account) - PROVEN in the donor
 
-- [ ] Блок `ios` в capacitor.config.ts (contentInset: 'never',
-      backgroundColor под сплэш - паттерн донора).
-- [ ] Платформо-зависимые вызовы (StatusBar и т.п.) - только под Android-гардом.
-- [ ] `public/.well-known/apple-app-site-association` + Content-Type заголовок
-      в vercel.json - скопируй шаблон кита
-      `modules/03-store-deploy/templates/vercel.json` в корень проекта (или
-      вмержь его секции headers/rewrites в существующий). Содержимое AASA
-      (для universal links):
+- [ ] An `ios` block in capacitor.config.ts (contentInset: 'never',
+      backgroundColor for the splash - the donor's pattern).
+- [ ] Platform-specific calls (StatusBar and friends) only behind an Android
+      guard.
+- [ ] `public/.well-known/apple-app-site-association` plus the Content-Type
+      header in vercel.json - copy the kit's template
+      `modules/03-store-deploy/templates/vercel.json` into the project root (or
+      merge its headers/rewrites sections into the existing file). The AASA
+      contents (for universal links):
 
 ```json
 {
@@ -30,26 +32,30 @@
 }
 ```
 
-- [ ] .gitignore: GoogleService-Info.plist (модуль 6).
-- [ ] codemagic.yaml из модуля 2 в корне репо.
+- [ ] .gitignore: GoogleService-Info.plist (module 06).
+- [ ] codemagic.yaml from module 02 in the repo root.
 
-## Волна B - Apple Developer + Codemagic (Владелец) - НЕ проверено в доноре
+## Wave B - Apple Developer + Codemagic (Owner) - NOT verified in the donor
 
-### Apple Developer Portal ($99/год)
+### Apple Developer Portal ($99/year)
 
-1. Оформить Apple Developer Program.
-2. Identifiers -> App ID = bundleId из конфига; capabilities (Push и т.д.).
-3. Если push: APNs Auth Key (.p8) - скачать ОДИН раз, в менеджер паролей.
+1. Enroll in the Apple Developer Program.
+2. Identifiers -> App ID = the bundleId from the config; capabilities (Push and
+   so on).
+3. With push: the APNs Auth Key (.p8) - downloadable ONCE, straight into a
+   password manager.
 
 ### Codemagic
 
-1. Подключить репозиторий, создать env group "ios" (переменные из модуля 2).
-2. Teams -> Integrations -> Developer Portal: подключить App Store Connect
-   API key (Issuer ID, Key ID, .p8) - это интеграция `app_store_connect`.
-3. Прогнать workflow `ios-bootstrap`: скачать ios-project.zip, закоммитить ios/.
-4. Доделать в ios/ (агент): Info.plist usage descriptions (camera, mic,
-   location - что использует приложение), URL schemes, capabilities.
-5. Заменить TODO-шаги в `ios-testflight` на штатные команды Codemagic CLI:
+1. Connect the repository and create the "ios" env group (variables from module
+   02).
+2. Teams -> Integrations -> Developer Portal: connect the App Store Connect API
+   key (Issuer ID, Key ID, .p8) - that is the `app_store_connect` integration.
+3. Run the `ios-bootstrap` workflow: download ios-project.zip, commit ios/.
+4. Finish ios/ (agent): Info.plist usage descriptions (camera, mic, location -
+   whatever the app uses), URL schemes, capabilities.
+5. Replace the TODO steps in `ios-testflight` with the standard Codemagic CLI
+   commands:
 
 ```yaml
       - name: Set up code signing
@@ -66,21 +72,22 @@
             --scheme "$XCODE_SCHEME"
 ```
 
-6. Раскомментировать блоки `integrations` + `publishing` (submit_to_testflight).
+6. Uncomment the `integrations` and `publishing` blocks (submit_to_testflight).
 
-## Волна C - App Store Connect (Владелец) - НЕ проверено в доноре
+## Wave C - App Store Connect (Owner) - NOT verified in the donor
 
-1. App record (имя, bundleId, SKU).
+1. The app record (name, bundleId, SKU).
 2. Privacy Policy URL + Support URL.
-3. Privacy Nutrition Labels (аналог Data Safety - см. google-play.md шаг 7,
-   набор данных тот же).
-4. Скриншоты (6.7" обязательно; единый набор допустим).
-5. App Review notes + демо-аккаунт ревьюера (НЕ в репо).
-6. Export compliance: для HTTPS-only обычно "No".
-7. TestFlight: internal group -> установка по invite -> closed beta.
+3. Privacy Nutrition Labels (the equivalent of Data Safety - see google-play.md
+   step 7; the data set is the same).
+4. Screenshots (6.7" is mandatory; one shared set is acceptable).
+5. App Review notes plus a demo account for the reviewer (NOT in the repo).
+6. Export compliance: for HTTPS-only apps this is usually "No".
+7. TestFlight: internal group -> install by invite -> closed beta.
 8. Submit for Review.
 
-## Чего агент НЕ делает сам
+## What the agent does not do
 
-Оплаты, создание аккаунтов, скачивание .p8/.plist, нажатие Submit -
-только человек. Агент готовит файлы, тексты, конфиги и проверяет их.
+Payments, creating accounts, downloading .p8 or .plist files, pressing Submit -
+those are the human's. The agent prepares the files, the copy and the configs,
+and checks them.

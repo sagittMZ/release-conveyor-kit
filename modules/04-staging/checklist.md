@@ -1,17 +1,21 @@
-# Чек-лист верификации - модуль 4 staging
+# Verification checklist - module 04 staging
 
-Вариант Б:
+Variant B:
 
-- [ ] QA-аккаунт(ы) создан(ы), логин через UI приложения работает.
-- [ ] Миграция cleanup_e2e_data применена без ошибок.
-- [ ] RPC под QA-аккаунтом удаляет только данные с префиксом и только свои:
-      создать запись "E2E test", вызвать RPC, запись исчезла; чужие данные целы.
-- [ ] RPC под обычным (не qa-) аккаунтом возвращает ошибку (guard работает).
-- [ ] anon без JWT не может вызвать RPC.
-- [ ] Секреты QA_* заведены в GitHub.
-- [ ] Аналитика (если есть) не получает события при VITE_CI=true.
+- [ ] The QA account(s) exist and can log in through the app's UI.
+- [ ] The cleanup_e2e_data migration applied without errors.
+- [ ] Under a QA account the RPC deletes only prefixed data and only the
+      caller's own: create an "E2E test" record, call the RPC, the record is
+      gone; other users' data is intact.
+- [ ] Under an ordinary (non-qa) account the RPC returns an error (the guard
+      works).
+- [ ] anon without a JWT cannot call the RPC.
+- [ ] The QA_* secrets exist in GitHub.
+- [ ] Analytics (if any) receives no events when VITE_CI=true.
 
-Вариант A:
+Variant A:
 
-- [ ] Staging project-ref отвечает, миграции применены, anon key отдельный.
-- [ ] Vercel preview окружение указывает на staging, production - на прод.
+- [ ] The staging project-ref responds, the migrations are applied, and its anon
+      key is separate.
+- [ ] The Vercel preview environment points at staging and production points at
+      prod.

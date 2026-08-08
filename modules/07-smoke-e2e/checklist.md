@@ -1,16 +1,17 @@
-# Чек-лист верификации - модуль 7 smoke-e2e
+# Verification checklist - module 07 smoke-e2e
 
-Локально:
+Locally:
 
-- [ ] В шаблонах не осталось TODO(kit).
-- [ ] `npx playwright test` локально: setup зелёный (.auth/user.json создан),
-      все смоук-сценарии проходят.
-- [ ] Данные тестов имеют префикс E2E и исчезают после прогона/cleanup.
-- [ ] tests/e2e/.gitignore закрывает .auth, отчёты, .env.test.
+- [ ] No TODO(kit) markers are left in the templates.
+- [ ] `npx playwright test` locally: setup is green (.auth/user.json created)
+      and every smoke scenario passes.
+- [ ] Test data is prefixed with E2E and disappears after the run or cleanup.
+- [ ] tests/e2e/.gitignore covers .auth, the reports and .env.test.
 
-В CI:
+In CI:
 
-- [ ] Секреты QA_* заведены; workflow E2E Smoke (workflow_dispatch) зелёный.
-- [ ] prepare-job отработал (cleanup status 2xx в логе).
-- [ ] Артефакт playwright-report скачивается и открывается.
-- [ ] Повторный прогон попадает в кэш браузеров.
+- [ ] The QA_* secrets exist; the E2E Smoke workflow (workflow_dispatch) is
+      green.
+- [ ] The prepare job ran (a 2xx cleanup status in the log).
+- [ ] The playwright-report artifact downloads and opens.
+- [ ] A repeat run hits the browser cache.

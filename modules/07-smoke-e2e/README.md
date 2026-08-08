@@ -1,21 +1,24 @@
-# Модуль 7 - smoke-e2e
+# Module 07 - smoke-e2e
 
-Минимальный Playwright-smoke: 7 сценариев (запуск, сессия, навигация,
-create/edit/delete основной сущности, logout) как шаблон с TODO-метками.
+A minimal Playwright smoke suite: 7 scenarios (startup, session, navigation,
+create/edit/delete of the main entity, logout) shipped as a template with TODO
+markers.
 
-## Происхождение
+## Origin
 
-- **Из работающего донора (проверено):** playwright.config (таймауты,
-  storageState, webServer, blob/html-репортеры), auth.setup через Supabase
-  REST (без UI - быстрее и стабильнее), паттерны спеков, кэш браузеров по
-  версии Playwright, отключённый автотриггер ради минут Actions.
-- **Изменено китом:** суита урезана с ~22 спеков до smoke-ядра; 1 шард вместо
-  2 (blob-merge machinery донора не нужна); сценарии CRUD - обобщённые
-  заготовки с TODO(kit), их селекторы ОБЯЗАН адаптировать применяющий агент.
+- **From the working donor (proven):** playwright.config (timeouts,
+  storageState, webServer, blob and html reporters), auth.setup through the
+  Supabase REST API (no UI - faster and more stable), the spec patterns, browser
+  caching keyed by the Playwright version, and the disabled auto-trigger that
+  saves Actions minutes.
+- **Changed by the kit:** the suite is cut from about 22 specs down to a smoke
+  core; one shard instead of two (the donor's blob-merge machinery is not
+  needed); the CRUD scenarios are generic scaffolds with TODO(kit) markers whose
+  selectors the applying agent MUST adapt.
 
-## Файлы (всё в tests/e2e/ целевого проекта)
+## Files (everything goes to the target project's tests/e2e/)
 
-| Файл | Куда |
+| File | Where |
 |---|---|
 | templates/playwright.config.ts | tests/e2e/playwright.config.ts |
 | templates/tests/auth.setup.ts | tests/e2e/tests/auth.setup.ts |
@@ -24,36 +27,39 @@ create/edit/delete основной сущности, logout) как шабло�
 | templates/.env.test.example | tests/e2e/.env.test.example |
 | templates/e2e.yml | .github/workflows/e2e.yml |
 
-Плюс tests/e2e/.gitignore: `.auth/`, `playwright-report/`, `test-results/`,
+Plus tests/e2e/.gitignore: `.auth/`, `playwright-report/`, `test-results/`,
 `.env.test`, `node_modules/`.
 
-## Зависимости от других модулей
+## Dependencies on other modules
 
-- Модуль 4 (staging): QA-аккаунт + RPC cleanup_e2e_data (prepare-job в e2e.yml
-  вызывает её; если модуль 4 не применён - удалить job prepare и needs).
-- Секреты: QA_TEST_EMAIL, QA_TEST_PASSWORD, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY.
+- Module 04 (staging): the QA account and the cleanup_e2e_data RPC (the prepare
+  job in e2e.yml calls it; if module 04 was not applied, remove the prepare job
+  and its `needs`).
+- Secrets: QA_TEST_EMAIL, QA_TEST_PASSWORD, VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY.
 
-## Применение (для агента)
+## Application (for the agent)
 
-1. Создать tests/e2e/ как самостоятельный пакет, `npm i` внутри,
-   `npx playwright install chromium` (Playwright 1.5x также требует
-   chromium-headless-shell - ставится тем же вызовом в CI через --with-deps).
-2. ОБЯЗАТЕЛЬНО исключить tests/e2e из vitest, иначе unit-job CI падает на
-   playwright-спеках (урок самопроверки кита): в vite.config.ts -
-   `import { defineConfig } from 'vitest/config'` и
-   `test: { exclude: ['node_modules', 'dist', 'tests/e2e/**/*'] }`
-   (паттерн донора).
-3. Пройти ВСЕ TODO(kit) в auth.setup.ts и smoke.spec.ts: главный
-   авторизованный роут, публичный элемент лендинга, 2-4 навигационных роута,
-   селекторы CRUD главной сущности. Детект: роуты из react-router конфига,
-   сущность - главная пользовательская таблица.
-4. Если в UI нет data-testid - добавить их точечно (create/delete кнопки,
-   title input) - это инфраструктурная правка, разрешена с согласия владельца.
-5. Mobile-first приложение: переключить проект на Pixel 5 (закомментированный
-   блок в конфиге - паттерн донора).
-6. Локальный прогон: `cd tests/e2e && npx playwright test` (dev-сервер
-   поднимется сам через webServer).
+1. Create tests/e2e/ as a standalone package, run `npm i` inside it and
+   `npx playwright install chromium` (Playwright 1.5x also needs
+   chromium-headless-shell - the same call installs it, in CI via --with-deps).
+2. You MUST exclude tests/e2e from vitest, otherwise the CI unit job fails on
+   the playwright specs (a lesson from the kit's own self-test): in
+   vite.config.ts use `import { defineConfig } from 'vitest/config'` and
+   `test: { exclude: ['node_modules', 'dist', 'tests/e2e/**/*'] }` (the donor's
+   pattern).
+3. Work through EVERY TODO(kit) in auth.setup.ts and smoke.spec.ts: the main
+   authenticated route, a public landing element, 2-4 navigation routes, and the
+   CRUD selectors of the main entity. Detection: routes from the react-router
+   config, the entity from the main user-facing table.
+4. If the UI has no data-testid attributes, add them narrowly (create/delete
+   buttons, the title input) - that is an infrastructure edit, allowed with the
+   owner's agreement.
+5. Mobile-first app: switch the project to Pixel 5 (the commented block in the
+   config - the donor's pattern).
+6. Local run: `cd tests/e2e && npx playwright test` (the dev server starts
+   itself through webServer).
 
-## Чек-лист верификации
+## Verification checklist
 
-См. [checklist.md](checklist.md).
+See [checklist.md](checklist.md).
