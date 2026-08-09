@@ -13,3 +13,11 @@ Summarize what we did this session. Then:
    scripts, workflows, major components - not ordinary edits inside files) and
    the project has docs/arch/arch-data.json, suggest refreshing the
    architecture visualization (/arch-viz), but do not run it yourself.
+5. If the session settled a DECISION about the product itself (how it is built,
+   what it guarantees, what it deliberately refuses to do), name it and offer to
+   append it to the project's decision record - ARCHITECTURE.md or docs/adr/ -
+   as a new numbered entry with context, alternatives and consequences, written
+   in the repository's canonical language. Records are append-only: a decision
+   that stops being true gets superseded by a new entry that says so, never
+   rewritten. Decisions about process, one machine or one person's other
+   projects do not belong there. Do not write the entry without my word.

@@ -53,8 +53,8 @@ node exist in nodes.
 | templates/arch-viz.yml | GitHub Actions: rebuild on push to main + staleness report + workflow_dispatch |
 | checklist.md | Verification (structural plus a browser smoke test) |
 
-The `/arch-viz` command lives in `modules/09-prompt-library/commands/arch-viz.md`
-- commands have one home.
+The `/arch-viz` command lives in `modules/09-prompt-library/commands/arch-viz.md`,
+because commands have one home.
 
 ## Refresh triggers (the full loop, from strongest to backstop)
 

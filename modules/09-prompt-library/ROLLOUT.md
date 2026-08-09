@@ -1,7 +1,7 @@
 # Rolling the stack-independent layer into a project
 
-Full installation of the kit's stack-independent layer (modules **09 + 11 + 12
-+ 13**) into a target project. It is executed by an agent in the session of the
+Full installation of the kit's stack-independent layer (modules **09, 11, 12
+and 13**) into a target project. It is executed by an agent in the session of the
 TARGET project itself: the agent takes the sources from the kit and integrates
 them ORGANICALLY, following the project's own conventions, rather than dropping
 "pieces of the kit" into it.
@@ -10,6 +10,7 @@ Set the path to the kit once: `KIT=<path-to-your-clone-of-the-kit>` (for
 example `KIT=~/projects/release-conveyor-kit`). Everything below uses `$KIT`.
 
 **What is included, and why only this:**
+
 - 09 (commands + menu), 11 (evals), 12 (memory consolidation), 13 (arch-viz) are
   stack-independent.
 - 01-08 are the release pipeline for React/Vite/Supabase and do not travel to

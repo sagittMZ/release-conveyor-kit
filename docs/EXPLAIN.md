@@ -81,6 +81,7 @@ applied through an agent scenario (AGENTS.md + apply-kit.md).
 Vite + Capacitor + Supabase + Vercel + GH Actions + Codemagic) - that pinning is
 the strategy: deep support for one familiar stack rather than a multi-stack
 machine. The modules:
+
 1. ci-core - lint + unit + build on PRs, caching, concurrency.
 2. mobile-build - Android AAB/APK signed through injected gradle props,
    versionCode = run_number; iOS on Codemagic, Capacitor 8 means SPM
@@ -137,6 +138,7 @@ Now the app exists, but there is no automatic build, no store release, no
 monitoring, the secrets are scattered and there are no tests. Open an AI agent
 session in the project folder and say "apply the Release Conveyor Kit". The
 agent:
+
 - asks what it is called, whether you need Android, which accounts exist, what
   the main entity is (for you, "plant");
 - puts the workflows in place, configures Sentry, writes smoke tests for your

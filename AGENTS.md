@@ -65,10 +65,14 @@ because of that.
 - **Punctuation.** No em dashes anywhere in the repository. Use a hyphen with
   spaces instead.
 - **Decision records.** A decision about the product - how the kit is built,
-  what it guarantees, what it refuses to do - goes into `ARCHITECTURE.md` as a
-  new numbered record with context, alternatives and consequences. Records are
-  append-only: supersede, never rewrite. A decision about process, one machine
-  or one owner's projects goes into the private journal instead.
+  what it guarantees, what it refuses to do - goes into `ARCHITECTURE.md`, in
+  English, as a new numbered record with context, alternatives and consequences.
+  Never into a session snapshot, a commit message alone, or the private journal.
+  Records are append-only: a decision that stops being true gets a new record
+  that says `Supersedes: <the old one>`, and the old record stays where it is.
+  A decision about process, one machine or the owner's other projects goes into
+  the private journal instead. `/session-wrap` asks about this at the end of a
+  session, so it does not depend on anyone remembering.
 - **Scope discipline.** Anything outside the current scope goes to the backlog
   with the condition that would activate it, rather than being built "while we
   are here".

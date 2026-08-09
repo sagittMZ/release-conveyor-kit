@@ -28,8 +28,8 @@ The parts (all from the working donor):
 1. **A pool of QA accounts** with one email convention: `qa-<role>@<domain>`. At
    least one (`qa-smoke@...`); the donor had four: smoke, onboarding (no data,
    for the first-login scenario), member, admin (a protected fixture pool).
-   Passwords live in a password manager and in the QA_*_EMAIL / QA_*_PASSWORD
-   secrets.
+   Passwords live in a password manager and in the `QA_<role>_EMAIL` and
+   `QA_<role>_PASSWORD` secrets.
 2. **A test data prefix:** everything the tests create starts with "E2E" -
    visible to the eye, easy to clean.
 3. **The cleanup_e2e_data RPC** (templates/cleanup_e2e_data.sql) - cleans the

@@ -31,8 +31,8 @@ for "the behavior was checked".
 | cases/&lt;name&gt;.md | Layer 2 test cases on invented examples: input plus expect/avoid |
 | judge/judge-prompt.md | The layer 2 LLM judge prompt (SCORE/PASS/NOTES) |
 
-The `/eval-command` command itself lives in `modules/09-prompt-library/commands/`
-- commands have one home.
+The `/eval-command` command itself lives in `modules/09-prompt-library/commands/`,
+because commands have one home.
 
 ## Running it
 

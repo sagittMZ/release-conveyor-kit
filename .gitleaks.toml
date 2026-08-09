@@ -1,0 +1,17 @@
+# Gitleaks config for the kit's own repository - the kit dogfooding module 06.
+# Base is the template it ships (modules/06-secrets/templates/.gitleaks.toml),
+# extended with the allowlist this repository actually needs.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders and prose, not secrets"
+paths = [
+  '''\.env\.example$''',
+  '''\.env\.test\.example$''',
+  '''conveyor\.config\.example\.json$''',
+  # Eval cases are invented English prose. The generic-api-key rule scores
+  # ordinary phrases as high-entropy strings; there is nothing to leak here.
+  '''modules/11-command-evals/cases/.*\.md$''',
+]

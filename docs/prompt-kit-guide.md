@@ -84,6 +84,7 @@ Each rung removes the need to remember the previous one. Details in
 ## Measurability: command evals (module 11)
 
 "Is `/spec` any good?" - answered with a number, not a feeling.
+
 - **Layer 1** (bash, zero cost): structural checks of the command sources -
   valid frontmatter, a fallback, the analyzer guard, the `.ai/` binding,
   hygiene. With a baseline and a delta: an edit either holds the score or drops
@@ -97,6 +98,7 @@ Run it with `/eval-command --all` (layer 1) or `/eval-command --judge`.
 ## Memory: consolidation (module 12)
 
 A file-based way to keep memory from turning into sediment.
+
 1. `consolidate.sh` deterministically gathers the raw material (snapshots,
    MEMORY.md, .ai/, usage) into one file.
 2. `/consolidate-memory` distills it into a **DRAFT** (Add / Update / Conflicts)

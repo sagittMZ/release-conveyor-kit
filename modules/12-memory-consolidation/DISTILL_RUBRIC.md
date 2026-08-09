@@ -35,6 +35,7 @@ the DRAFT and merges it by hand.
 ## The format of DRAFT-<date>.md
 
 Three sections:
+
 - **Add** - new insights (with category, source and links).
 - **Update** - which existing records change, and how.
 - **Conflicts** - where the distillate disagrees with current memory (for the

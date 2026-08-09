@@ -1,5 +1,7 @@
 # Release Conveyor Kit (v0)
 
+[![CI](https://github.com/sagittMZ/release-conveyor-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/sagittMZ/release-conveyor-kit/actions/workflows/ci.yml)
+
 A release pipeline you hand to an AI agent, which applies it to an app you have
 already built. Target stack: React/TS + Vite + Capacitor + Supabase + Vercel +
 GitHub Actions + Codemagic. The patterns were extracted from a working

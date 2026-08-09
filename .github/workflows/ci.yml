@@ -1,0 +1,150 @@
+# CI for the kit itself. The kit gates other people's projects, so it has to
+# hold itself to the same standard: linted shell, linted workflows, linted
+# markdown, a green evals gate, a secret scan, and a publishability check that
+# keeps the private layer private.
+#
+# Every third-party action is SHA-pinned and every downloaded binary is
+# checksum-verified. Permissions are read-only; no job writes to the repo.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell:
+    name: Shell (shellcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
+      - name: shellcheck
+        run: |
+          set -euo pipefail
+          shellcheck --version
+          git ls-files '*.sh' | xargs -r shellcheck -S warning
+
+  actions:
+    name: Workflows (actionlint)
+    runs-on: ubuntu-latest
+    env:
+      ACTIONLINT_VERSION: 1.7.7
+      ACTIONLINT_SHA256: 023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
+      - name: Install actionlint (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -sSfL -o actionlint.tgz "$url"
+          echo "${ACTIONLINT_SHA256}  actionlint.tgz" | sha256sum -c -
+          tar xzf actionlint.tgz actionlint
+      - name: actionlint (the kit's own workflows)
+        run: ./actionlint .github/workflows/*.yml
+      - name: actionlint (the workflow templates the kit ships)
+        run: |
+          set -euo pipefail
+          # Some templates are job fragments meant to be merged into an existing
+          # workflow, not standalone files - actionlint cannot parse those, so
+          # they are skipped and named, never skipped silently. A fragment is
+          # anything without a top-level "on:" key.
+          full=()
+          for f in modules/*/templates/*.yml; do
+            if grep -qE '^on:' "$f"; then full+=("$f"); else echo "skipped (job fragment): $f"; fi
+          done
+          # -shellcheck= : the templates carry placeholders, so their run: blocks
+          # are not valid shell until a project fills them in.
+          ./actionlint -shellcheck= "${full[@]}"
+
+  markdown:
+    name: Docs (markdownlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
+      - name: markdownlint
+        run: npx --yes markdownlint-cli2@0.23.2
+
+  evals:
+    name: Command evals + arch-viz build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
+      - name: Layer 1 evals (structure of all commands)
+        run: bash modules/11-command-evals/eval.sh --all --strict
+      - name: Architecture data invariants
+        run: |
+          set -euo pipefail
+          # The builder validates the schema and fails on broken data. Building
+          # into a temporary path keeps this job read-only.
+          bash modules/13-arch-viz/build-arch-viz.sh --out "${RUNNER_TEMP}/arch.html"
+          if grep -q '__ARCH_DATA__' "${RUNNER_TEMP}/arch.html"; then
+            echo "::error::the __ARCH_DATA__ placeholder was not replaced"
+            exit 1
+          fi
+          echo "placeholder replaced, HTML self-contained"
+
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.24.3
+      GITLEAKS_SHA256: 9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
+        with:
+          fetch-depth: 0   # gitleaks scans the whole history, not just the tip
+      - name: Install gitleaks (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o gitleaks.tgz "$url"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
+          tar xzf gitleaks.tgz gitleaks
+      - name: gitleaks (working tree and full history)
+        run: |
+          set -euo pipefail
+          ./gitleaks detect --no-git --redact --exit-code 1
+          ./gitleaks detect --redact --exit-code 1
+
+  publishability:
+    name: Publishability (private layer stays private)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
+      - name: No absolute home paths
+        run: |
+          set -euo pipefail
+          # Absolute paths from someone's machine are both a portability defect
+          # and a privacy leak. $KIT or <path-to-kit> instead.
+          if git grep -nE '(/home/|/Users/)[a-z0-9_.-]+/' -- . ':!.github/workflows/ci.yml'; then
+            echo "::error::absolute home paths found - use \$KIT or <path-to-kit>"
+            exit 1
+          fi
+          echo "no absolute home paths"
+      - name: Private layer is not tracked
+        run: |
+          set -euo pipefail
+          # docs/private/ and the session mechanics are the owner's working
+          # layer. If any of it is tracked, the gitignore was bypassed.
+          leaked="$(git ls-files -- 'docs/private/**' 'docs/.session-current.md' 'docs/NEW_SESSION_PROMPT.md' 'docs/evals/**' 'docs/consolidation/**')"
+          if [ -n "$leaked" ]; then
+            echo "::error::private files are tracked:"
+            echo "$leaked"
+            exit 1
+          fi
+          echo "private layer is not tracked"
+      - name: The example template exists
+        run: |
+          set -euo pipefail
+          # The .env pattern only works if the committed template is there.
+          test -f docs/NEW_SESSION_PROMPT.example.md
+          echo "session entry point template present"

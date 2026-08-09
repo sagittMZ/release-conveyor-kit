@@ -61,6 +61,7 @@ nothing of value - just run consolidate.sh again on the new machine.
 ## Cadence (without a paid cron)
 
 Two triggers:
+
 - calling `/consolidate-memory` by hand at the end of a large block, or when
   the snapshots and MEMORY.md have grown;
 - a reminder at the end of `/session-wrap` ("time to consolidate?") - just text.
@@ -73,8 +74,8 @@ Two triggers:
 | DISTILL_RUBRIC.md | The distillation rules: atomicity, dedup, categories, never clobber hand-written records |
 | checklist.md | Verification |
 
-The `/consolidate-memory` command lives in `modules/09-prompt-library/commands/`
-- commands have one home.
+The `/consolidate-memory` command lives in `modules/09-prompt-library/commands/`,
+because commands have one home.
 
 Transcripts are read through the shared `lib-transcripts.sh` (module 09), the
 same as evals and the digest.

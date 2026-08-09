@@ -24,7 +24,7 @@ Secret hygiene: the .env pattern, the .gitignore set, leak scanning in CI.
 | Secret | Storage | Module |
 |---|---|---|
 | VITE_SUPABASE_URL / ANON_KEY | GH secrets + Vercel + Codemagic | 1,2,4,5 |
-| ANDROID_KEYSTORE_BASE64 / _PASSWORD, ANDROID_KEY_ALIAS / _PASSWORD | GH secrets (+ the keystore in a password manager) | 2 |
+| `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | GH secrets (+ the keystore in a password manager) | 2 |
 | GOOGLE_SERVICES_JSON | GH secrets (with Firebase) | 2 |
 | FIREBASE_APP_ID / FIREBASE_SERVICE_ACCOUNT | GH secrets (with App Distribution) | 2 |
 | PLAY_SERVICE_ACCOUNT_JSON | GH secrets (with automatic Play upload) | 3 |
@@ -36,7 +36,7 @@ Secret hygiene: the .env pattern, the .gitignore set, leak scanning in CI.
 
 Rules:
 
-- The VITE_ prefix means the value ends up in the client bundle. Tokens with
+- The VITE_prefix means the value ends up in the client bundle. Tokens with
   write access (SENTRY_AUTH_TOKEN, service accounts) are NEVER prefixed with
   VITE_.
 - The Supabase anon key is public by design (RLS is the protection), but it

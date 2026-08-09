@@ -12,6 +12,7 @@ structural 100% as evidence that behavior was verified.
 
 LAYER 2 (when the argument contains --judge): for every command that has a
 modules/11-command-evals/cases/<name>.md file, for each case:
+
 1. have a subagent execute the command - give it the body of commands/<name>.md
    with the case input substituted, and ask for the answer the command would
    produce;

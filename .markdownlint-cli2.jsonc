@@ -1,0 +1,43 @@
+{
+  // Markdown lint rules for the kit. The intent is a gate that catches real
+  // breakage (broken lists, missing fences, bad headings), not a style police.
+  // Rules turned off below are turned off deliberately, with the reason.
+  "config": {
+    "default": true,
+
+    // Prose is hard-wrapped at 80, but tables, links and inlined command lines
+    // legitimately run longer. Enforcing this would only teach people to split
+    // tables badly.
+    "MD013": false,
+
+    // The docs use angle-bracket placeholders (<path-to-kit>, <name>) and HTML
+    // entities inside tables. That is intentional notation, not stray markup.
+    "MD033": false,
+
+    // Table pipe spacing: cosmetic, and it fights with keeping tables readable
+    // in the raw file.
+    "MD060": false,
+
+    // Checklists number continuously across sections on purpose - a failure is
+    // reported as "check 7", and renumbering per section would break that.
+    "MD029": false,
+
+    // Bullets are dashes throughout.
+    "MD004": { "style": "dash" },
+
+    // Several documents repeat a heading by design (one "## Prompt" per prompt
+    // file, "## Origin" in every module README).
+    "MD024": { "siblings_only": true },
+
+    // Command and menu-prompt files start with YAML frontmatter followed by the
+    // prompt body. Requiring a top-level heading would mean putting a title
+    // into text that gets fed to a model verbatim.
+    "MD041": false,
+
+    // Most fenced blocks here hold prompt text or console output, not code in
+    // a language. Tagging them all "text" would be noise.
+    "MD040": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["docs/private/**", "docs/consolidation/**", "docs/evals/**", "node_modules/**"]
+}

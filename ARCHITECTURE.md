@@ -190,6 +190,7 @@ is the only thing that keeps the copies accountable.
 and deterministic: invariants checked against `expectations.tsv`, free to run.
 Layer 2 is behavioral: an LLM judge over recorded cases, costly, run on demand.
 The metric is always stated as both - "layer 1: X/Y; layer 2: N of K commands"
+
 - never collapsed into one number.
 
 **Alternatives.** Structural checks only - rejected: they cannot see that a
@@ -324,3 +325,35 @@ the untranslated layer on the second click.
 **Consequences.** A one-time translation of the product layer, and the
 discipline of writing new product documentation in English from the start. The
 private layer costs nothing, because it is never translated at all.
+
+---
+
+### 14. The kit gates itself with the checks it demands of others
+
+**Context.** The kit's whole proposition is that a project should not merge
+anything that has not passed a check. For a long time the kit itself had exactly
+one workflow, and that one only rebuilt the architecture visualization. A tool
+that gates other people's repositories while running ungated is not credible.
+
+**Decision.** The kit runs its own CI on every push and pull request, with six
+gates: shellcheck over every shell script, actionlint over its own workflows and
+over the templates it ships, markdownlint over the documentation, the layer 1
+command evals in `--strict` mode, a gitleaks scan of both the working tree and
+the full history, and a publishability job that fails if an absolute home path
+appears anywhere or if any file of the private layer becomes tracked. Every
+third-party action is SHA-pinned, every downloaded binary is checksum-verified,
+and the token permissions are read-only.
+
+**Alternatives.** Trust the checklists that already exist in each module -
+rejected: a checklist a human runs is not a gate, it is an intention. Add the
+linters but leave the evals out of CI - rejected: layer 1 exists precisely
+because it can be a hard gate, and a gate that is not wired is decoration.
+Scan only the working tree for secrets - rejected: this repository has a
+rewritten history, and the point of scanning is to prove that rewrite held.
+
+**Consequences.** Contributions, including the owner's, must pass the same bar
+the kit sets for target projects. The publishability job makes the
+public/private split (record 12) enforceable rather than a matter of care: the
+gitignore can be bypassed, this job cannot. Two of the shipped templates are job
+fragments rather than standalone workflows, so actionlint cannot parse them;
+they are skipped by name in the log, never silently.
