@@ -79,12 +79,39 @@ usage are candidates for renaming or removal - the same logic as the digest.
 ## Running layer 2
 
 From a session: `/eval-command --judge`. For every command that has a
-`cases/<name>.md` file, the agent has a subagent execute the command against the
-case input, a second subagent judge the answer against `judge/judge-prompt.md`
-plus `RUBRIC.md` plus the case expect/avoid, and collects SCORE/PASS/NOTES into
-`docs/evals/judge-<date>.md`. The cases use invented examples so they are safe
-to publish. Run it selectively - subagents cost money - and on the commands that
-are actually used.
+`cases/<name>.md` file, each case costs three subagent calls: one executor and
+two judges. Results are collected into `docs/evals/judge-<date>.md` in the
+format of `judge/scorecard-template.md`. The cases use invented examples so they
+are safe to publish. Run it selectively - subagents cost money - and on the
+commands that are actually used.
+
+### The protocol
+
+The value of a judged score comes from what each participant is **not** allowed
+to see.
+
+1. **The executor** (`EXECUTOR`) gets the command body with the case input
+   substituted, and the fixture repository if the case has one. It never sees
+   the case expectations. A command that is told what it will be graded on
+   stops being evidence of anything.
+2. **Judge A** (`JUDGE_A`) and **judge B** (`JUDGE_B`) each get the same four
+   things - command text, case input, the answer, expect/avoid - plus
+   `judge/judge-prompt.md` and `RUBRIC.md`. Each runs in a fresh context.
+   Neither sees the other's score, and neither is told a second judge exists.
+3. **Nothing is averaged.** Both scores go into the report. The lower of the two
+   is the conservative result; the headline stays two numbers plus how often
+   they agree.
+4. **Disagreements of 2 points or more** go to a work queue instead of a
+   tie-breaker call. The first suspect is the wording of the case expectations,
+   the second is the judge prompt, and only then the command. A third judge
+   would buy a majority, not an answer.
+5. **Score anchors live in the judge prompt**, so both judges anchor to the same
+   behavior. The sharpest one is for negative cases: refusing or asking is
+   correct and can score 5, while a confident answer built on material that was
+   not there scores 0-1.
+
+Rerun policy is per changed command by default; a full pass is for a rollout, a
+public release or a change of models, never for a push.
 
 ## Models are configuration
 
