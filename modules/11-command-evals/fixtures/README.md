@@ -14,6 +14,7 @@ are generated, and the real command is dispatched against them by
 bash mkfixture.sh --list
 fx="$(bash mkfixture.sh dirty)"      # prints the path it built
 bash mkfixture.sh huge-diff /tmp/hd  # or pick the path yourself
+bash mkfixture.sh --clean "$fx"      # removes it, and whatever it put outside
 ```
 
 Fixtures go to a temporary directory, are never committed, and are safe to
@@ -31,11 +32,18 @@ delete. Rebuilding is cheaper than keeping one around.
 | `backlog` | a `BACKLOG.md` of seven items with mixed priorities and one coupled pair | `/backlog`, `/scope-triage` |
 | `no-backlog` | the same project with no backlog file at all | `/scope-triage` |
 | `app` | a small application with a money path that has no tests, an `.env.example` naming secrets, docs and a session snapshot | `/audit`, `/session-wrap` |
+| `memory` | raw material outside the tree (two durable facts, one relative date, one one-off episode) plus a memory record that partly overlaps it | `/consolidate-memory` |
+| `memory-empty` | the same project with a consolidation directory that exists and is empty | `/consolidate-memory` |
+| `memory-conflict` | the same material plus a hand-written memory record that contradicts it | `/consolidate-memory` |
+| `arch` | a service in four parts (client, API, domain, storage) with the arch-viz builder vendored, and no data yet | `/arch-viz` |
+| `arch-stale` | the same, plus `arch-data.json` carrying a node for a directory that no longer exists | `/arch-viz` |
+| `arch-broken` | the same, plus `arch-data.json` with an edge to a node that does not exist - the builder refuses it | `/arch-viz` |
+| `commands` | a project the prompt-kit layer was rolled out into: vendored harness, no cases, one command with a broken frontmatter | `/eval-command` |
 
 Nothing in a fixture is code from any real project. Every defect is planted on
 purpose and invented for the occasion.
 
-## Two details that are not obvious
+## Three details that are not obvious
 
 **The credential in `dirty` is assembled at generation time.** A literal
 key-shaped string in the generator would trip the kit's own gitleaks gate, which
@@ -50,6 +58,22 @@ in `git status` and ruin the fixtures whose whole point is to look empty, so the
 generator writes the ignore rule into `.git/info/exclude` - a per-repository
 ignore file that lives inside `.git`, invisible both to `git status` and to the
 working tree.
+
+**The memory fixtures have a second half outside themselves.** Module 12 keeps
+raw material and memory outside the git tree on purpose (record 9 in
+`ARCHITECTURE.md`), so a fixture for `/consolidate-memory` has to put its
+material where the command will actually look:
+`<claude-config>/projects/<encoded-fixture-path>/`. The encoded name is derived
+from the fixture's own temporary path, so it cannot collide with a real
+project's memory; the directory carries its own stamp, the generator refuses to
+touch an unstamped one, and `--clean` removes both halves. The path is printed
+on stderr when the fixture is built.
+
+Two kinds also need the kit vendored into them - `arch` needs the builder,
+`commands` needs the harness - because the command under test resolves those by
+the rolled-out layout. The generator follows `ROLLOUT.md` steps 4 and 5 for
+that, including the two path rewrites in the meta-commands, so the fixture is a
+rolled-out project rather than an approximation of one.
 
 ## Safety
 
@@ -70,7 +94,17 @@ directory that exists and is not already a fixture.
 
 Kit vocabulary: proven means it was executed and the result observed.
 
-**Proven.** All ten kinds build. `/precommit` was dispatched end to end against
+**Proven.** All seventeen kinds build. The seven added for the second half of
+the case matrix were checked against the tool that will meet them, which is as
+far as a fixture can be verified without paying for a run: the `memory` material
+lands exactly where the command computes its path, `arch-stale` builds through
+the vendored builder while `arch-broken` is refused by it with the invariant
+named, `commands` runs the vendored harness to 61/62 with the single planted
+frontmatter defect as the only failure, and `--clean` removes both halves of a
+fixture. No command has been dispatched against any of the seven yet - that is
+phase 5.
+
+`/precommit` was dispatched end to end against
 `empty-git`, `huge-diff` and `dirty`. On `empty-git` it reported that there was
 nothing to review and invented nothing. On `huge-diff` it triaged 12000 diff
 lines and reported honestly what it had checked. On `dirty` it found all three
