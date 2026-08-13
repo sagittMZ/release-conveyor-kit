@@ -200,11 +200,24 @@ OVERALL=$(( TOTAL_T>0 ? 100*TOTAL_P/TOTAL_T : 0 ))
 # Layer 2 (behavior): coverage reported honestly. The layer 1 metric is about
 # the structure of the sources, NOT about behavior; how many commands were
 # actually judged is read from the most recent judge report.
+#
+# A v2 report (see judge/scorecard-template.md) states its own coverage in a
+# machine-readable line: "layer2-summary: commands=<n> cases=<m> agreement=<p>".
+# Older reports have no such line, so their table is scraped instead - a count
+# of distinct command names.
 JUDGE_LINE="layer 2 (behavior, LLM judge): not run - use /eval-command --judge"
 JUDGE_F="$(ls -1 "$OUT_DIR"/judge-*.md 2>/dev/null | sort | tail -1 || true)"
 if [ -n "${JUDGE_F:-}" ]; then
-  J_N="$(awk -F'|' '/^\|/ && $2 !~ /Command|Команда|---/ {gsub(/ /,"",$2); if ($2!="") print $2}' "$JUDGE_F" | sort -u | wc -l)"
-  JUDGE_LINE="layer 2 (behavior, LLM judge): run for $J_N of $SCORED commands ($(basename "$JUDGE_F"))"
+  J_SUM="$(grep -m1 '^layer2-summary:' "$JUDGE_F" || true)"
+  if [ -n "$J_SUM" ]; then
+    J_N="$(printf '%s' "$J_SUM" | sed -n 's/.*commands=\([0-9][0-9]*\).*/\1/p')"
+    J_C="$(printf '%s' "$J_SUM" | sed -n 's/.*cases=\([0-9][0-9]*\).*/\1/p')"
+    J_A="$(printf '%s' "$J_SUM" | sed -n 's/.*agreement=\([0-9][0-9]*\).*/\1/p')"
+    JUDGE_LINE="layer 2 (behavior, two judges): ${J_N:-?} of $SCORED commands, ${J_C:-?} cases, judges agree on ${J_A:-?}% ($(basename "$JUDGE_F"))"
+  else
+    J_N="$(awk -F'|' '/^\|/ && $2 !~ /Command|Команда|---/ {gsub(/ /,"",$2); if ($2!="") print $2}' "$JUDGE_F" | sort -u | wc -l)"
+    JUDGE_LINE="layer 2 (behavior, LLM judge): run for $J_N of $SCORED commands ($(basename "$JUDGE_F"))"
+  fi
 fi
 
 REPORT="Command Evals - $DATE

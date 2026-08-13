@@ -29,7 +29,9 @@ for "the behavior was checked".
 | expectations.tsv | The layer 1 rubric in machine form: one row per command (needs_arg / analyzer / ai_role) |
 | eval.sh | The layer 1 harness: checks + scorecard + delta against the baseline |
 | cases/&lt;name&gt;.md | Layer 2 test cases on invented examples: input plus expect/avoid |
+| models.json | Which model plays which layer 2 role (EXECUTOR / JUDGE_A / JUDGE_B) |
 | judge/judge-prompt.md | The layer 2 LLM judge prompt (SCORE/PASS/NOTES) |
+| judge/scorecard-template.md | The shape of a layer 2 report, with the rules it has to keep |
 
 The `/eval-command` command itself lives in `modules/09-prompt-library/commands/`,
 because commands have one home.
@@ -83,3 +85,37 @@ plus `RUBRIC.md` plus the case expect/avoid, and collects SCORE/PASS/NOTES into
 `docs/evals/judge-<date>.md`. The cases use invented examples so they are safe
 to publish. Run it selectively - subagents cost money - and on the commands that
 are actually used.
+
+## Models are configuration
+
+`models.json` maps three aliases to actual models:
+
+| Alias | Role | Why this one |
+|---|---|---|
+| `EXECUTOR` | runs the command against a case input | called once per case, the cheap seat |
+| `JUDGE_A` | first judge | deliberately the **same** model as the executor |
+| `JUDGE_B` | second judge | deliberately a **different** model |
+
+Prompts and scripts refer to the aliases, never to a model name, so switching
+models is one edit in one file. The values do not live in
+`conveyor.config.json`: that file parameterizes the release pipeline of a target
+project, and this layer is stack-independent and applied on its own (record 6 in
+`ARCHITECTURE.md`).
+
+Judge A sharing a model with the executor is the point, not an oversight. A
+model grading its own output is the standard failure mode of self-evaluation;
+a second judge on a different model turns that failure mode into a number - the
+gap between the two judges' means over the same answers. Declaring the
+limitation is honest, measuring it is better.
+
+## What a layer 2 run reports
+
+The report format is `judge/scorecard-template.md`. In short: both judges'
+scores per case, how often they agree, a separate work queue of disagreements of
+2 points or more, the conservative (lower) score as a result but never as the
+headline, the measured self-grading gap, and the run's own metadata - resolved
+model names, date, kit commit, and what the run actually cost.
+
+`eval.sh` reads the `layer2-summary:` line out of the most recent report, so the
+layer 1 scorecard always carries layer 2 coverage next to it. "Not run" stays a
+visible and legitimate result.

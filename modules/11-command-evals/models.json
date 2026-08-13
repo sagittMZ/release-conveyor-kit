@@ -1,0 +1,8 @@
+{
+  "about": "Models used by layer 2 of the command evals. The aliases below are what the /eval-command prompt, the judge prompt and the scorecard refer to. A model is changed here and nowhere else. Reasoning: modules/11-command-evals/README.md.",
+  "roles": {
+    "EXECUTOR": "claude-fable-5",
+    "JUDGE_A": "claude-fable-5",
+    "JUDGE_B": "claude-opus-5"
+  }
+}
