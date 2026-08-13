@@ -57,6 +57,9 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
 3. GUIDE -> docs/prompt-kit-guide.md: copy $KIT/docs/prompt-kit-guide.md (the
    same relative location it has in the kit) and add the same
    <!-- provenance: $KIT_STAMP --> as its first line.
+   Then fix the one kit-relative path inside it. In the kit the pattern map
+   lives in the module; here it lives in the menu library:
+     modules/09-prompt-library/PATTERNS.md -> docs/prompts/library/PATTERNS.md
 
 4. TOOLING (the evals and consolidation harness) -> tools/prompt-kit/, VENDORED:
    tools/prompt-kit/
@@ -72,9 +75,14 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
                                       kit path: $KIT
 
 5. FIX THE PATHS in the two copied meta-commands (.claude/commands/): in
-   eval-command.md and consolidate-memory.md replace the harness path prefixes:
-     modules/11-command-evals/        -> tools/prompt-kit/command-evals/
-     modules/12-memory-consolidation/ -> tools/prompt-kit/memory-consolidation/
+   eval-command.md and consolidate-memory.md replace the path prefixes:
+     modules/09-prompt-library/commands/ -> .claude/commands/
+     modules/11-command-evals/           -> tools/prompt-kit/command-evals/
+     modules/12-memory-consolidation/    -> tools/prompt-kit/memory-consolidation/
+   Every path inside those two commands carries one of these prefixes on
+   purpose. A bare "RUBRIC.md" or "commands/<name>.md" is not rewritten by this
+   step and would silently point at nothing once vendored, so keep the prefixes
+   when editing the commands in the kit.
    (The scripts locate the project root through git and their lib next to
    themselves - they need no edits, only the references inside the command
    texts do.)

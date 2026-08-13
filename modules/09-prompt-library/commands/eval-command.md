@@ -13,12 +13,13 @@ structural 100% as evidence that behavior was verified.
 LAYER 2 (when the argument contains --judge): for every command that has a
 modules/11-command-evals/cases/<name>.md file, for each case:
 
-1. have a subagent execute the command - give it the body of commands/<name>.md
-   with the case input substituted, and ask for the answer the command would
-   produce;
+1. have a subagent execute the command - give it the body of
+   modules/09-prompt-library/commands/<name>.md with the case input
+   substituted, and ask for the answer the command would produce;
 2. have a second subagent act as judge and score that answer per
-   modules/11-command-evals/judge/judge-prompt.md, grounded in RUBRIC.md and the
-   case expectations (expect/avoid); collect SCORE/PASS/NOTES.
+   modules/11-command-evals/judge/judge-prompt.md, grounded in
+   modules/11-command-evals/RUBRIC.md and the case expectations (expect/avoid);
+   collect SCORE/PASS/NOTES.
 Collect the results into docs/evals/judge-<date>.md and show a summary (command,
 case, SCORE, PASS). Prioritize the commands that are actually used (per the
 usage digest).
