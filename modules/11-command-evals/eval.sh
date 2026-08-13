@@ -105,7 +105,10 @@ eval_one() {
   hasi() { printf '%s' "$body" | grep -qiE "$1"; }  # case-insensitive (prose)
 
   # U1 frontmatter: --- ... description: ... ---
-  if printf '%s' "$body" | head -1 | grep -q '^---$' \
+  # The first line is taken by parameter expansion, not "| head -1": under
+  # pipefail head closes the pipe early, printf takes SIGPIPE, and the whole
+  # condition fails for a long command file - a FAIL that is not real.
+  if [ "${body%%$'\n'*}" = "---" ] \
      && has '^description:' \
      && [ "$(printf '%s' "$body" | grep -c '^---$')" -ge 2 ]; then
     check 0 ""; else check 1 "broken frontmatter (--- / description:)"; fi
