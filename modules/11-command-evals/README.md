@@ -104,6 +104,24 @@ This exists because the cases that matter most cannot be imagined into being:
 an empty git, a diff too large to read, a staged binary, a repository with no
 tags. A model asked to picture those states answers about itself.
 
+### The shape of a case
+
+A case file holds one or more cases, each under a `## case:` heading, with these
+fields:
+
+| Field | What it does |
+|---|---|
+| `fixture:` | the kind to build with `fixtures/mkfixture.sh`. Absent means the case has no repository state and the executor is given the command body with the input substituted |
+| `arg:` | what follows the slash command. Empty means the command is run with no argument, which is what several negative cases are about |
+| `input:` | the case in prose: what was given, and what state the repository was in. This is what the judges see |
+| `expect:` | properties a good answer has |
+| `avoid:` | properties that make an answer wrong, however well it reads |
+
+Expectations describe **behavior, not strings**. "Says the path is not there" is
+checkable whatever language the answer comes back in; "contains the word
+missing" is a spelling test. The rule is in `RUBRIC.md` and the judges are told
+to score substance rather than wording.
+
 The session runs with permissions bypassed, which is only safe because the
 runner refuses any target that is not a generated fixture - see
 [fixtures/README.md](fixtures/README.md) for the guards, for what has actually

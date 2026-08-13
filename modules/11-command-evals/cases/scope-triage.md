@@ -21,3 +21,16 @@ expect:
 avoid:
 - starting the implementation
 - ignoring coupling and sorting purely by the original priority
+
+## case: there is no scope to triage
+
+fixture: no-backlog
+arg:
+input: a project with no backlog file and no scope given in the argument
+expect:
+
+- says that no scope was found
+- asks what should be treated as the scope
+avoid:
+- inventing a backlog out of the directory structure
+- prioritizing files as though they were tasks

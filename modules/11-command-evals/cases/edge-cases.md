@@ -27,3 +27,13 @@ expect:
 - an empty or default state (no avatar)
 avoid:
 - code
+
+## case: no feature given
+
+input:
+expect:
+
+- asks what feature the list should be built for
+avoid:
+- producing a generic list that would fit any feature at all
+- picking a feature of its own and building the list for that
