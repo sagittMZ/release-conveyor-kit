@@ -30,6 +30,8 @@ for "the behavior was checked".
 | eval.sh | The layer 1 harness: checks + scorecard + delta against the baseline |
 | cases/&lt;name&gt;.md | Layer 2 test cases on invented examples: input plus expect/avoid |
 | models.json | Which model plays which layer 2 role (EXECUTOR / JUDGE_A / JUDGE_B) |
+| run-case.sh | Dispatches a real slash command against a fixture, headless |
+| fixtures/mkfixture.sh | Builds the throwaway repositories the negative cases need |
 | judge/judge-prompt.md | The layer 2 LLM judge prompt (SCORE/PASS/NOTES) |
 | judge/scorecard-template.md | The shape of a layer 2 report, with the rules it has to keep |
 
@@ -84,6 +86,30 @@ two judges. Results are collected into `docs/evals/judge-<date>.md` in the
 format of `judge/scorecard-template.md`. The cases use invented examples so they
 are safe to publish. Run it selectively - subagents cost money - and on the
 commands that are actually used.
+
+### The command is really run
+
+The executor does not describe what a command would answer - it runs it. A
+throwaway repository is built by `fixtures/mkfixture.sh`, and `run-case.sh`
+dispatches the actual slash command into it headlessly, with the model from
+`models.json`:
+
+```bash
+fx="$(bash modules/11-command-evals/fixtures/mkfixture.sh empty-git)"
+bash modules/11-command-evals/run-case.sh --fixture "$fx" --command precommit
+```
+
+This exists because the cases that matter most cannot be imagined into being:
+an empty git, a diff too large to read, a staged binary, a repository with no
+tags. A model asked to picture those states answers about itself.
+
+The session runs with permissions bypassed, which is only safe because the
+runner refuses any target that is not a generated fixture - see
+[fixtures/README.md](fixtures/README.md) for the guards, for what has actually
+been run, and for the one confound that was measured rather than assumed: by
+default the dispatched session inherits the operator's global `CLAUDE.md` and
+hooks, so a layer 2 score describes a command in an environment. The runner
+records that environment; the scorecard reports it.
 
 ### The protocol
 

@@ -16,3 +16,18 @@
    directory is in `.gitignore`).
 7. Ranking by usage: when transcripts are available, frequently invoked commands
    show a higher `use=` count and sort to the top.
+8. Fixtures build: `bash fixtures/mkfixture.sh <kind>` prints a path for every
+   kind in `--list`, and `git status` inside an `empty-git` fixture is empty
+   (the vendored commands are hidden through `.git/info/exclude`).
+9. The runner refuses anything that is not a fixture: pointed at a real
+   repository, or at a fixture nested inside one, `run-case.sh` exits non-zero
+   with the reason and dispatches nothing.
+10. Real dispatch works end to end: `run-case.sh --fixture <empty-git>
+    --command precommit` returns an answer that says there is nothing to review,
+    and the same command against a `dirty` fixture finds the planted defects
+    with file and line.
+11. Failure is loud: when the session cannot run the command, the runner exits
+    non-zero and prints what came back instead. It never returns an empty or a
+    non-answer as if it were the command's output.
+12. The scorecard states its environment and its price: the meta line carries
+    `env=`, the model, the elapsed time and the cost of the run.

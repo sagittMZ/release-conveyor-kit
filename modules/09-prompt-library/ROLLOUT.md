@@ -66,7 +66,8 @@ KIT_STAMP="release-conveyor-kit@$(git -C $KIT rev-parse --short HEAD) $(date +%F
      lib-transcripts.sh            <- $KIT/modules/09-prompt-library/usage-digest/lib-transcripts.sh
      usage-digest.sh               <- $KIT/modules/09-prompt-library/usage-digest/usage-digest.sh
      command-evals/                <- everything from $KIT/modules/11-command-evals/
-       (eval.sh, expectations.tsv, RUBRIC.md, cases/, judge/)
+       (eval.sh, run-case.sh, models.json, expectations.tsv, RUBRIC.md,
+        cases/, judge/, fixtures/)
      memory-consolidation/         <- consolidate.sh, DISTILL_RUBRIC.md from $KIT/modules/12-memory-consolidation/
      arch-viz/                     <- template.html, build-arch-viz.sh, freshness-hook.sh, README.md, checklist.md from $KIT/modules/13-arch-viz/
      check-provenance.sh           <- $KIT/modules/09-prompt-library/check-provenance.sh
