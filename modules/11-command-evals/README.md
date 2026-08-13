@@ -65,9 +65,10 @@ conditional. Driven by `expectations.tsv`: a command with an argument has an
 "do not change / do not commit / do not start" guard; a declared role is bound
 to the right `.ai/` file (or to the `PATTERNS.md` map for multi-role commands).
 
-The phrase matching is bilingual: the harness recognizes both the English
-wording of the kit's own commands and commands written in the owner's language
-after rollout. A command is judged on the guarantee, never on its language.
+Commands are written in English, here and in the projects the kit is applied to
+(see "Language" in the module 09 README). The phrase matching also recognizes a
+handful of Russian phrasings, so that a command written in the owner's language
+is judged on the guarantee it makes rather than on the language it makes it in.
 
 A new command with no row in `expectations.tsv` is a deliberate FAIL, "no
 expectations": add a row and declare the intent.

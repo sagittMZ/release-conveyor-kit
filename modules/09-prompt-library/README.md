@@ -74,6 +74,25 @@ sensible default (see "Roles are your .ai/" in PATTERNS.md).
 | /consolidate-memory | - | distill memory raw material (module 12) into a reviewable DRAFT |
 | /arch-viz | - | refresh the architecture visualization (module 13): data + built HTML |
 
+## Language
+
+**Commands are written in English.** All 14 of them are, and so is everything
+else in this repository - the same convention the rest of the industry follows,
+and the kit's own rule (record 13 in `ARCHITECTURE.md`). Write your own commands
+in English too: they are read by a model and by whoever forks your project next.
+
+**The language you and the agent speak is a separate thing, and the kit does not
+touch it.** It comes from your own environment - your global or project
+`CLAUDE.md` - so an English command answers you in Spanish, Russian or anything
+else, without a single edit here.
+
+If you do write a command in another language, nothing breaks. The evals in
+module 11 only score commands that have a row in `expectations.tsv`; your own
+commands are listed as "outside expectations" and are neither passed nor failed
+until you declare them there. The structural checks also recognize a handful of
+Russian phrasings besides the English ones, so a command is judged on the
+guarantee it makes rather than the language it makes it in.
+
 ## Links to the other modules
 
 | Prompt | Module |

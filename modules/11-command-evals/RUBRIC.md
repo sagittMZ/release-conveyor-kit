@@ -19,10 +19,10 @@ manual review.
    `PATTERNS.md`.
 5. **Hygiene.** No em dash used as punctuation (project rule: `--` -> ` - `).
 
-The layer 1 checks are **bilingual by design**: the harness recognizes both the
-English phrasings used in the kit's own commands and the owner's language in
-commands written after rollout into their projects. A command is never penalized
-for the language it is written in - only for missing the guarantee itself.
+Commands are written in English (see "Language" in the module 09 README). The
+layer 1 checks also recognize a handful of Russian phrasings, so a command is
+never penalized for the language it is written in - only for missing the
+guarantee itself.
 
 ## Behavior (layer 2, LLM judge)
 
@@ -36,4 +36,9 @@ for the language it is written in - only for missing the guarantee itself.
    duplication).
 
 Layer 2 scale: 0-5 per case (0 - does not do what it claims, 5 - precise and
-within bounds).
+within bounds). The anchors for each score are in `judge/judge-prompt.md`.
+
+**Case expectations describe behavior, never a string to find.** "Asks a
+clarifying question before planning" is checkable in any language; "contains the
+word 'clarify'" is a spelling test that fails the moment the answer comes back
+in the language the owner actually speaks.

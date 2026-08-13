@@ -119,8 +119,8 @@ eval_one() {
     check 1 "em dash found (--)"; else check 0 ""; fi
 
   # U3 a reference to an .ai/ role file MUST be conditional ("if the project has ...").
-  # Patterns are bilingual on purpose: the harness also scores commands written
-  # in the owner's language after rollout into their own projects.
+  # Commands are written in English; the Russian alternatives are here so that a
+  # command written in the owner's language is still judged on its guarantee.
   if has '\.ai/[A-Z]'; then
     if hasi 'if .*\.ai/|\.ai/.*(exists|is present)|if the project has|если.*\.ai/|\.ai/.*(есть|нет)|если в проекте'; then
       check 0 ""; else check 1 ".ai/ role referenced unconditionally (needs \"if ...\")"; fi
