@@ -8,3 +8,7 @@ voice, briefly, ready to paste into a store's "What's new".
 
 If $1 or $2 is not given, take the two most recent tags
 (git tag --sort=-creatordate) and say which ones you took.
+
+If a ref I gave does not exist in this repository, say so and stop. Offering
+the two most recent tags as a replacement is fine, but only as a named offer -
+never write the notes as if I had asked for those.
