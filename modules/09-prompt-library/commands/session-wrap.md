@@ -19,5 +19,8 @@ Summarize what we did this session. Then:
    as a new numbered entry with context, alternatives and consequences, written
    in the repository's canonical language. Records are append-only: a decision
    that stops being true gets superseded by a new entry that says so, never
-   rewritten. Decisions about process, one machine or one person's other
-   projects do not belong there. Do not write the entry without my word.
+   rewritten. Release discipline counts as product, not process: a rule about
+   what must hold before a release goes out (a green pipeline, a passed check)
+   is a guarantee the product makes. Decisions about one machine, tooling
+   habits or one person's other projects do not belong there. Do not write the
+   entry without my word.
