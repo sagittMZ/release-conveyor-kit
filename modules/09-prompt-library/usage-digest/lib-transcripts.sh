@@ -9,7 +9,6 @@
 #   source "<path>/lib-transcripts.sh"
 #
 # Functions:
-#   lt_projects_dir             -> the projects directory (env CLAUDE_PROJECTS_DIR)
 #   lt_find_files <days>        -> *.jsonl modified within N days (one per line)
 #   lt_cmd_counts   <files...>  -> "<count> <command>" for slash commands, descending
 #   lt_skill_counts <files...>  -> "<count> <skill>" for skills (Skill tool)
@@ -18,8 +17,6 @@
 #                                  content), one per line, without wrapper lines
 
 LT_PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
-
-lt_projects_dir() { printf '%s\n' "$LT_PROJECTS_DIR"; }
 
 lt_find_files() {
   local days="${1:-7}"

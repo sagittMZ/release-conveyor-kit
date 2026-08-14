@@ -19,8 +19,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib-transcripts.sh"
 
 DAYS="${DIGEST_DAYS:-7}"
 
-# The prompt library's commands (module 09). Extend as the set grows.
-LIB_COMMANDS="spec precommit session-wrap release-notes security-scan edge-cases backlog scope-triage handoff impl-plan audit eval-command consolidate-memory arch-viz"
+# The prompt library's commands: whatever sits in commands/ next door, so the
+# list cannot rot when a command is added or renamed. An empty directory just
+# means everything reports under "other".
+LIB_COMMANDS=""
+for _f in "$(dirname "${BASH_SOURCE[0]}")"/../commands/*.md; do
+  [ -f "$_f" ] && LIB_COMMANDS="$LIB_COMMANDS $(basename "$_f" .md)"
+done
 
 DATE="$(date '+%Y-%m-%d')"
 
