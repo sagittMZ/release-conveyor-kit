@@ -26,7 +26,13 @@
 # Usage:
 #   run-case.sh --fixture <dir> --command <name> [--arg <text>]
 #               [--role EXECUTOR] [--model <model>] [--out <file>]
-#               [--meta <file>] [--timeout <seconds>] [--isolated]
+#               [--meta <file>] [--state <file>] [--timeout <seconds>]
+#               [--isolated]
+#
+# --state writes the fixture's git state after the run (status + recent
+# commits). Judges cannot verify "writes nothing into the repository" from the
+# answer alone; this file is the evidence, and it belongs in the judge bundle
+# whenever a case has an avoid-item about writing.
 #
 # Exit codes: 0 ok, 2 bad usage or a refused target, 3 the session failed,
 # 4 the session returned an empty answer, 5 timed out.
@@ -37,7 +43,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODELS="$HERE/models.json"
 
 FIXTURE=""; COMMAND=""; ARG=""; ROLE="EXECUTOR"; MODEL=""
-OUT=""; META=""; TIMEOUT="${EVAL_TIMEOUT:-600}"; ISOLATED=0
+OUT=""; META=""; STATE=""; TIMEOUT="${EVAL_TIMEOUT:-600}"; ISOLATED=0
 PERM="${EVAL_PERMISSION_MODE:-bypassPermissions}"
 
 die() { echo "!! $1" >&2; exit "${2:-2}"; }
@@ -51,9 +57,10 @@ while [ $# -gt 0 ]; do
     --model)   MODEL="${2:-}"; shift 2 ;;
     --out)     OUT="${2:-}"; shift 2 ;;
     --meta)    META="${2:-}"; shift 2 ;;
+    --state)   STATE="${2:-}"; shift 2 ;;
     --timeout) TIMEOUT="${2:-}"; shift 2 ;;
     --isolated) ISOLATED=1; shift ;;
-    -h|--help) sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,38p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "unknown flag: $1" ;;
   esac
 done
@@ -174,6 +181,22 @@ if [ -n "$is_error" ] || printf '%s' "$answer" | head -3 | grep -qiE '^(Unknown 
   echo "-- what came back instead:" >&2; printf '%s\n' "$answer" | head -5 >&2
   echo "-- stderr tail:" >&2; tail -20 "$err" >&2
   exit 3
+fi
+
+# The answer says what the command claims it did; the fixture says what it
+# actually did. Captured after the run so a judge can hold the two against
+# each other.
+if [ -n "$STATE" ]; then
+  {
+    echo "## fixture git state after the run"
+    echo
+    echo "git status --porcelain:"
+    git -C "$FIXTURE" status --porcelain 2>/dev/null || echo "(git status failed)"
+    echo
+    echo "recent commits:"
+    git -C "$FIXTURE" log --oneline -5 2>/dev/null || echo "(no commits)"
+  } > "$STATE"
+  echo "-- state: $STATE" >&2
 fi
 
 meta_line="command=/$COMMAND role=$ROLE model=$MODEL fixture=$(basename "$FIXTURE") env=$env_note seconds=$elapsed $cost"

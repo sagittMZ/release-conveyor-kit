@@ -31,9 +31,11 @@ for "the behavior was checked".
 | cases/&lt;name&gt;.md | Layer 2 test cases on invented examples: input plus expect/avoid |
 | models.json | Which model plays which layer 2 role (EXECUTOR / JUDGE_A / JUDGE_B) |
 | run-case.sh | Dispatches a real slash command against a fixture, headless |
+| judge-case.sh | Runs one judge over one prepared answer, headless, in its own session |
 | fixtures/mkfixture.sh | Builds the throwaway repositories the negative cases need |
 | judge/judge-prompt.md | The layer 2 LLM judge prompt (SCORE/PASS/NOTES) |
 | judge/scorecard-template.md | The shape of a layer 2 report, with the rules it has to keep |
+| judge/sample-scorecard.md | A filled-in example with invented numbers - a format demonstration, not a live assessment |
 
 The `/eval-command` command itself lives in `modules/09-prompt-library/commands/`,
 because commands have one home.
@@ -104,6 +106,12 @@ This exists because the cases that matter most cannot be imagined into being:
 an empty git, a diff too large to read, a staged binary, a repository with no
 tags. A model asked to picture those states answers about itself.
 
+`run-case.sh --state <file>` captures the fixture's git state after the run.
+The answer says what the command claims it did; the state file says what it
+actually did. When a case has an avoid-item about writing ("changes nothing",
+"does not commit"), that file goes into the judge bundle - a judge cannot
+verify restraint from the answer alone.
+
 ### The shape of a case
 
 A case file holds one or more cases, each under a `## case:` heading, with these
@@ -143,6 +151,10 @@ to see.
    things - command text, case input, the answer, expect/avoid - plus
    `judge/judge-prompt.md` and `RUBRIC.md`. Each runs in a fresh context.
    Neither sees the other's score, and neither is told a second judge exists.
+   `judge-case.sh` runs one judge in its own session against a prepared bundle,
+   which is what makes the fresh context a fact rather than a promise, and it
+   refuses a verdict that carries no SCORE/PASS lines instead of reading a
+   missing score as a lenient one.
 3. **Nothing is averaged.** Both scores go into the report. The lower of the two
    is the conservative result; the headline stays two numbers plus how often
    they agree.
