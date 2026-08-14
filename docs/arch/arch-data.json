@@ -43,9 +43,7 @@
       "label": "Owner",
       "group": "actors",
       "desc": "Sets goals, gives the go-ahead for rollouts and publications, reviews DRAFTs and pilot verdicts. Every outward-facing action requires their word.",
-      "files": [
-        "DECISIONS.md"
-      ],
+      "files": [],
       "tech": [
         "decisions"
       ]
@@ -66,10 +64,9 @@
       "id": "tz",
       "label": "Spec & v0 scope",
       "group": "contracts",
-      "desc": "Goals, non-goals and boundaries of the pipeline. Scope discipline: anything extra goes to BACKLOG with activation conditions.",
+      "desc": "Goals, non-goals and boundaries of the pipeline. Scope discipline: anything extra goes to the backlog with activation conditions. Lives in the private layer, outside the public tree (record 12).",
       "files": [
-        "TZ.md",
-        "BACKLOG.md"
+        "docs/private/"
       ],
       "tech": [
         "markdown"
@@ -79,10 +76,9 @@
       "id": "decisions",
       "label": "DECISIONS / BLOCKERS",
       "group": "contracts",
-      "desc": "Log of autonomous decisions and blockers. Also holds the zero-wrapping principle (#9).",
+      "desc": "Log of autonomous decisions and blockers. Also holds the zero-wrapping principle (#9). Lives in the private layer, outside the public tree (record 12).",
       "files": [
-        "DECISIONS.md",
-        "BLOCKERS.md"
+        "docs/private/"
       ],
       "tech": [
         "journal"
@@ -94,7 +90,7 @@
       "group": "contracts",
       "desc": "Target project parameters: branches, Node versions, build commands. `# conveyor:` markers in templates show what to change.",
       "files": [
-        "conveyor.config.json"
+        "conveyor.config.example.json"
       ],
       "tech": [
         "JSON"
@@ -104,10 +100,9 @@
       "id": "sessiondocs",
       "label": "Session docs",
       "group": "contracts",
-      "desc": "Fresh-session entry point, last-session snapshot, handoffs - continuity between agent sessions.",
+      "desc": "Fresh-session entry point, last-session snapshot, handoffs - continuity between agent sessions. The live documents are private; the tree ships the entry-point template.",
       "files": [
-        "docs/NEW_SESSION_PROMPT.md",
-        "docs/.session-current.md"
+        "docs/NEW_SESSION_PROMPT.example.md"
       ],
       "tech": [
         "markdown"
@@ -338,8 +333,7 @@
       "group": "delivery",
       "desc": "What every project receives: project level (commands, plugins) and machine level (rtk, pinned clones). Entry only via pilot verdict or audit.",
       "files": [
-        "modules/09-prompt-library/ROLLOUT.md",
-        "DECISIONS.md"
+        "modules/09-prompt-library/ROLLOUT.md"
       ],
       "tech": [
         "rule"
