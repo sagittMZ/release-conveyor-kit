@@ -357,3 +357,36 @@ public/private split (record 12) enforceable rather than a matter of care: the
 gitignore can be bypassed, this job cannot. Two of the shipped templates are job
 fragments rather than standalone workflows, so actionlint cannot parse them;
 they are skipped by name in the log, never silently.
+
+---
+
+### 15. Layer 2 judges real dispatches, with two judges and nothing averaged
+
+**Context.** Record 8 promised an LLM judge over cases. There are two quiet
+ways for such a judge to stop measuring anything: ask a model to *imagine* the
+repository state a case describes, and let a model grade its own output.
+
+**Decision.** A case that names a repository state gets a real one:
+`fixtures/mkfixture.sh` builds a throwaway repository and `run-case.sh`
+dispatches the actual slash command into it headlessly, behind guards that
+refuse any target that is not a stamped fixture. Every answer is scored by two
+judges in fresh sessions that know nothing of each other: judge A deliberately
+on the executor's own model, judge B on a different one. Nothing is averaged -
+both scores are reported, the lower is the conservative result, and
+disagreements of 2 points or more go to a work queue whose first suspect is the
+case wording, not the command. The gap between the judges' means is the
+measured size of self-grading bias for that run. The dispatched session
+inherits the operator's global config by default; that environment is recorded
+in the run metadata and reported, not pretended away.
+
+**Alternatives.** Simulated execution ("what would this command answer?") -
+rejected: a model asked to picture an empty repository answers about itself.
+One judge - rejected: a single score carries no error bar. A third judge as
+tie-breaker - rejected: it buys a majority, not an answer.
+
+**Consequences.** A layer 2 score describes a command *in an environment*, and
+says which. Reruns are per changed command; a full pass is reserved for a
+rollout, a release or a change of models. The first full run put judge
+agreement at 97% and self-grading bias at +0.17 points, and surfaced a defect
+structure cannot see: commands silently substituting a default when the
+argument they were given was invalid.
