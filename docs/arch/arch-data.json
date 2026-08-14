@@ -1,8 +1,8 @@
 {
   "meta": {
     "project": "release-conveyor-kit",
-    "updated": "2026-08-05",
-    "commit": "d2d5685",
+    "updated": "2026-08-14",
+    "commit": "ff8b799",
     "lang": "en"
   },
   "groups": [
@@ -253,14 +253,31 @@
       "id": "m11",
       "label": "11 command-evals",
       "group": "promptkit",
-      "desc": "Command quality as a number: layer 1 - structural checks against expectations.tsv, layer 2 - LLM judge over cases. The metric is always reported as two layers.",
+      "desc": "Command quality as a number: layer 1 - structural checks against expectations.tsv, layer 2 - behavioral cases (expect/avoid) scored by two judges. The metric is always reported as two layers, never collapsed.",
       "files": [
         "modules/11-command-evals/eval.sh",
-        "modules/11-command-evals/expectations.tsv"
+        "modules/11-command-evals/expectations.tsv",
+        "modules/11-command-evals/cases/"
       ],
       "tech": [
         "bash",
         "LLM judge"
+      ]
+    },
+    {
+      "id": "l2runner",
+      "label": "layer 2 runner",
+      "group": "promptkit",
+      "desc": "Real headless dispatch: mkfixture.sh builds a throwaway repository for a case, run-case.sh runs the actual slash command in it (guards refuse anything not a stamped fixture, post-run git state is captured as evidence), judge-case.sh runs each judge in its own fresh session. Two judges, nothing averaged; self-grading bias is measured, not disclaimed.",
+      "files": [
+        "modules/11-command-evals/run-case.sh",
+        "modules/11-command-evals/judge-case.sh",
+        "modules/11-command-evals/fixtures/mkfixture.sh",
+        "modules/11-command-evals/models.json"
+      ],
+      "tech": [
+        "bash",
+        "headless Claude"
       ]
     },
     {
@@ -354,7 +371,7 @@
       "id": "gha",
       "label": "GitHub Actions",
       "group": "runtime",
-      "desc": "Runs the pipeline templates and the arch-viz workflow: builds, checks, staleness reports.",
+      "desc": "Runs the pipeline templates, the arch-viz workflow, and the kit's own six-gate CI: shellcheck, actionlint, markdownlint, layer 1 evals in strict mode, gitleaks over tree and history, publishability.",
       "files": [
         ".github/workflows/"
       ],
@@ -505,6 +522,18 @@
       "kind": "data"
     },
     {
+      "from": "m11",
+      "to": "l2runner",
+      "label": "cases, rubric, roles",
+      "kind": "control"
+    },
+    {
+      "from": "m09",
+      "to": "l2runner",
+      "label": "commands vendored into fixtures",
+      "kind": "data"
+    },
+    {
       "from": "libtr",
       "to": "digest",
       "label": "counters",
@@ -650,7 +679,11 @@
         },
         {
           "node": "m11",
-          "text": "Layer 1: structural invariants against expectations.tsv; layer 2: LLM judge over cases. Scorecard with delta."
+          "text": "Layer 1: structural invariants against expectations.tsv, free and usable as a CI gate."
+        },
+        {
+          "node": "l2runner",
+          "text": "Layer 2: the real command dispatched into a generated fixture, then two judges in fresh sessions - both scores reported, disagreements queued, self-grading bias measured. Scorecard with delta."
         }
       ]
     },
