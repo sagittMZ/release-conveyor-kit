@@ -30,6 +30,10 @@ and an agent work together, and it survives any stack.
 Each module is self-contained: a `README.md` with an "Origin" section, a
 `checklist.md` that defines what "applied" means, and `templates/` with
 `# conveyor:` markers on every line that needs a project-specific value.
+Templates carry a second marker for what a config cannot hold: `TODO(kit)`
+flags a place the applying agent must adapt with judgement - routes,
+selectors, entity names. `# conveyor:` reads from the config; `TODO(kit)`
+asks the agent.
 
 ## Design decisions
 
