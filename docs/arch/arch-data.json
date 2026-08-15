@@ -1,8 +1,8 @@
 {
   "meta": {
     "project": "release-conveyor-kit",
-    "updated": "2026-08-14",
-    "commit": "ff8b799",
+    "updated": "2026-08-15",
+    "commit": "849e6c7",
     "lang": "en"
   },
   "groups": [
@@ -211,7 +211,7 @@
       "id": "m09",
       "label": "09 prompt-library",
       "group": "promptkit",
-      "desc": "14 slash commands + 21 prompt-menu entries across 6 phases + PATTERNS. Stack-independent core, dogfooded by the kit itself via symlinks.",
+      "desc": "14 slash commands + 21 prompt-menu entries across 6 phases + PATTERNS. Stack-independent core, dogfooded by the kit itself via CI-guarded real copies in .claude/commands (ADR 16).",
       "files": [
         "modules/09-prompt-library/commands/",
         "modules/09-prompt-library/PATTERNS.md"
@@ -365,7 +365,7 @@
       "id": "gha",
       "label": "GitHub Actions",
       "group": "runtime",
-      "desc": "Runs the pipeline templates, the arch-viz workflow, and the kit's own six-gate CI: shellcheck, actionlint, markdownlint, layer 1 evals in strict mode, gitleaks over tree and history, publishability.",
+      "desc": "Runs the pipeline templates, the arch-viz workflow, and the kit's own six-gate CI: shellcheck, actionlint, markdownlint, layer 1 evals in strict mode, gitleaks over tree and history, publishability (private layer, local settings strays) plus a dogfood-copy drift gate against module 09.",
       "files": [
         ".github/workflows/"
       ],
