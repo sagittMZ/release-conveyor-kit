@@ -6,6 +6,13 @@ Code), with no cloud and no paid jobs. It periodically distills raw material
 so memory does not just accumulate as raw sediment. It closes the main gap of
 file-based memory: it piles up and never gets revisited.
 
+## Origin
+
+Added by the kit - this module has no donor. Verified by dogfooding: the
+collection script runs against this repository's own session history, and the
+safety rules below (never clobber hand-written memory, raw material outside
+the git tree) were earned in that use, not derived in theory.
+
 ## The flow (cheap, reviewable)
 
 1. **Collection (bash, zero cost):** `consolidate.sh` gathers the scattered

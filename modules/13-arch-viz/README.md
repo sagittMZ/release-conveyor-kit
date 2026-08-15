@@ -7,6 +7,12 @@ any component through the sidebar.
 
 Stack-independent (like 09/11/12): it works for any repository.
 
+## Origin
+
+Added by the kit - this module has no donor. Verified by dogfooding: the kit's
+own visualization is produced by this module and watched by the same CI it
+ships - see "Field test" at the end of this file.
+
 ## The hybrid mechanism
 
 Semantic analysis of code is LLM work: free inside a session, paid in CI. So:

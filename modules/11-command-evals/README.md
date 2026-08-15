@@ -5,6 +5,14 @@ eval-driven agent development: a rubric, checks, a baseline and a delta. The
 whole module runs on the stack already in use (bash + Claude Code) - no cloud,
 no paid jobs.
 
+## Origin
+
+Added by the kit - this module has no donor. Verified by dogfooding: layer 1
+gates this repository's own CI in `--strict` mode, and the full layer 2
+protocol (real dispatches into stamped fixtures, two independent judges) has
+been run against the kit's own 14 commands - the agreement and bias numbers in
+ARCHITECTURE.md record 15 come from that run.
+
 ## Philosophy: programmatic first, judge selectively
 
 - **Layer 1 (always on, free):** deterministic bash checks over the command

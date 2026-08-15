@@ -3,6 +3,14 @@
 The environment pattern for Supabase projects. Two variants; the choice is
 `staging.variant` in conveyor.config.json.
 
+## Origin
+
+- **From the working donor (proven):** variant B as production reality - QA
+  accounts, the cleanup RPC, the CI exclusion flags - extracted as is.
+- **Added by the kit (NOT verified):** variant A, written as instructions and
+  never run against a live second project. Each variant heading below carries
+  its own mark.
+
 ## Variant A - a separate environment (paid, or a second free project)
 
 NOT from the donor (the donor lives on the free tier with variant B) - these are

@@ -5,6 +5,15 @@ requirements change - so its core is step-by-step INSTRUCTIONS for the
 "agent + owner" pair rather than hardcoded automation. Automation only where the
 API is stable.
 
+## Origin
+
+- **From the working donor (proven):** the Google Play path end to end (the
+  donor shipped there), App Store wave A, and the deep-link hosting pattern
+  (headers + rewrite exception).
+- **Added by the kit (NOT verified):** the Data Safety notes, the Play API
+  upload job, waves B-C of the App Store playbook. The per-file split is the
+  Status column in the table below.
+
 ## Contents
 
 | File | What it is | Status |
