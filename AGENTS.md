@@ -76,6 +76,11 @@ because of that.
 - **Scope discipline.** Anything outside the current scope goes to the backlog
   with the condition that would activate it, rather than being built "while we
   are here".
+- **Numbered registries.** Backlog items, decision records and any other
+  numbered sequence: before assigning a number, find the highest index ever
+  used - including closed or superseded entries that live elsewhere
+  (CHANGELOG, archives, done sections) - and take max+1. Numbers are never
+  reused; a closed entry keeps its number forever.
 
 ## Where things are
 
