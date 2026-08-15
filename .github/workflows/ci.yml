@@ -80,6 +80,14 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, SHA-pinned
       - name: Layer 1 evals (structure of all commands)
         run: bash modules/11-command-evals/eval.sh --all --strict
+      - name: Dogfood commands match module 09 (no drift)
+        run: |
+          set -euo pipefail
+          # .claude/commands/ holds real copies, not symlinks (symlinks break
+          # on Windows clones - ARCHITECTURE record 16). Copies may not drift
+          # from their source of truth in module 09.
+          diff -ru modules/09-prompt-library/commands .claude/commands
+          echo "dogfood copies are byte-identical to module 09"
       - name: Architecture data invariants
         run: |
           set -euo pipefail

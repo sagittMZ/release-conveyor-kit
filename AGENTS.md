@@ -95,4 +95,4 @@ because of that.
 | `docs/EXPLAIN.md`, `docs/prompt-kit-guide.md` | explanations and user guide |
 | `docs/arch/` | architecture visualization (canonical, English) |
 | `docs/private/` | the owner's working layer - git-ignored, never published |
-| `.claude/commands/` | the kit's own slash commands (dogfooding) |
+| `.claude/commands/` | the kit's own slash commands (dogfooding) - real copies of module 09, kept identical by a CI diff gate |

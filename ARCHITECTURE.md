@@ -390,3 +390,32 @@ rollout, a release or a change of models. The first full run put judge
 agreement at 97% and self-grading bias at +0.17 points, and surfaced a defect
 structure cannot see: commands silently substituting a default when the
 argument they were given was invalid.
+
+---
+
+### 16. Dogfood commands are CI-guarded copies, not symlinks
+
+**Context.** The kit runs its own commands: `.claude/commands/` must mirror
+`modules/09-prompt-library/commands/`. Symlinks were the original
+deduplication mechanism - and they break the moment the repository is cloned
+on Windows, where git without `core.symlinks` checks them out as text stubs
+containing the target path. A fork on Windows would get fourteen broken
+commands.
+
+**Decision.** `.claude/commands/` holds real copies. A CI step diffs them
+against module 09 and fails on any drift, so the copies cannot quietly stop
+being copies. The source of truth stays module 09; edits land there and are
+copied over.
+
+**Alternatives.** Keep symlinks - rejected: portability is a stated property
+of the stack-independent layer, and the kit's own tree contradicted it. An
+install script plus gitignored copies - rejected: a fresh clone would have no
+working commands until a script runs. Pointing Claude at module 09 directly -
+rejected: the command directory location is the harness's convention, not the
+kit's to change.
+
+**Consequences.** The tree works identically on any OS that can clone it.
+The cost is a two-step edit (module, then copy), and the CI gate turns a
+forgotten second step from silent drift into a red build. This is the same
+pattern rollout already uses for target projects, which get real files and a
+provenance stamp rather than links.
