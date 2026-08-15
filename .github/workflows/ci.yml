@@ -135,7 +135,9 @@ jobs:
           set -euo pipefail
           # docs/private/ and the session mechanics are the owner's working
           # layer. If any of it is tracked, the gitignore was bypassed.
-          leaked="$(git ls-files -- 'docs/private/**' 'docs/.session-current.md' 'docs/NEW_SESSION_PROMPT.md' 'docs/evals/**' 'docs/consolidation/**')"
+          # Local Claude settings and any *.tmp.* stray are process artifacts:
+          # one once reached the index, which is why they are guarded here.
+          leaked="$(git ls-files -- 'docs/private/**' 'docs/.session-current.md' 'docs/NEW_SESSION_PROMPT.md' 'docs/evals/**' 'docs/consolidation/**' '.claude/settings.local.json*' '*.tmp.*')"
           if [ -n "$leaked" ]; then
             echo "::error::private files are tracked:"
             echo "$leaked"

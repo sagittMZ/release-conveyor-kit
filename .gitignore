@@ -22,8 +22,10 @@ docs/evals/
 # distillate by hand.
 docs/consolidation/
 
-# Local Claude Code settings and Telegram bridge uploads.
-.claude/settings.local.json
+# Local Claude Code settings and Telegram bridge uploads. The wildcard also
+# covers editor/tool temp copies (settings.local.json.tmp.*), which once
+# slipped into the index.
+.claude/settings.local.json*
 .ccgram-uploads/
 
 # Translated versions of the architecture visualization - the owner's local
