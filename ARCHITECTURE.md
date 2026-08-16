@@ -423,3 +423,44 @@ The cost is a two-step edit (module, then copy), and the CI gate turns a
 forgotten second step from silent drift into a red build. This is the same
 pattern rollout already uses for target projects, which get real files and a
 provenance stamp rather than links.
+
+---
+
+### 17. Done is proven, not declared
+
+**Context.** The longer an agent works on something, the less its own "it
+works" is worth: the author of a change is the least reliable witness to its
+success, and a model that spent an hour on a feature honestly believes in it.
+Anthropic's published work on long-running agents (the patterns behind
+github.com/anthropics/cwc-long-running-agents) names two counter-measures the
+kit does not yet carry as portable mechanisms: acceptance criteria that start
+failed, and an evaluator that never saw the work happen. The kit already
+demands proof of itself - AGENTS.md's verify-before-reporting rule, record
+15's refusal of self-grading - but only as house rules of this repository,
+nothing a rollout target inherits.
+
+**Decision.** The kit adopts both patterns as module 09 commands; this record
+fixes the direction, the implementation sits in the backlog. First,
+Default-FAIL acceptance criteria: a task above a triage threshold gets a
+criteria file where every criterion starts as fail and flips to pass only
+with attached evidence - a test run, a log, an artifact. The same file is the
+task's resumable state: a fresh session picks up the first criterion still
+failing instead of reconstructing the story. Second, an independent
+evaluator: a separate agent with a fresh context and no write access receives
+the criteria and the tree, and returns pass or fail with a reason per
+criterion. Below the threshold none of this ceremony applies - a small fix
+stays "fix, test, commit".
+
+**Alternatives.** Trusting the working agent's self-report - rejected: that
+is the failure mode being fixed. Using /audit as the verifier - rejected for
+this purpose: it runs in the session that produced the work, so it shares
+that session's blind spots (/audit stays what it is, a project review, not
+task acceptance). Applying the full cycle to every task - rejected: for a
+one-commit fix the harness costs more than the work.
+
+**Consequences.** "Done" becomes something the tree can demonstrate rather
+than a claim the agent makes, and long tasks survive session boundaries by
+construction. The costs are one more artifact per large task and one more
+model call per acceptance, which is why the threshold is part of the
+decision, not an afterthought. This extends record 15's principle - nothing
+grades its own output - from command evals to everyday work.
