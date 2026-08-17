@@ -11,8 +11,13 @@ index ever used - scan the whole registry including closed and archived items
 (CHANGELOG, done sections), not just the currently visible list - and assign
 max+1. Never reuse a number: a closed item keeps its number forever.
 
-If $ARGUMENTS is "priorities" (or empty and a backlog already exists): walk the
-backlog and return it ordered by descending priority - briefly, here in chat.
+If $ARGUMENTS is "priorities": walk the backlog and return it ordered by
+descending priority - briefly, here in chat.
+
+If $ARGUMENTS is empty: ask one question - file a task or show priorities -
+and wait for the answer. Command menus (Telegram and the like) send a bare
+command instantly, so an empty call is usually a tap that never got its
+arguments, not a request to rank.
 
 Hygiene: anything done moves out of the backlog into the project's feature
 registry, if it has one.

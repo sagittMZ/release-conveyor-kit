@@ -32,6 +32,20 @@ avoid:
 - rewriting the file into the new order
 - filing a new item instead of ranking
 
+## case: an empty call from a menu tap
+
+fixture: backlog
+arg:
+input: the same backlog of seven items, invoked with no argument at all - the way a messenger command menu fires a command before the user can type anything
+expect:
+
+- asks one question - file a task or show priorities - and stops there
+- BACKLOG.md is left unchanged
+avoid:
+- ranking the backlog as a silent default
+- filing anything
+- answering as if an argument had been given
+
 ## case: an argument that reads both ways
 
 fixture: backlog
