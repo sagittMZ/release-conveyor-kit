@@ -1,8 +1,8 @@
 {
   "meta": {
     "project": "release-conveyor-kit",
-    "updated": "2026-08-17",
-    "commit": "8d674c9",
+    "updated": "2026-08-28",
+    "commit": "567291c",
     "lang": "en"
   },
   "groups": [
@@ -301,6 +301,23 @@
       "tech": [
         "SVG",
         "vanilla JS"
+      ]
+    },
+    {
+      "id": "m14",
+      "label": "14 session-respawn",
+      "group": "promptkit",
+      "desc": "Machine-level: a manifest of agent sessions (tmux window, project, chat topic, model, resume mode) and a script that brings them all back after a reboot, once, with the topic bindings intact and layered loop protection (ADR 18). Not verified until the reboot acceptance passes.",
+      "files": [
+        "modules/14-session-respawn/ccgram-respawn.sh",
+        "modules/14-session-respawn/templates/respawn-manifest.example.json",
+        "modules/14-session-respawn/templates/ccgram-respawn.service"
+      ],
+      "tech": [
+        "bash",
+        "python3",
+        "systemd",
+        "tmux"
       ]
     },
     {
@@ -628,6 +645,18 @@
       "to": "target",
       "label": "CI runs",
       "kind": "control"
+    },
+    {
+      "from": "owner",
+      "to": "m14",
+      "label": "manifest + acceptance",
+      "kind": "control"
+    },
+    {
+      "from": "m14",
+      "to": "transcripts",
+      "label": "newest transcript = session id",
+      "kind": "data"
     }
   ],
   "flows": [
