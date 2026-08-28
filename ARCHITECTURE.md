@@ -17,6 +17,7 @@ conveyor.config.json      parameters of the target project (names, branches, ver
 modules/01..08            release pipeline, stack-specific (React/TS + Vite +
                           Capacitor + Supabase + Vercel + Actions + Codemagic)
 modules/09, 11, 12, 13    prompt-kit layer, stack-independent - works on any repo
+modules/14                session respawn, stack-independent - works on the host machine
         |
         v
 target project            vendored copy: .claude/commands/, docs/prompts/,
@@ -464,3 +465,41 @@ construction. The costs are one more artifact per large task and one more
 model call per acceptance, which is why the threshold is part of the
 decision, not an afterthought. This extends record 15's principle - nothing
 grades its own output - from command evals to everyday work.
+
+### 18. Sessions survive the machine: respawn from a manifest, once per boot
+
+**Context.** The owner runs one agent session per project, each in a tmux
+window, each bound to a chat topic through a bridge daemon. The bridge and the
+tmux server restart on boot; the windows and the sessions in them do not, and
+the bridge sweeps their records as stale. Re-creating them by hand was done
+several times and each time hit the same traps: window order decides which
+topic talks to which project, a resume dialog blocks a window until a key is
+pressed, two start hooks in the same second overwrite each other's record,
+and stopping the bridge with windows alive wipes its map. The owner also
+carries a scar from another tool's auto-restart that looped until the machine
+ran out of memory.
+
+**Decision.** The kit ships module 14: a manifest that lists every window
+(project path, topic, model, resume mode, optional config dir) and a script
+that rebuilds them from it, plus a oneshot unit that runs the script once per
+boot. Two rules are part of the decision, not implementation detail. First,
+the bridge is stopped only when nothing exists yet; with a single live window
+it is never touched. Second, loop protection is layered and boring: a lock, a
+ceiling equal to the manifest length, a stop when processes appear that the
+run did not start, no `Restart=`, and a dry-run that must pass before the unit
+is enabled. The manifest is the only source of truth; session ids are looked
+up at run time, never stored.
+
+**Alternatives.** Waiting for the bridge to grow the feature upstream -
+rejected as the only path: a feature request is filed separately, the machine
+needs to reboot now. tmux-resurrect style plugins - rejected: they restore
+panes and commands, not the bridge's topic bindings, and they would answer no
+dialog. One systemd unit per window - rejected: eight units with ordering
+dependencies to keep topic ids aligned is the same problem with more files.
+
+**Consequences.** A reboot stops being an incident. The module is machine-level
+rather than repository-level, the first of its kind in the kit, which is why
+the README says so explicitly. It enters as "added by the kit, not verified"
+(record 4) and stays there until a real cold run and a real reboot pass; the
+checklist names both. The manifest is one more file in the machine's backup
+set, which the restore procedure must cover (backlog).

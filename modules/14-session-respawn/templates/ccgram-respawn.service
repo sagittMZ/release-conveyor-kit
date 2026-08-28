@@ -1,0 +1,24 @@
+# Copy to ~/.config/systemd/user/ccgram-respawn.service, then
+# systemctl --user daemon-reload && systemctl --user enable ccgram-respawn
+# - enable ONLY after a manual cold run of the script has passed.
+[Unit]
+Description=Respawn ccgram tmux windows and claude sessions from the manifest
+# Runs once per boot after ccgram is up. Loop protection: oneshot without
+# Restart=, RemainAfterExit keeps it "active" so a second start is a no-op,
+# the script itself holds a flock and refuses to launch more claude processes
+# than the manifest lists. TimeoutStartSec bounds the whole run.
+After=network-online.target tmux-keeper.service ccgram.service
+Wants=network-online.target
+Requires=tmux-keeper.service ccgram.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=10min
+ExecStartPre=/bin/sleep 30
+ExecStart=%h/bin/ccgram-respawn.sh
+Environment=CCGRAM_DIR=%h/.ccgram
+Environment=PATH=%h/.local/bin:%h/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target

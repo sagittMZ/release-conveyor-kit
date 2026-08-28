@@ -34,6 +34,7 @@ in any language - see [the stack-independent layer](#stack-independent-layer).
 | 11 | [command-evals](modules/11-command-evals/) | Command quality as a number: structural checks + an LLM judge. Stack-independent |
 | 12 | [memory-consolidation](modules/12-memory-consolidation/) | Distilling session history into reviewable insights, on files, for free. Stack-independent |
 | 13 | [arch-viz](modules/13-arch-viz/) | Interactive architecture visualization as one self-contained HTML file; CI watches it for staleness. Stack-independent |
+| 14 | [session-respawn](modules/14-session-respawn/) | Agent sessions and their chat-topic bindings come back after a reboot from one manifest, with loop protection. Stack-independent, machine-level |
 
 ## Quick start
 
@@ -47,8 +48,8 @@ in any language - see [the stack-independent layer](#stack-independent-layer).
 
 ## Stack-independent layer
 
-Modules 09, 11, 12 and 13 have nothing to do with React or Supabase. They can be
-applied alone, to any repository:
+Modules 09, 11, 12, 13 and 14 have nothing to do with React or Supabase. They
+can be applied alone, to any repository (14 to the machine that hosts them):
 
 - **Commands and prompts** - 14 slash commands for the recurring moments of
   work (spec, pre-commit review, release notes, security scan, handoff,
@@ -65,6 +66,9 @@ applied alone, to any repository:
 - **Architecture visualization** - an LLM updates the data in-session, a script
   deterministically builds a self-contained page, CI reports when it goes
   stale.
+- **Session respawn** - a manifest of agent sessions (tmux window, project,
+  chat topic, model, resume mode) and a script that brings them all back after
+  a reboot, once, with the bindings intact and a hard ceiling on processes.
 
 Guide and worked examples: [docs/prompt-kit-guide.md](docs/prompt-kit-guide.md).
 Rollout into an existing project:

@@ -1,0 +1,14 @@
+{
+  "_doc": "Copy to ~/.ccgram/respawn-manifest.json. Order = tmux window order after a reboot. session_id is never stored: it is resolved from the newest transcript in <config_dir>/projects/<cwd-slug>/. resume: summary | full | fresh. group: the model-diversity check wants at least two distinct models per group.",
+  "tmux_session": "ccgram",
+  "claude_command": "claude --settings ~/.ccgram/no-telegram.json --dangerously-skip-permissions",
+  "report": {
+    "summary_thread_id": 0,
+    "per_topic_line": true
+  },
+  "windows": [
+    {"name": "<topic-name>",       "cwd": "~/projects/<repo>",      "thread_id": 0, "model": "<model-a>", "resume": "summary", "group": "default"},
+    {"name": "<other-topic-name>", "cwd": "~/projects/<other-repo>", "thread_id": 0, "model": "<model-b>", "resume": "summary", "group": "default"},
+    {"name": "<work-topic-name>",  "cwd": "~/work/<repo>",           "thread_id": 0, "model": "<model-a>", "resume": "full",    "group": "work", "config_dir": "~/.claude-work"}
+  ]
+}
