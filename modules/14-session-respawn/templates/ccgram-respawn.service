@@ -9,7 +9,9 @@ Description=Respawn ccgram tmux windows and claude sessions from the manifest
 # than the manifest lists. TimeoutStartSec bounds the whole run.
 After=network-online.target tmux-keeper.service ccgram.service
 Wants=network-online.target
-Requires=tmux-keeper.service ccgram.service
+Wants=tmux-keeper.service ccgram.service
+# Wants, not Requires: the script stops ccgram in cold mode, and with Requires=
+# systemd would take this unit down together with it (seen 2026-09-17).
 
 [Service]
 Type=oneshot

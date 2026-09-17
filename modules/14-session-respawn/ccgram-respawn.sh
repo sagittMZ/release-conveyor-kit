@@ -164,7 +164,7 @@ handle_startup_dialog() {
         fi
         if grep -q 'Yes, I accept' <<<"$pane"; then echo "needs-attention:bypass-permissions-consent"; return 0; fi
         if grep -qi 'trust the files' <<<"$pane"; then echo "needs-attention:trust-dialog"; return 0; fi
-        if grep -q 'for shortcuts' <<<"$pane"; then echo "prompt"; return 0; fi
+        if grep -qE 'for shortcuts|for agents' <<<"$pane"; then echo "prompt"; return 0; fi
     done
     printf '%s\n' "--- pane $id after ${DIALOG_WAIT}s ---" "$pane" >>"$LOG"
     echo "timeout"
@@ -251,8 +251,22 @@ for w in mapping:
             new_ws[w["id"]].pop("panes", None)
         if old in offs:
             new_off[w["id"]] = offs[old]
-dropped = sorted(set(s.get("thread_bindings", {}).get(user_id, {})) - set(new_bind))
-s.setdefault("thread_bindings", {})[user_id] = new_bind
+# ccgram 4.9+ keys bindings by "user:chat:thread" in chat_thread_bindings and
+# lets a chat-scoped row win over the legacy thread_bindings row, so a stale
+# chat-scoped id would silently survive a legacy-only rewrite. Rewrite whichever
+# schema the file already uses.
+if "chat_thread_bindings" in s:
+    prefix = f"{user_id}:{group_id}:"
+    old_chat = s.get("chat_thread_bindings", {})
+    dropped = sorted(k[len(prefix):] for k in old_chat if k.startswith(prefix)
+                     and k[len(prefix):] not in new_bind)
+    kept = {k: v for k, v in old_chat.items() if not k.startswith(prefix)}
+    kept.update({prefix + tid: wid for tid, wid in new_bind.items()})
+    s["chat_thread_bindings"] = kept
+    s.get("thread_bindings", {}).pop(user_id, None)
+else:
+    dropped = sorted(set(s.get("thread_bindings", {}).get(user_id, {})) - set(new_bind))
+    s.setdefault("thread_bindings", {})[user_id] = new_bind
 s["window_display_names"] = new_names
 s["window_states"] = new_ws
 s.setdefault("user_window_offsets", {})[user_id] = new_off
@@ -405,6 +419,18 @@ for g, models in sorted(groups.items()):
 print("; ".join(out) or "no live windows")
 PY
 )"
+# A window that already existed carries ccgram's in-memory "dead" flag from the
+# SessionEnd of the claude we replaced; relaunching in the same pane does not
+# clear it, so Telegram answers that topic with the recovery UI instead of
+# reaching the live session. Cold mode starts ccgram fresh, so only warm needs it.
+# ponytail: blunt - ~10s of bridge downtime for all topics. Narrow it only if
+# ccgram ever exposes a per-window "unmark dead" command.
+if [ "$MODE" = warm ] && [ "$launched" -gt 0 ] && [ "$DRY" = 0 ]; then
+    log "warm relaunch: restarting ccgram to clear dead-window flags"
+    systemctl --user restart ccgram && sleep 8
+    systemctl --user is-active --quiet ccgram || { log "WARN: ccgram failed to restart"; failed=$((failed + 1)); }
+fi
+
 AFTER="$(claude_count)"
 if [ "$AFTER" -gt $((BEFORE + launched)) ]; then
     log "WARN: $AFTER claude processes, expected at most $((BEFORE + launched))"; failed=$((failed + 1))

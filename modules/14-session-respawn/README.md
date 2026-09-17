@@ -20,6 +20,11 @@ that actually happened). **Not verified**: the script has passed syntax,
 shellcheck and dry-runs in all three modes (nothing to do, warm, cold), but a
 real cold run after a tmux server restart and a real reboot with the unit
 enabled are still pending. This section changes to "verified" when they pass.
+First real reboot with the unit enabled (2026-09-17) did not pass: the unit
+had `Requires=ccgram.service`, so when the script stopped the bridge in cold
+mode systemd stopped the script with it, and the bridge stayed down. Fixed
+(`Wants=`), together with the bindings schema of ccgram 4.9+ (trap 7). The
+fleet was brought back by hand that day with the warm path of the script.
 
 ## Files
 
@@ -87,7 +92,9 @@ Mode is chosen from what exists:
   session map on shutdown when windows are alive. Missing windows are created,
   windows without a live session get one, live windows are kept. `--only`
   limits which windows get a session; in cold mode all windows are still
-  created so the ids line up.
+  created so the ids line up. After a warm relaunch the bridge is restarted
+  once: it keeps an in-memory "dead" flag for a window whose session ended,
+  and a new session in the same pane does not clear it.
 
 Per window, one at a time with a pause between: send the launch line, watch
 the pane for the "Resume from summary / full" dialog and answer it as the
@@ -125,6 +132,14 @@ of memory - the owner has been there with another tool. So:
 4. Sessions created before the bridge finished its startup cleanup get swept
    away as stale.
 5. Stopping the bridge while windows are alive wipes the session map.
+6. A unit with `Requires=ccgram.service` dies together with the bridge the
+   moment the script stops it in cold mode; `Wants=` keeps the ordering
+   without the coupling.
+7. ccgram 4.9+ stores bindings as `chat_thread_bindings` (`user:chat:thread`
+   -> window id) and its startup re-resolution by name does not touch that
+   map, so after a tmux server restart every topic points at a window id
+   that no longer exists (or, worse, at a new window with a reused id). The
+   cold rewrite handles both schemas.
 
 ## Rollout
 
@@ -137,6 +152,14 @@ of memory - the owner has been there with another tool. So:
    `systemctl --user enable ccgram-respawn`.
 5. Reboot in a quiet hour. Sessions come back on their own.
    `systemctl --user start ccgram-respawn` afterwards must be a no-op.
+
+Manual fallback when the bridge is already down and one window is yours
+(what 2026-09-17 looked like): back up `state.json`, create the missing
+windows with `tmux new-window -d -P -F '#{window_id}' -t ccgram: -n <topic>
+-c <cwd>`, rewrite `chat_thread_bindings`, `window_display_names` and
+`window_states` to the new ids (drop the ones you are not bringing back),
+start the bridge, then run the script with `--only` per window - it is warm
+mode from there.
 
 Log: `~/.ccgram/respawn.log`. Backups of `state.json` before a rewrite:
 `~/.ccgram/state.json.bak-respawn-<timestamp>`.
