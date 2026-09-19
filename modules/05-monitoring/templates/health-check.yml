@@ -1,7 +1,7 @@
 # Release Conveyor Kit - module 05-monitoring
 # Scheduled production health check. KIT ADDITION - not present in the donor.
 # Pings the web app and the Supabase REST endpoint; a red run = GitHub
-# notification (add the Telegram step below for instant alerts).
+# notification (add the alert step below for instant alerts in the team chat).
 #
 # conveyor: web.productionUrl
 
@@ -37,15 +37,23 @@ jobs:
           echo "supabase auth health: HTTP $code"
           [ "$code" = "200" ] || exit 1
 
-      # Optional instant alert. Requires TELEGRAM_BOT_TOKEN_REPORTS and
-      # TELEGRAM_CHAT_ID_REPORTS secrets (pattern proven in donor's e2e workflow).
-      - name: Telegram alert on failure
+      # Optional instant alert to the team chat. One backend is enough:
+      # TELEGRAM_BOT_TOKEN_REPORTS + TELEGRAM_CHAT_ID_REPORTS (Telegram Bot API,
+      # pattern proven in the donor's e2e workflow) or NOTIFY_WEBHOOK_URL_REPORTS
+      # (an incoming webhook that accepts {"text": ...}, Slack-style; added by
+      # the kit, not verified). Without secrets the step exits quietly.
+      - name: Alert on failure
         if: failure()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_REPORTS }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_REPORTS }}
+          WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL_REPORTS }}
         run: |
-          [ -n "$TELEGRAM_BOT_TOKEN" ] || exit 0
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -F "chat_id=${TELEGRAM_CHAT_ID}" \
-            -F "text=🔴 Health check FAILED: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > /dev/null
+          TEXT="🔴 Health check FAILED: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -F "chat_id=${TELEGRAM_CHAT_ID}" -F "text=${TEXT}" > /dev/null
+          elif [ -n "$WEBHOOK_URL" ]; then
+            curl -s -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${TEXT}\"}" "$WEBHOOK_URL" > /dev/null
+          fi

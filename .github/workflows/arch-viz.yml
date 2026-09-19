@@ -1,13 +1,17 @@
 # arch-viz: deterministic rebuild of the architecture visualization plus a
 # staleness check with a HARD guarantee - a notification to the project's
-# Telegram topic when the data goes stale (sources newer than arch-data.json).
+# chat (a messenger topic or channel) when the data goes stale (sources newer than arch-data.json).
 # Anti-spam: one ping per staleness episode (when it STARTED in this push);
 # the summary is always written.
 #
 # Secrets (Settings -> Secrets and variables -> Actions):
-#   TELEGRAM_BOT_TOKEN   the bot token
-#   TELEGRAM_CHAT_ID     the group or chat id
-#   TELEGRAM_THREAD_ID   the project's topic id in a forum group (empty = no topic)
+#   one backend is enough; Telegram is the proven one, the webhook is added by
+#   the kit and not verified:
+#   TELEGRAM_BOT_TOKEN   the bot token                       (Telegram backend)
+#   TELEGRAM_CHAT_ID     the group or chat id                (Telegram backend)
+#   TELEGRAM_THREAD_ID   the topic id in a forum group, empty = no topic
+#   NOTIFY_WEBHOOK_URL   an incoming webhook that accepts {"text": ...}
+#                        (Slack-style; webhook backend)
 # Without the secrets the workflow still runs; the notification is skipped quietly.
 #
 # The kit dogfooding itself. Template source: modules/13-arch-viz/templates/arch-viz.yml.
@@ -19,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       test_notify:
-        description: 'Send a test Telegram notification'
+        description: 'Send a test notification'
         required: false
         default: 'false'
 
@@ -57,37 +61,50 @@ jobs:
             echo "HTML lagged behind the data - rebuilt and committed" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Staleness check + Telegram guarantee
+      - name: Staleness check + notification guarantee
         env:
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
           TG_THREAD: ${{ secrets.TELEGRAM_THREAD_ID }}
+          WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
           BEFORE_SHA: ${{ github.event.before }}
           TEST_NOTIFY: ${{ inputs.test_notify }}
         run: |
           set -euo pipefail
           notify() { # notify <text>; returns 0 only on confirmed delivery
-            if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
-              echo "(Telegram notification skipped: the TELEGRAM_* secrets are not configured)" >> "$GITHUB_STEP_SUMMARY"
+            local resp code payload
+            if [ -n "${TG_TOKEN:-}" ] && [ -n "${TG_CHAT:-}" ]; then
+              # backend: Telegram Bot API (proven)
+              resp="$(curl -s --max-time 20 \
+                --data-urlencode "chat_id=${TG_CHAT}" \
+                ${TG_THREAD:+--data-urlencode "message_thread_id=${TG_THREAD}"} \
+                --data-urlencode "text=$1" \
+                "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" 2>&1)" || resp="curl failed: $resp"
+              if printf '%s' "$resp" | grep -q '"ok":true'; then
+                echo "(notification delivered)" >> "$GITHUB_STEP_SUMMARY"
+                return 0
+              fi
+            elif [ -n "${WEBHOOK_URL:-}" ]; then
+              # backend: a generic incoming webhook that accepts {"text": ...}
+              # (Slack-style; added by the kit, not verified)
+              payload="$(printf '{"text":"%s"}' "$(printf '%s' "$1" | sed 's/["\\]/\\&/g')")"
+              code="$(curl -s --max-time 20 -o /dev/null -w '%{http_code}' \
+                -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK_URL" 2>&1)" || code="curl failed: $code"
+              case "$code" in
+                2*) echo "(notification delivered)" >> "$GITHUB_STEP_SUMMARY"; return 0 ;;
+              esac
+              resp="HTTP $code"
+            else
+              echo "(notification skipped: no TELEGRAM_* or NOTIFY_WEBHOOK_URL secret is configured)" >> "$GITHUB_STEP_SUMMARY"
               return 1
             fi
-            local resp
-            resp="$(curl -s --max-time 20 \
-              --data-urlencode "chat_id=${TG_CHAT}" \
-              ${TG_THREAD:+--data-urlencode "message_thread_id=${TG_THREAD}"} \
-              --data-urlencode "text=$1" \
-              "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" 2>&1)" || resp="curl failed: $resp"
-            if printf '%s' "$resp" | grep -q '"ok":true'; then
-              echo "(Telegram notification delivered)" >> "$GITHUB_STEP_SUMMARY"
-              return 0
-            fi
-            echo "(Telegram notification NOT delivered, API response: ${resp})" >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::arch-viz: Telegram notification not delivered: ${resp}"
+            echo "(notification NOT delivered, response: ${resp})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::arch-viz: notification not delivered: ${resp}"
             return 1
           }
           if [ "${TEST_NOTIFY:-false}" = "true" ]; then
             # test mode is strict: no delivery means a red run
-            notify "arch-viz: test notification from ${GITHUB_REPOSITORY} - the CI -> Telegram wiring works."
+            notify "arch-viz: test notification from ${GITHUB_REPOSITORY} - the CI -> chat wiring works."
             exit $?
           fi
           [ -f docs/arch/arch-data.json ] || exit 0
@@ -108,7 +125,7 @@ jobs:
             # ping only at the start of an episode: before this push it was not stale
             if [ -n "${BEFORE_SHA:-}" ] && [ "${BEFORE_SHA}" != "0000000000000000000000000000000000000000" ] \
                && git cat-file -e "${BEFORE_SHA}" 2>/dev/null && stale_at "${BEFORE_SHA}"; then
-              echo "(the staleness episode was already running - not duplicating the Telegram ping)" >> "$GITHUB_STEP_SUMMARY"
+              echo "(the staleness episode was already running - not duplicating the ping)" >> "$GITHUB_STEP_SUMMARY"
             else
               notify "arch-viz: the architecture visualization in ${GITHUB_REPOSITORY} is stale - the sources are newer than arch-data.json. Run /arch-viz in the project session." || true
             fi

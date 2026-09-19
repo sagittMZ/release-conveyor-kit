@@ -11,7 +11,7 @@ documented exception to "do not touch application code").
 
 - **From the working donor (proven):** templates/sentry.ts - init with
   enabled-in-PROD-only, tracesSampleRate 0.1, and apikey redaction in
-  breadcrumbs; the Telegram alert pattern.
+  breadcrumbs; the chat alert pattern (Telegram Bot API).
 - **Added by the kit (NOT verified in the donor - gaps found during the audit):**
   - the VITE_APP_VERSION define in vite.config (the donor's release tag was
     empty);
@@ -44,7 +44,7 @@ documented exception to "do not touch application code").
 
 1. sentry.io -> create a project (react). Put the DSN into env/secrets.
 2. Alerts: Alerts -> Create Alert -> "Issues": a new issue in production ->
-   email or a Telegram integration. Recommended minimum: an alert on new errors
+   email or a chat integration. Recommended minimum: an alert on new errors
    and one on a spike (>10 events per hour).
 3. For sourcemaps: Settings -> Auth Tokens -> a token with the project:releases
    scope -> the SENTRY_AUTH_TOKEN secret (in CI, NOT prefixed with VITE_).
@@ -55,7 +55,8 @@ documented exception to "do not touch application code").
 |---|---|
 | VITE_SENTRY_DSN | Vercel env + GH secrets + Codemagic group |
 | SENTRY_AUTH_TOKEN | GH secrets (only with sourcemaps) |
-| TELEGRAM_BOT_TOKEN_REPORTS, TELEGRAM_CHAT_ID_REPORTS | optional, for the health check alert |
+| TELEGRAM_BOT_TOKEN_REPORTS, TELEGRAM_CHAT_ID_REPORTS | optional, health check alert (Telegram backend, proven) |
+| NOTIFY_WEBHOOK_URL_REPORTS | optional, health check alert (webhook backend, not verified) |
 
 ## Verification checklist
 

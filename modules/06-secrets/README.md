@@ -32,7 +32,9 @@ Secret hygiene: the .env pattern, the .gitignore set, leak scanning in CI.
 | QA_TEST_EMAIL / QA_TEST_PASSWORD (and extra roles) | GH secrets | 4,7 |
 | VITE_SENTRY_DSN | Vercel + GH + Codemagic | 5 |
 | SENTRY_AUTH_TOKEN | GH secrets (no VITE_ prefix) | 5 |
-| TELEGRAM_BOT_TOKEN_REPORTS / TELEGRAM_CHAT_ID_REPORTS | GH secrets (optional) | 5,7 |
+| TELEGRAM_BOT_TOKEN_REPORTS / TELEGRAM_CHAT_ID_REPORTS | GH secrets (optional; Telegram alert backend) | 5,7 |
+| NOTIFY_WEBHOOK_URL_REPORTS | GH secrets (optional; webhook alert backend, not verified) | 5 |
+| TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID / TELEGRAM_THREAD_ID, or NOTIFY_WEBHOOK_URL | GH secrets (optional; arch-viz staleness ping) | 13 |
 
 Rules:
 

@@ -11,5 +11,5 @@
 - [ ] (With sourcemaps) the stack trace in Sentry shows the sources, not
       minified code.
 - [ ] Health Check workflow: a manual run is green; pointing it at a
-      non-existent URL turns it red (plus a Telegram message, if configured).
+      non-existent URL turns it red (plus a chat alert, if configured).
 - [ ] The alert rule exists in Sentry (a manual owner step).

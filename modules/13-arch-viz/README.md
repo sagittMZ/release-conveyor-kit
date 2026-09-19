@@ -71,9 +71,10 @@ because commands have one home.
    most once a day (the marker lives in the project's private zone).
 2. **/session-wrap** offers /arch-viz when the session changed the structure.
 3. **The CI backstop:** the workflow on every push to main - a staleness report
-   in the summary plus a Telegram ping to the project's topic (TELEGRAM_*
-   secrets, one ping per episode, delivery confirmed by the API response; test
-   it with a dispatch and test_notify=true).
+   in the summary plus a ping to the project's chat (TELEGRAM_* secrets for
+   the proven Telegram backend, or NOTIFY_WEBHOOK_URL for a Slack-style
+   incoming webhook, added and not verified; one ping per episode, delivery
+   confirmed by the response; test it with a dispatch and test_notify=true).
 4. **Manual:** /arch-viz.
 
 ## Languages
