@@ -119,10 +119,8 @@ eval_one() {
     check 1 "em dash found (--)"; else check 0 ""; fi
 
   # U3 a reference to an .ai/ role file MUST be conditional ("if the project has ...").
-  # Commands are written in English; the Russian alternatives are here so that a
-  # command written in the owner's language is still judged on its guarantee.
   if has '\.ai/[A-Z]'; then
-    if hasi 'if .*\.ai/|\.ai/.*(exists|is present)|if the project has|если.*\.ai/|\.ai/.*(есть|нет)|если в проекте'; then
+    if hasi 'if .*\.ai/|\.ai/.*(exists|is present)|if the project has'; then
       check 0 ""; else check 1 ".ai/ role referenced unconditionally (needs \"if ...\")"; fi
   fi
 
@@ -131,13 +129,13 @@ eval_one() {
     ok=0
     has '\$ARGUMENTS|\$1' || ok=1
     grep -q '^argument-hint:' "$f" || ok=1
-    hasi 'otherwise|ask|if .*(is )?(not )?given|if none|if no |иначе|спроси|если задан|если задана|если задано|если.*не задан|если.*нет|не задан' || ok=1
+    hasi 'otherwise|ask|if .*(is )?(not )?given|if none|if no ' || ok=1
     check "$ok" "argument declared, but argument-hint / \$ARGUMENTS / fallback is missing"
   fi
 
   # C2 analyzer=y -> guard
   if [ "${EXP_ANALYZER[$name]}" = "y" ]; then
-    if hasi 'do not write code|do not commit|do not change|do not start|do not run it yourself|не пиши код|ничего не коммить|ничего не меняй|не начинай|пока не пиши|реализацию не начинай'; then
+    if hasi 'do not write code|do not commit|do not change|do not start|do not run it yourself'; then
       check 0 ""; else check 1 "analyzer without a guard (do not write code / do not change / do not start)"; fi
   fi
 

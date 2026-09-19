@@ -9,6 +9,6 @@
   "windows": [
     {"name": "<topic-name>",       "cwd": "~/projects/<repo>",      "thread_id": 0, "model": "<model-a>", "resume": "summary", "group": "default"},
     {"name": "<other-topic-name>", "cwd": "~/projects/<other-repo>", "thread_id": 0, "model": "<model-b>", "resume": "summary", "group": "default"},
-    {"name": "<work-topic-name>",  "cwd": "~/work/<repo>",           "thread_id": 0, "model": "<model-a>", "resume": "full",    "group": "work", "config_dir": "~/.claude-work"}
+    {"name": "<second-topic-name>", "cwd": "~/<second-root>/<repo>", "thread_id": 0, "model": "<model-a>", "resume": "full",    "group": "second", "config_dir": "~/.claude-second"}
   ]
 }

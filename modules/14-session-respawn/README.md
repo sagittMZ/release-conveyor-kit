@@ -46,13 +46,13 @@ never kills the sessions), linger enabled for the user.
 {
   "tmux_session": "ccgram",
   "claude_command": "claude --settings ~/.ccgram/no-telegram.json --dangerously-skip-permissions",
-  "report": { "summary_thread_id": 9, "per_topic_line": true },
+  "report": { "summary_thread_id": <thread-id>, "per_topic_line": true },
   "windows": [
-    { "name": "<topic-name>", "cwd": "~/projects/<repo>", "thread_id": 9,
+    { "name": "<topic-name>", "cwd": "~/projects/<repo>", "thread_id": <thread-id>,
       "model": "<model>", "resume": "summary", "group": "default" },
-    { "name": "<other-topic>", "cwd": "~/work/<repo>", "thread_id": 17354,
-      "model": "<model>", "resume": "full", "group": "work",
-      "config_dir": "~/.claude-work" }
+    { "name": "<other-topic>", "cwd": "~/<second-root>/<repo>", "thread_id": <thread-id>,
+      "model": "<model>", "resume": "full", "group": "second",
+      "config_dir": "~/.claude-second" }
   ]
 }
 ```
@@ -67,7 +67,7 @@ never kills the sessions), linger enabled for the user.
   new session). The session id is never stored - it is the newest transcript in
   `<config_dir>/projects/<cwd-slug>/`, resolved at run time.
 - `config_dir`: a separate `CLAUDE_CONFIG_DIR` for windows that must not share
-  the default account or settings (a corporate context, for example).
+  the default account or settings (a second account, for example).
 - `group`: the model-diversity check needs at least two distinct models per
   group, so one provider-side incident does not take the whole group down.
   The check only reports; it never blocks.

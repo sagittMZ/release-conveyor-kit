@@ -79,6 +79,15 @@ A prompt that worked twice should not live in your clipboard. The escalation:
 Rule of thumb: chat -> file -> command -> automatic. Each rung removes the need
 to remember the previous one.
 
+## Number what you hand back
+
+When a reply contains several things the user will choose between or
+recombine - variants of a screen, candidate names, alternative plans - number
+them. "Take the layout from 3 and the copy from 6" is a one-line instruction;
+"the one with the sidebar, but with the shorter text from the other one" is a
+guessing game. The same holds for findings and steps: a numbered item can be
+referred to, a paragraph cannot.
+
 ## Roles are your .ai/
 
 Module 09 does not introduce roles of its own and does not invent persona tags.
