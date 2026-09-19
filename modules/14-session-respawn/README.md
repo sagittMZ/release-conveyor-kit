@@ -140,6 +140,15 @@ of memory - the owner has been there with another tool. So:
    map, so after a tmux server restart every topic points at a window id
    that no longer exists (or, worse, at a new window with a reused id). The
    cold rewrite handles both schemas.
+8. **Open, not closed.** A warm run for a window whose binding is missing
+   from the state file (for example after a cold recovery that dropped idle
+   topics) creates the window, and the bridge auto-creates a fresh topic with
+   the window's name within a second, before the script's restart of the
+   bridge. The manifest's `thread_id` is not applied. Recovery by hand: stop
+   the bridge, back up the state file, rename the new thread's keys in
+   `chat_thread_bindings` and `group_chat_ids` to the manifest's thread id,
+   start the bridge, delete the empty topic. The fix (write the manifest
+   binding before the bridge sees the window) is on the backlog.
 
 ## Rollout
 
