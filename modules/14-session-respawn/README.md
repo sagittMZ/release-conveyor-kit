@@ -149,6 +149,12 @@ of memory - the owner has been there with another tool. So:
    `chat_thread_bindings` and `group_chat_ids` to the manifest's thread id,
    start the bridge, delete the empty topic. The fix (write the manifest
    binding before the bridge sees the window) is on the backlog.
+9. Launching the agent by hand in a bound window, without restarting the
+   bridge, brings the session back but not the topic: the bridge keeps a
+   "dead window" flag from the moment the previous agent exited and answers
+   every message in that topic with its recovery menu instead of forwarding
+   it. This is why the warm path restarts the bridge after a launch. Restart
+   the bridge, or use `--only`; never the bare command.
 
 ## Rollout
 
