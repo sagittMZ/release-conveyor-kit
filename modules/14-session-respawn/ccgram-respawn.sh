@@ -66,14 +66,19 @@ fi
 # ------------------------------------------------------------ manifest ----
 [ -r "$MANIFEST" ] || die "manifest not found: $MANIFEST"
 
-mapfile -t MROWS < <(python3 - "$MANIFEST" <<'PY'
+mapfile -t MROWS < <(python3 - "$MANIFEST" ${ONLY[@]+"${ONLY[@]}"} <<'PY'
 import json, sys
-m = json.load(open(sys.argv[1]))
+m = json.load(open(sys.argv[1])); only = set(sys.argv[2:])
 for w in m["windows"]:
+    # "enabled": false parks a window: the run acts as if the entry were not
+    # there, unless --only names it.
+    if w.get("enabled", True) is False and w["name"] not in only:
+        print("#" + w["name"]); continue
     # "|" as separator: tab is IFS whitespace and an empty field would collapse
     print("|".join([
         w["name"], w["cwd"], str(w["thread_id"]), w.get("config_dir", ""),
         w["model"], w.get("resume", "summary"), w.get("group", "default"),
+        w.get("effort", ""),
     ]))
 PY
 )
@@ -95,11 +100,13 @@ CLAUDE_BASE="$(expand_home "$CLAUDE_BASE")"
 SUMMARY_THREAD="$(read_manifest_key report.summary_thread_id)"
 PER_TOPIC="$(read_manifest_key report.per_topic_line)"
 
-declare -a M_NAME M_CWD M_THREAD M_CFG M_MODEL M_RESUME M_GROUP
+declare -a M_NAME M_CWD M_THREAD M_CFG M_MODEL M_RESUME M_GROUP M_EFFORT PARKED=()
 for row in "${MROWS[@]}"; do
-    IFS='|' read -r n c t cfg mo r g <<<"$row"
+    case "$row" in "#"*) PARKED+=("${row#"#"}"); continue ;; esac
+    IFS='|' read -r n c t cfg mo r g ef <<<"$row"
     M_NAME+=("$n"); M_CWD+=("$(expand_home "$c")"); M_THREAD+=("$t")
     M_CFG+=("$(expand_home "$cfg")"); M_MODEL+=("$mo"); M_RESUME+=("$r"); M_GROUP+=("$g")
+    M_EFFORT+=("$ef")
 done
 COUNT=${#M_NAME[@]}
 
@@ -430,6 +437,7 @@ for ((i = 0; i < COUNT; i++)); do
     sid=""; [ "$resume" != fresh ] && sid="$(resolve_sid "${M_CFG[$i]}" "${M_CWD[$i]}")"
     [ -z "$sid" ] && resume=fresh
     cmd="$CLAUDE_BASE --model ${M_MODEL[$i]}"
+    [ -n "${M_EFFORT[$i]}" ] && cmd="$cmd --effort ${M_EFFORT[$i]}"
     [ -n "$sid" ] && cmd="$cmd --resume $sid"
     [ -n "${M_CFG[$i]}" ] && cmd="CLAUDE_CONFIG_DIR=${M_CFG[$i]} $cmd"
     if [ "$DRY" = 1 ]; then
@@ -499,6 +507,7 @@ summary="ccgram respawn $status ($MODE, $(ts))
 launched=$launched claude_procs=$BEFORE->$AFTER
 models: $diversity
 bridge: $bridge
+parked: ${PARKED[*]:-none}
 $(printf '%s\n' "${R_LINE[@]}")"
 log "$summary"
 if [ "$DRY" = 1 ]; then

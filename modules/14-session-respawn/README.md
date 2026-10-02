@@ -70,6 +70,14 @@ never kills the sessions), linger enabled for the user.
   order stable means nothing moves in the bridge's eyes.
 - `name` must equal the topic name; the bridge's rebind-by-name is the fallback
   in warm mode.
+- `effort`: optional, passed to the agent as `--effort <level>`; left out, the
+  session keeps the model's default.
+- `enabled`: optional; `false` parks the entry. The run treats it as absent -
+  no window, no session, and in cold mode its topic binding is dropped like
+  any binding outside the manifest - and lists it on the `parked:` line of
+  the report. `--only <name>` overrides it for one run; bringing a parked
+  window back that way is a warm run for a window without a binding, so
+  trap 8 applies. Not verified in a real cold start.
 - `resume`: `summary` (cheap, loses detail), `full` (expensive), `fresh` (a
   new session). The session id is never stored - it is the newest transcript in
   `<config_dir>/projects/<cwd-slug>/`, resolved at run time.
