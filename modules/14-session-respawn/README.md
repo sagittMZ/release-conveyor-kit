@@ -25,6 +25,13 @@ had `Requires=ccgram.service`, so when the script stopped the bridge in cold
 mode systemd stopped the script with it, and the bridge stayed down. Fixed
 (`Wants=`), together with the bindings schema of ccgram 4.9+ (trap 7). The
 fleet was brought back by hand that day with the warm path of the script.
+First real cold run from the unit after a power loss (2026-10-02): every
+window, binding and session came back, but the bridge treated more than half
+of the windows as dead (trap 10) and the summary report was lost to a network
+error. A manual restart of the bridge cleared it. The script now does that
+restart itself, checks the result and retries the report; those three changes
+have passed syntax, shellcheck and a harness over the real state files, and
+have **not** yet run in a real cold start.
 
 ## Files
 
@@ -87,7 +94,8 @@ Mode is chosen from what exists:
   manifest order, rewrite `state.json` so each topic points at its new window
   id (display names, per-window offsets and resumable window states move with
   it; bindings to threads not in the manifest are dropped and logged), start
-  the bridge, wait for its startup cleanup, then launch the sessions.
+  the bridge, wait for its startup cleanup, then launch the sessions, then
+  restart the bridge once more (trap 10).
 - **warm** (some windows exist): the bridge is not touched - it wipes its
   session map on shutdown when windows are alive. Missing windows are created,
   windows without a live session get one, live windows are kept. `--only`
@@ -96,6 +104,11 @@ Mode is chosen from what exists:
   once: it keeps an in-memory "dead" flag for a window whose session ended,
   and a new session in the same pane does not clear it.
 
+After that restart, in either mode, the script reads the bridge's state file
+and counts the windows it lists as live (a pane record and the manifest's
+binding); a window that is running a session but is missing there is a
+reported problem.
+
 Per window, one at a time with a pause between: send the launch line, watch
 the pane for the "Resume from summary / full" dialog and answer it as the
 manifest says, or for the prompt; then wait for the bridge's session-map entry
@@ -103,9 +116,12 @@ and repair it from the hook event log if the SessionStart race lost it. A
 consent or trust dialog is reported as "needs attention", never answered.
 
 At the end: the model-diversity check per group, a process-count sanity check,
-a summary line per window. The summary goes to `summary_thread_id` and, with
-`per_topic_line`, one line goes into each restored topic (Bot API, token read
-from `~/.ccgram/.env`). `--dry-run` prints all of this and changes nothing.
+the bridge check, a summary line per window. The summary goes to
+`summary_thread_id` and, with `per_topic_line`, one line goes into each
+restored topic (Bot API, token read from `~/.ccgram/.env`). The summary is
+retried with a growing pause, because the network is often not up yet right
+after a boot; the per-topic lines are sent once. `--dry-run` prints all of
+this and changes nothing.
 
 ## Loop protection
 
@@ -155,6 +171,17 @@ of memory - the owner has been there with another tool. So:
    every message in that topic with its recovery menu instead of forwarding
    it. This is why the warm path restarts the bridge after a launch. Restart
    the bridge, or use `--only`; never the bare command.
+10. A cold start has the same flag problem as trap 9, from the other side.
+    The bridge has to be running before the sessions (traps 3 and 4), so when
+    it starts, every window holds a bare shell. For a window whose carried-over
+    state says an agent ran there, the bridge logs "agent exited to shell" and
+    keeps it dead even after the session comes up in that pane; a window whose
+    state says it started as a shell is corrected by the SessionStart hook and
+    is fine. The run reports success, the sessions are alive, and those topics
+    answer with the recovery menu. The script restarts the bridge once after
+    the launches in cold mode as well, then checks that every live window has
+    a pane record. Not verified in a real cold start yet; the manual restart
+    it automates did clear the state.
 
 ## Rollout
 

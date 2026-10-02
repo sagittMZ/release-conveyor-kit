@@ -10,6 +10,8 @@
 #   cold  - none of the manifest windows exist: stop ccgram (nothing to lose),
 #           create every window in manifest order, rewrite state.json bindings
 #           to the new window ids, start ccgram, then launch claude per window.
+#           ccgram is restarted once more after the launches: it starts before
+#           the sessions and files every carried-over window as "agent exited".
 #   warm  - some manifest windows already exist: ccgram is NOT stopped (it wipes
 #           session_map on shutdown); only missing windows are created and only
 #           windows without a live claude get one launched.
@@ -32,6 +34,8 @@ DIALOG_WAIT=40      # seconds to wait for the resume dialog / prompt per window
 MAP_WAIT=20         # seconds to wait for the session_map entry per window
 BETWEEN_WINDOWS=4   # pause between launches (SessionStart hook race)
 CCGRAM_SETTLE=12    # seconds for ccgram to finish startup cleanup
+BRIDGE_WAIT=45      # seconds for ccgram to list every live window after its restart
+REPORT_TRIES=4      # attempts for the summary report (10s, 20s, 40s apart)
 
 DRY=0; FRESH=0; NO_REPORT=0; ONLY=()
 usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
@@ -284,12 +288,56 @@ import os; os.replace(tmp, state_path)
 PY
 }
 
-tg_send() {  # $1 thread_id, $2 text
+tg_send() {  # $1 thread_id, $2 text, $3 attempts (default 1, doubling pause between)
     [ "$NO_REPORT" = 1 ] && return 0
     [ -n "$BOT_TOKEN" ] || { log "no TELEGRAM_BOT_TOKEN - report skipped"; return 0; }
-    curl -s -m 15 -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-        --data-urlencode "chat_id=$GROUP_ID" --data-urlencode "message_thread_id=$1" \
-        --data-urlencode "text=$2" >/dev/null 2>&1 || log "telegram send failed (thread $1)"
+    local tries="${3:-1}" n delay=10
+    for ((n = 1; n <= tries; n++)); do
+        if curl -sf -m 15 -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=$GROUP_ID" --data-urlencode "message_thread_id=$1" \
+            --data-urlencode "text=$2" >/dev/null 2>&1; then
+            [ "$n" -gt 1 ] && log "telegram send ok on attempt $n (thread $1)"
+            return 0
+        fi
+        log "telegram send failed (thread $1, attempt $n/$tries)"
+        if [ "$n" -lt "$tries" ]; then sleep "$delay"; delay=$((delay * 2)); fi
+    done
+    return 0
+}
+
+bridge_check() {  # after the restart: does ccgram list every live window as live?
+    local rows="" n id i t out=""
+    for ((i = 0; i < COUNT; i++)); do
+        n="${M_NAME[$i]}"; id="${WIN_ID[$n]:-}"
+        if [ -n "$id" ] && [ "${WIN_CMD[$id]:-}" = claude ]; then
+            rows+="$n"$'\t'"$id"$'\t'"${M_THREAD[$i]}"$'\n'
+        fi
+    done
+    for ((t = 0; t < BRIDGE_WAIT; t += 3)); do
+        out="$(python3 - "$STATE" "$USER_ID" "$GROUP_ID" "$rows" <<'PY'
+import json, sys
+state, user, group, rows = sys.argv[1:5]
+try:
+    s = json.load(open(state))
+except Exception:
+    s = {}
+ws = s.get("window_states", {})
+prefix = f"{user}:{group}:"
+bind = {k[len(prefix):]: v for k, v in s.get("chat_thread_bindings", {}).items()
+        if k.startswith(prefix)} or s.get("thread_bindings", {}).get(user, {})
+total, bad = 0, []
+for line in rows.splitlines():
+    name, wid, thread = line.split("\t")
+    total += 1
+    # a window the bridge filed as "agent exited" has no panes block
+    if not ws.get(wid, {}).get("panes") or bind.get(thread) != wid:
+        bad.append(name)
+print(f"{total - len(bad)}/{total} live" + (f", not live: {' '.join(bad)}" if bad else ""))
+PY
+)"
+        case "$out" in *"not live"*) sleep 3 ;; *) break ;; esac
+    done
+    echo "$out"
 }
 
 # --------------------------------------------------------------- plan -----
@@ -419,16 +467,25 @@ for g, models in sorted(groups.items()):
 print("; ".join(out) or "no live windows")
 PY
 )"
-# A window that already existed carries ccgram's in-memory "dead" flag from the
-# SessionEnd of the claude we replaced; relaunching in the same pane does not
-# clear it, so Telegram answers that topic with the recovery UI instead of
-# reaching the live session. Cold mode starts ccgram fresh, so only warm needs it.
+# ccgram keeps an in-memory "dead" flag per window, and a session launched in
+# the same pane does not clear it: Telegram answers that topic with the recovery
+# UI instead of reaching the live session. Warm: the flag comes from the
+# SessionEnd of the claude we replaced. Cold: ccgram is started before the
+# sessions, sees a bare shell in every window whose carried-over state says an
+# agent ran there, and files it as "agent exited to shell". So restart once
+# after the launches, in both modes, and check what ccgram sees afterwards.
 # ponytail: blunt - ~10s of bridge downtime for all topics. Narrow it only if
 # ccgram ever exposes a per-window "unmark dead" command.
-if [ "$MODE" = warm ] && [ "$launched" -gt 0 ] && [ "$DRY" = 0 ]; then
-    log "warm relaunch: restarting ccgram to clear dead-window flags"
+bridge="not checked"
+if [ "$launched" -gt 0 ] && [ "$DRY" = 0 ]; then
+    log "$MODE relaunch: restarting ccgram to clear dead-window flags"
     systemctl --user restart ccgram && sleep 8
-    systemctl --user is-active --quiet ccgram || { log "WARN: ccgram failed to restart"; failed=$((failed + 1)); }
+    if systemctl --user is-active --quiet ccgram; then
+        bridge="$(bridge_check)"
+        case "$bridge" in *"not live"*) log "WARN: ccgram does not list as live: $bridge"; failed=$((failed + 1)) ;; esac
+    else
+        log "WARN: ccgram failed to restart"; failed=$((failed + 1)); bridge="ccgram down"
+    fi
 fi
 
 AFTER="$(claude_count)"
@@ -441,11 +498,12 @@ status="OK"; [ "$failed" -gt 0 ] && status="PROBLEMS: $failed"
 summary="ccgram respawn $status ($MODE, $(ts))
 launched=$launched claude_procs=$BEFORE->$AFTER
 models: $diversity
+bridge: $bridge
 $(printf '%s\n' "${R_LINE[@]}")"
 log "$summary"
 if [ "$DRY" = 1 ]; then
     log "dry-run: no report sent, nothing changed"
 else
-    [ -n "$SUMMARY_THREAD" ] && tg_send "$SUMMARY_THREAD" "$summary"
+    [ -n "$SUMMARY_THREAD" ] && tg_send "$SUMMARY_THREAD" "$summary" "$REPORT_TRIES"
 fi
 [ "$failed" -eq 0 ]

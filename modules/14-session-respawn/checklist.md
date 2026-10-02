@@ -12,4 +12,6 @@
 6. A real reboot brings the sessions back without a hand on the keyboard, and a
    manual `systemctl --user start ccgram-respawn` afterwards is a no-op.
 7. The report arrived: summary in the summary topic, one line per restored
-   topic, model-diversity line shows every group with at least two models.
+   topic, model-diversity line shows every group with at least two models,
+   `bridge:` line shows every window live. A message sent to a restored topic
+   reaches its session instead of the recovery menu.
