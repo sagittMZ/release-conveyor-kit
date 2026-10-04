@@ -1,17 +1,19 @@
 # Not verified
 
 The kit never presents an unrun template as proven. As of this release the
-following are *added by the kit, not verified*, and their READMEs say so:
+following are *added by the kit* and not verified, or verified only in part,
+and their READMEs say so:
 
-- **Module 14, session respawn.** Syntax, shellcheck and dry runs pass in all
-  three modes. The first real reboot with the unit enabled did not pass: the
-  unit had a hard dependency on the bridge, so when the script stopped the
-  bridge the service manager stopped the script with it. That is fixed. The
-  first real cold run, after a power loss, brought every window, binding and
-  session back, but the bridge treated more than half of the windows as dead
-  until it was restarted by hand. The script now does that restart itself and
-  checks the result; that change has not run in a real cold start, and the
-  module stays *not verified* until one passes clean.
+- **Module 14, session respawn - proven in part.** What has run for real: the
+  warm path, and a cold start after a power loss that brought every window,
+  binding and session back from the manifest. What went wrong on the way: the
+  first reboot with the unit enabled failed on a hard dependency on the bridge
+  (fixed), and after the cold start the bridge treated more than half of the
+  windows as dead until it was restarted by hand. The script now does that
+  restart itself and checks the result. That last change has passed a harness
+  over the real state files and has not run in a real cold start, so the
+  module is not called verified until one ends clean with nobody at the
+  keyboard.
   A known limitation is documented in the module: a warm run for a window
   whose topic binding is missing lets the bridge create a fresh topic instead
   of rebinding the one from the manifest.

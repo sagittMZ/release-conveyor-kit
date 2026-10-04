@@ -113,7 +113,7 @@ examples: [docs/prompt-kit-guide.md](docs/prompt-kit-guide.md).
 | Memory (module 12) | Session history distilled into notes you review | Runs on the kit itself |
 | Architecture page (module 13) | One HTML file with your project's architecture, kept fresh by CI. [Example](docs/arch/index.html) | Runs on the kit itself |
 | Release pipeline (modules 01-08) | CI, Android and iOS builds, store playbooks, staging, monitoring, secrets hygiene, smoke tests. One stack only | Partly extracted from a production pipeline, partly not verified |
-| Session respawn (module 14) | Agent sessions and their chat topics come back after a reboot | Not verified |
+| Session respawn (module 14) | Agent sessions and their chat topics come back after a reboot | Proven in part: a real cold start brought every session back; the latest fix has not run cold yet |
 
 ## What is not verified
 

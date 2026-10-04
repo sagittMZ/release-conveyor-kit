@@ -16,10 +16,12 @@ window, whichever project it belongs to.
 
 Added by the kit - no donor. Distilled from a manual recovery procedure that
 was run several times on the owner's machine (the traps below are all things
-that actually happened). **Not verified**: the script has passed syntax,
-shellcheck and dry-runs in all three modes (nothing to do, warm, cold), but a
-real cold run after a tmux server restart and a real reboot with the unit
-enabled are still pending. This section changes to "verified" when they pass.
+that actually happened). **Proven in part.** What has run for real: the warm
+path, and one cold start from the unit after a power loss, which brought every
+window, binding and session back. What has not: a cold start that ends with
+every window live and nobody at the keyboard (checks 6 and 7 of the
+checklist). This section changes to "verified" when one passes. The history,
+in order.
 First real reboot with the unit enabled (2026-09-17) did not pass: the unit
 had `Requires=ccgram.service`, so when the script stopped the bridge in cold
 mode systemd stopped the script with it, and the bridge stayed down. Fixed

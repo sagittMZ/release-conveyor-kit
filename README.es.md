@@ -1,4 +1,4 @@
-<!-- translated-from: README.md sha256:d2897bdc7ace -->
+<!-- translated-from: README.md sha256:464e1d4e418e -->
 <p align="right"><a href="README.md"><img src="docs/assets/lang-en.svg" alt="English" width="46" height="28"></a><a href="README.ru.md"><img src="docs/assets/lang-ru.svg" alt="Русский" width="46" height="28"></a><a href="README.es.md"><img src="docs/assets/lang-es-on.svg" alt="Español" width="46" height="28"></a></p>
 
 # Release Conveyor Kit
@@ -121,7 +121,7 @@ Ejemplos comentados: [docs/prompt-kit-guide.md](docs/prompt-kit-guide.md).
 | Memoria (módulo 12) | El historial de sesiones destilado en notas que tú revisas | Funciona en el propio kit |
 | Página de arquitectura (módulo 13) | Un archivo HTML con la arquitectura de tu proyecto, que CI mantiene al día. [Ejemplo](docs/arch/index.html) | Funciona en el propio kit |
 | Pipeline de publicación (módulos 01-08) | CI, builds de Android e iOS, guías para las tiendas, staging, monitoreo, higiene de secretos, pruebas de humo. Un solo stack | En parte extraído de un pipeline en producción, en parte no verificado |
-| Recuperación de sesiones (módulo 14) | Las sesiones de los agentes y sus temas de chat vuelven después de un reinicio | No verificado |
+| Recuperación de sesiones (módulo 14) | Las sesiones de los agentes y sus temas de chat vuelven después de un reinicio | Probado en parte: un arranque en frío real recuperó todas las sesiones; la última corrección aún no se ha ejecutado en frío |
 
 ## Qué no está verificado
 
