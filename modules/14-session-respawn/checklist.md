@@ -15,3 +15,7 @@
    topic, model-diversity line shows every group with at least two models,
    `bridge:` line shows every window live. A message sent to a restored topic
    reaches its session instead of the recovery menu.
+8. After a run that restarted the bridge, `~/.ccgram/pre-restart/` holds a
+   snapshot for it and the `offsets:` line of the summary says "all current";
+   if it names a session, look at that topic for a replayed burst before the
+   snapshot rotates out.

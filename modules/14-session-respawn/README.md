@@ -32,6 +32,9 @@ error. A manual restart of the bridge cleared it. The script now does that
 restart itself, checks the result and retries the report; those three changes
 have passed syntax, shellcheck and a harness over the real state files, and
 have **not** yet run in a real cold start.
+The bridge-state snapshot and the `offsets:` line (trap 11, 2026-10-03) have
+passed syntax, shellcheck and a harness over a copy of the real state files
+with the bridge stop stubbed out; they have **not** run in a real restart.
 
 ## Files
 
@@ -117,6 +120,15 @@ and counts the windows it lists as live (a pane record and the manifest's
 binding); a window that is running a session but is missing there is a
 reported problem.
 
+Every time the script stops the bridge it first copies `monitor_state.json`
+and `session_map.json` into `~/.ccgram/pre-restart/<timestamp>/`, copies
+`monitor_state.json` again once the bridge has saved it on stop, and logs who
+asked for the stop (own window and the parent process). The ten newest
+snapshots are kept. It then compares each saved transcript offset with the
+size of that transcript: a session with more than 64 KB unread, or an offset
+past the end of the file, goes into the log and into the `offsets:` line of
+the summary. This is a warning, not a failure (trap 11).
+
 Per window, one at a time with a pause between: send the launch line, watch
 the pane for the "Resume from summary / full" dialog and answer it as the
 manifest says, or for the prompt; then wait for the bridge's session-map entry
@@ -190,6 +202,14 @@ of memory - the owner has been there with another tool. So:
     the launches in cold mode as well, then checks that every live window has
     a pane record. Not verified in a real cold start yet; the manual restart
     it automates did clear the state.
+11. **Open, cause not established.** After a restart the bridge once sent
+    several hours of one topic's conversation again, in one burst. The
+    suspected cause is a stale saved transcript offset, but once the burst is
+    over the offset equals the file size and nothing is left to check. The
+    script does not prevent this. It keeps the state files from before and
+    after each bridge stop it performs and reports offsets that are behind,
+    so the next occurrence can be examined. A stop made by anything else (a
+    manual `systemctl restart`, the bridge's own crash) leaves no snapshot.
 
 ## Rollout
 

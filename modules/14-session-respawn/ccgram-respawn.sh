@@ -28,6 +28,8 @@ LOG="$CCGRAM_DIR/respawn.log"
 ENV_FILE="$CCGRAM_DIR/.env"
 STATE="$CCGRAM_DIR/state.json"
 SESSION_MAP="$CCGRAM_DIR/session_map.json"
+MONITOR_STATE="$CCGRAM_DIR/monitor_state.json"
+SNAP_DIR="$CCGRAM_DIR/pre-restart"
 EVENTS="$CCGRAM_DIR/events.jsonl"
 
 DIALOG_WAIT=40      # seconds to wait for the resume dialog / prompt per window
@@ -36,6 +38,8 @@ BETWEEN_WINDOWS=4   # pause between launches (SessionStart hook race)
 CCGRAM_SETTLE=12    # seconds for ccgram to finish startup cleanup
 BRIDGE_WAIT=45      # seconds for ccgram to list every live window after its restart
 REPORT_TRIES=4      # attempts for the summary report (10s, 20s, 40s apart)
+SNAP_KEEP=10        # bridge-state snapshots kept in $SNAP_DIR
+OFFSET_LAG_KB=64    # unread transcript above this is reported before the bridge starts
 
 DRY=0; FRESH=0; NO_REPORT=0; ONLY=()
 usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
@@ -347,6 +351,52 @@ PY
     echo "$out"
 }
 
+# The bridge resumes each transcript from the byte offset it saved on stop. If
+# that offset is behind, it re-sends everything after it into the topic at
+# once, and afterwards the offset equals the file size - nothing is left to
+# show why. So every bridge stop made here leaves a snapshot: the two state
+# files as they were while it ran, and monitor_state.json as it was saved on
+# stop (what the next start loads). Not verified that a stale offset is what
+# causes the burst; the snapshot and the lag line exist to find out.
+SNAP=""
+stop_bridge() {  # stop_bridge <why>; stops ccgram, echoes the offsets line
+    local why="$1" caller
+    caller="$(ps -o args= -p "$PPID" 2>/dev/null | cut -c1-120)"
+    SNAP="$SNAP_DIR/$(date '+%Y%m%d-%H%M%S')"
+    mkdir -p "$SNAP"
+    [ -f "$MONITOR_STATE" ] && cp -p "$MONITOR_STATE" "$SNAP/monitor_state.running.json"
+    [ -f "$SESSION_MAP" ] && cp -p "$SESSION_MAP" "$SNAP/session_map.running.json"
+    log "stopping ccgram ($why); own_window=${OWN_ID:-none} caller=${caller:-unknown} snapshot=$SNAP"
+    systemctl --user stop ccgram
+    [ -f "$MONITOR_STATE" ] && cp -p "$MONITOR_STATE" "$SNAP/monitor_state.stopped.json"
+    # keep the newest $SNAP_KEEP snapshots (names sort by time)
+    find "$SNAP_DIR" -mindepth 1 -maxdepth 1 -type d | sort | head -n -"$SNAP_KEEP" | xargs -r rm -rf
+    python3 - "$SNAP" "$OFFSET_LAG_KB" <<'PY'
+import json, os, sys
+snap, limit = sys.argv[1], int(sys.argv[2])
+def load(name):
+    try:
+        return json.load(open(os.path.join(snap, name)))
+    except Exception:
+        return {}
+names = {v.get("session_id"): v.get("window_name", "?")
+         for v in load("session_map.running.json").values() if isinstance(v, dict)}
+tracked = load("monitor_state.stopped.json").get("tracked_sessions", {})
+bad = []
+for sid, t in tracked.items():
+    path, off = t.get("file_path", ""), int(t.get("last_byte_offset", 0))
+    if not os.path.exists(path):
+        continue
+    lag = (os.path.getsize(path) - off) // 1024
+    who = names.get(sid, sid[:8])
+    if lag > limit:
+        bad.append(f"{who} {lag}KB unread")
+    elif lag < 0:
+        bad.append(f"{who} offset past end of file")
+print(f"{len(tracked)} tracked, " + ("; ".join(bad) if bad else "all current"))
+PY
+}
+
 # --------------------------------------------------------------- plan -----
 log "=== respawn start (dry=$DRY fresh=$FRESH only=${ONLY[*]:-all}) manifest=$MANIFEST"
 tmux_alive || {
@@ -373,8 +423,11 @@ fi
 # ------------------------------------------------------- cold: rebuild ----
 if [ "$MODE" = cold ]; then
     if systemctl --user is-active --quiet ccgram; then
-        log "stopping ccgram (no manifest windows exist, nothing to lose)"
-        [ "$DRY" = 1 ] || systemctl --user stop ccgram
+        if [ "$DRY" = 1 ]; then
+            log "would stop ccgram (no manifest windows exist, nothing to lose)"
+        else
+            log "offsets at stop: $(stop_bridge "cold: no manifest windows exist")"
+        fi
     fi
     if ! tmux has-session -t "$SESSION" 2>/dev/null; then
         log "creating tmux session $SESSION with __main__"
@@ -484,10 +537,11 @@ PY
 # after the launches, in both modes, and check what ccgram sees afterwards.
 # ponytail: blunt - ~10s of bridge downtime for all topics. Narrow it only if
 # ccgram ever exposes a per-window "unmark dead" command.
-bridge="not checked"
+bridge="not checked"; offsets="not checked"
 if [ "$launched" -gt 0 ] && [ "$DRY" = 0 ]; then
-    log "$MODE relaunch: restarting ccgram to clear dead-window flags"
-    systemctl --user restart ccgram && sleep 8
+    offsets="$(stop_bridge "$MODE relaunch: clearing dead-window flags")"
+    case "$offsets" in *unread*|*"past end"*) log "WARN: transcript offsets behind at stop: $offsets" ;; esac
+    systemctl --user start ccgram && sleep 8
     if systemctl --user is-active --quiet ccgram; then
         bridge="$(bridge_check)"
         case "$bridge" in *"not live"*) log "WARN: ccgram does not list as live: $bridge"; failed=$((failed + 1)) ;; esac
@@ -507,6 +561,7 @@ summary="ccgram respawn $status ($MODE, $(ts))
 launched=$launched claude_procs=$BEFORE->$AFTER
 models: $diversity
 bridge: $bridge
+offsets: $offsets
 parked: ${PARKED[*]:-none}
 $(printf '%s\n' "${R_LINE[@]}")"
 log "$summary"
