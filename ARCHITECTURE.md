@@ -503,3 +503,40 @@ the README says so explicitly. It enters as "added by the kit, not verified"
 (record 4) and stays there until a real cold run and a real reboot pass; the
 checklist names both. The manifest is one more file in the machine's backup
 set, which the restore procedure must cover (backlog).
+
+### 20. Versions say what a rollout can rely on
+
+**Context.** The kit is vendored into other repositories (record 7), and each
+copy carries a stamp that says which state of the kit it came from. Until the
+first public release there were no versions at all, only commits. A user
+deciding whether to refresh their copies needs to know one thing from a version
+number: did anything they rely on change.
+
+**Decision.** Tags are three-part, `vMAJOR.MINOR.PATCH`, annotated and signed;
+the first one is `v0.1.0`. What moves each part is defined by what a rollout
+touches, not by how large the change felt:
+
+- **patch** - fixes, documentation, a refreshed architecture page. A vendored
+  copy keeps working unchanged.
+- **minor** - a new module or command, or a change to the behaviour of a
+  command, to the rollout steps (`ROLLOUT.md`, `apply-kit.md`), or to the
+  shape of `conveyor.config.json`. A change of the kit's name in stamps and
+  paths is a minor release for the same reason.
+- **major** - `v1.0.0` is a promise of stability, and it is not made until the
+  stack-independent layer has been rolled into at least two repositories the
+  owner does not control and module 14 has passed a clean cold start.
+
+While the major version is 0, a minor release may break a rollout, and the
+release notes say how. Module numbers and version numbers are unrelated.
+
+**Alternatives.** Two-part tags (`v0.1`) - rejected: the first fix would need a
+third part anyway, and mixed forms sort badly. Calendar versions - rejected:
+a date says when, and the user's question is what changed. Starting at `v1.0.0`
+because the kit is in daily use - rejected: half of it is marked not verified
+(record 4), and a 1.0 on top of that would be the kind of claim record 17
+exists to prevent.
+
+**Consequences.** The criterion for a minor release can be checked against a
+diff: it names the files. `/release-notes` has tags to compare from the second
+release on. The stamp still records a commit, not a tag; moving it to a tag is
+on the backlog. Number 19 is reserved by a record that is not merged yet.
