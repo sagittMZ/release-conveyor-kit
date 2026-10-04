@@ -1,3 +1,5 @@
+<p align="right"><a href="README.md"><img src="docs/assets/lang-en-on.svg" alt="English" width="46" height="28"></a><a href="README.ru.md"><img src="docs/assets/lang-ru.svg" alt="Русский" width="46" height="28"></a><a href="README.es.md"><img src="docs/assets/lang-es.svg" alt="Español" width="46" height="28"></a></p>
+
 # Release Conveyor Kit
 
 Slash commands and checks that make an AI coding agent show its work instead

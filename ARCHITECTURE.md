@@ -540,3 +540,43 @@ exists to prevent.
 diff: it names the files. `/release-notes` has tags to compare from the second
 release on. The stamp still records a commit, not a tag; moving it to a tag is
 on the backlog. Number 19 is reserved by a record that is not merged yet.
+
+### 21. The README is translated, and nothing else is
+
+**Supersedes:** record 13, for the README only. Everything else in record 13
+stands.
+
+**Context.** The README is the door. The people the kit is for include readers
+who do not read English at all, and for them an English door is a closed one,
+however good the rest is. Record 13 rejected translating "only the entry
+points" because the reader hits the untranslated layer on the second click.
+That is still true; what changed is the judgement that a reader who understood
+what the kit is for and stopped at the second click is better off than one who
+never got through the first.
+
+**Decision.** The repository tracks two translations of the README,
+`README.ru.md` and `README.es.md`, next to the canonical `README.md`. Each
+README carries a three-way language switch at the top. Each translation says,
+near the top, that the rest of the documentation is in English. Nothing else
+is translated: commands, prompts, module READMEs and decision records stay
+English, because they are also what an agent reads.
+
+Drift is handled by a check, not by discipline. Every translation starts with
+a stamp holding the hash of the English README it was made from, and CI fails
+when the stamp does not match. The order of work is fixed: change the English
+text, redo both translations, restamp.
+
+**Alternatives.** Keep translations git-ignored, as record 13 had it -
+rejected: a translation that is not in the repository does not help anyone who
+arrives at the repository. Translate the whole documentation tree - rejected
+for the reason record 13 gives, two copies of every document drift within a
+month, and the check that keeps one file honest does not scale to a hundred.
+Machine translation in the reader's browser - rejected as the only answer: it
+mangles command names and code, which is the part that must be exact.
+
+**Consequences.** Every change to the English README costs two more
+translations, and the CI check makes that cost impossible to skip. The buttons
+and the demo animation stay English in all three versions. The Spanish
+translation enters as not verified (record 4) until a native speaker has read
+it. A third language is a new file, a new switch segment and one more name in
+the check, and needs no new record.

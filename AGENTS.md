@@ -47,7 +47,10 @@ because of that.
    commands, prompts, rubrics, code comments, commit messages - is English.
    The private layer is in whatever language the owner writes in. Where a local
    translation is useful, English stays canonical and the translation is
-   regenerated and git-ignored.
+   regenerated and git-ignored. One exception (record 21): `README.ru.md` and
+   `README.es.md` are tracked translations of `README.md`. Change the English
+   one first, redo both translations, then restamp them with
+   `bash .github/scripts/check-readme-translations.sh --stamp`.
 
 6. **Templates are parameterized.** Anything project-specific in a template
    carries a `# conveyor:` marker and reads from `conveyor.config.json`.
