@@ -1,8 +1,8 @@
 {
   "meta": {
     "project": "release-conveyor-kit",
-    "updated": "2026-10-03",
-    "commit": "a1e5084",
+    "updated": "2026-10-04",
+    "commit": "fdfdee8",
     "lang": "en"
   },
   "groups": [
@@ -382,9 +382,10 @@
       "id": "gha",
       "label": "GitHub Actions",
       "group": "runtime",
-      "desc": "Runs the pipeline templates, the arch-viz workflow, and the kit's own six-gate CI: shellcheck, actionlint, markdownlint, layer 1 evals in strict mode, gitleaks over tree and history, publishability (private layer, local settings strays) plus a dogfood-copy drift gate against module 09.",
+      "desc": "Runs the pipeline templates, the arch-viz workflow, and the kit's own six-gate CI: shellcheck, actionlint, markdownlint, layer 1 evals in strict mode, gitleaks over tree and history, publishability (private layer, local settings strays) plus a dogfood-copy drift gate against module 09, and a stamp check that fails when a translated README lags behind the English one.",
       "files": [
-        ".github/workflows/"
+        ".github/workflows/",
+        ".github/scripts/check-readme-translations.sh"
       ],
       "tech": [
         "CI"
@@ -420,6 +421,23 @@
         "Play",
         "App Store",
         "Vercel"
+      ]
+    },
+    {
+      "id": "readme",
+      "label": "README (EN / RU / ES)",
+      "group": "delivery",
+      "desc": "The entry point: what the kit does, four entry buttons, a recorded /precommit run on a generated repository. English is canonical; the Russian and Spanish copies carry the hash of the English text they were made from.",
+      "files": [
+        "README.md",
+        "README.ru.md",
+        "README.es.md",
+        "docs/demo/",
+        "docs/assets/"
+      ],
+      "tech": [
+        "markdown",
+        "svg"
       ]
     }
   ],
@@ -657,6 +675,18 @@
       "to": "transcripts",
       "label": "newest transcript = session id",
       "kind": "data"
+    },
+    {
+      "from": "readme",
+      "to": "rollout",
+      "label": "sends the reader to",
+      "kind": "control"
+    },
+    {
+      "from": "gha",
+      "to": "readme",
+      "label": "checks translation stamps",
+      "kind": "build"
     }
   ],
   "flows": [
