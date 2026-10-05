@@ -9,7 +9,7 @@ anti-properties it must not have (avoid).
 input: exporting a user's monthly report to PDF from a button
 expect:
 
-- the answer is grouped by category (input/validation, network/loading, permissions/access, empty/boundary data, races/retries)
+- the answer is grouped by category (input and validation, network and loading, permissions, empty or boundary data, races and retries)
 - an empty state is covered (no data for the period)
 - a permissions case is covered (requesting somebody else's report)
 - a network or timeout case is covered for the file generation
