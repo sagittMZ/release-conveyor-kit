@@ -1,4 +1,4 @@
-<!-- translated-from: README.md sha256:073587a8ce25 -->
+<!-- translated-from: README.md sha256:a6767174828a -->
 <p align="right"><a href="README.md"><img src="docs/assets/lang-en.svg" alt="English" width="46" height="28"></a><a href="README.ru.md"><img src="docs/assets/lang-ru-on.svg" alt="Русский" width="46" height="28"></a><a href="README.es.md"><img src="docs/assets/lang-es.svg" alt="Español" width="46" height="28"></a></p>
 
 # Release Conveyor Kit
@@ -123,11 +123,11 @@ CI, сборки под Android и iOS, инструкции для сторов
 | Релизный конвейер (модули 01-08) | CI, сборки под Android и iOS, инструкции для сторов, стейджинг, мониторинг, гигиена секретов, смоук-тесты. Только один стек | Частично извлечён из боевого конвейера, частично не проверен |
 | Восстановление сессий (модуль 14) | Сессии агентов и их темы в чате возвращаются после перезагрузки | Проверено частично: настоящий холодный старт вернул все сессии; последнее исправление в холодном старте ещё не запускалось |
 
-[![Страница архитектуры самого кита: 32 компонента в шести группах и потоки между ними](docs/assets/arch-example.png)](docs/assets/arch-example.png)
+[![Страница архитектуры самого кита: 32 компонента в шести группах и потоки между ними](docs/assets/arch-example.png)](https://sagittmz.github.io/release-conveyor-kit/docs/arch/)
 
-Страница архитектуры самого кита - такой её собирает модуль 13. Это один
-файл, [docs/arch/index.html](docs/arch/index.html): скачайте его и откройте в
-браузере, чтобы пройтись по компонентам и потокам.
+Страница архитектуры самого кита - такой её собирает модуль 13. Нажмите на
+картинку, чтобы открыть [живую страницу](https://sagittmz.github.io/release-conveyor-kit/docs/arch/) и пройтись по компонентам и
+потокам.
 
 ## Что не проверено
 

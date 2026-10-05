@@ -115,11 +115,11 @@ examples: [docs/prompt-kit-guide.md](docs/prompt-kit-guide.md).
 | Release pipeline (modules 01-08) | CI, Android and iOS builds, store playbooks, staging, monitoring, secrets hygiene, smoke tests. One stack only | Partly extracted from a production pipeline, partly not verified |
 | Session respawn (module 14) | Agent sessions and their chat topics come back after a reboot | Proven in part: a real cold start brought every session back; the latest fix has not run cold yet |
 
-[![The kit's own architecture page: 32 components in six groups, with the flows between them](docs/assets/arch-example.png)](docs/assets/arch-example.png)
+[![The kit's own architecture page: 32 components in six groups, with the flows between them](docs/assets/arch-example.png)](https://sagittmz.github.io/release-conveyor-kit/docs/arch/)
 
-The architecture page of the kit itself, as module 13 builds it. It is one
-file, [docs/arch/index.html](docs/arch/index.html): download it and open it in
-a browser to click through the components and flows.
+The architecture page of the kit itself, as module 13 builds it. Click the
+picture to open the [live page](https://sagittmz.github.io/release-conveyor-kit/docs/arch/) and walk through the components and
+flows.
 
 ## What is not verified
 
