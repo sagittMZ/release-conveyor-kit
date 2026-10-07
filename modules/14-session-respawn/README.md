@@ -45,6 +45,7 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `ccgram-respawn.sh` | the script; copy to `~/bin/` (or anywhere on PATH) |
 | `templates/respawn-manifest.example.json` | the manifest; copy to `~/.ccgram/respawn-manifest.json` and fill in |
 | `templates/ccgram-respawn.service` | systemd user unit; copy to `~/.config/systemd/user/` |
+| `dismiss-cards.sh` | closes keyboard-only cards in the session windows; see [Cards nobody can answer](#cards-nobody-can-answer) |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -158,6 +159,42 @@ of memory - the owner has been there with another tool. So:
   run per boot, a second `systemctl start` is a no-op, `TimeoutStartSec`
   bounds the whole run;
 - a run when everything is already alive exits early with "nothing to do".
+
+## Cards nobody can answer
+
+A session driven through a chat bridge has nobody at its keyboard. Now and
+then the agent's TUI raises a card that waits for a key press - the one seen
+so far is the feedback draft, a framed box that ends in
+`1 to review · 2 to send · 0 to dismiss`. From the chat there is nothing to
+press, so the card stays and covers the status line.
+
+`dismiss-cards.sh` looks at every window of the bridge's tmux session and
+presses the dismissing key where it sees such a card:
+
+```bash
+dismiss-cards.sh --dry-run        # what it would dismiss, nothing pressed
+dismiss-cards.sh                  # every window
+dismiss-cards.sh --only <window>  # one window, repeatable
+```
+
+It never sends anything anywhere: dismissing a feedback draft folds the card
+away and leaves the draft queued on the machine, unsent. It presses one key
+per card and never Enter. A card is recognised only by its framed lines at
+the bottom of the pane, so the same words quoted in a conversation do not
+match. If the key lands in the input line instead of the card, it is erased
+again and the window is reported as still showing the card. The exit code is
+non-zero when a card survived.
+
+To call it from the chat, wrap it in a slash command of your own that runs the
+script and reports its output; the bridge puts such a command into the chat
+menu.
+
+**Added by the kit, proven in part.** The key itself was pressed by hand in
+two real sessions (2026-10-07) and the card went away. The script has passed
+syntax, shellcheck and three fake screens - a card that takes the key, a card
+that ignores it, and the card's words quoted without a frame - and has **not**
+yet met a real card. Known cards live in the `CARDS` table at the top of the
+script; add a row only for a card seen for real.
 
 ## Traps this closes
 
