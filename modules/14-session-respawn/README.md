@@ -46,6 +46,8 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `templates/respawn-manifest.example.json` | the manifest; copy to `~/.ccgram/respawn-manifest.json` and fill in |
 | `templates/ccgram-respawn.service` | systemd user unit; copy to `~/.config/systemd/user/` |
 | `dismiss-cards.sh` | closes keyboard-only cards in the session windows; see [Cards nobody can answer](#cards-nobody-can-answer) |
+| `next-session.sh` | clears one session and types its kickoff line; see [Handoff, clear, kickoff](#handoff-clear-kickoff) |
+| `templates/next.command.md` | a slash command that does the handoff and then starts `next-session.sh`; copy to your user commands and fill in the path |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -195,6 +197,45 @@ syntax, shellcheck and three fake screens - a card that takes the key, a card
 that ignores it, and the card's words quoted without a frame - and has **not**
 yet met a real card. Known cards live in the `CARDS` table at the top of the
 script; add a row only for a card seen for real.
+
+## Handoff, clear, kickoff
+
+The routine after a handoff never changes: wait for the session to finish,
+type `/clear`, wait again, type the line that makes the fresh session read its
+rules file and its session prompt. From a chat that is three messages and two
+waits per session, and with five sessions it is fifteen.
+
+`next-session.sh` does the routine for one window:
+
+```bash
+next-session.sh --window <window> --dry-run   # the plan, nothing pressed
+next-session.sh --window <window>
+next-session.sh --cwd <project-dir>           # find the window by its project
+```
+
+1. waits until the agent is idle, then a little longer so the bridge delivers
+   the last reply;
+2. types `/clear`;
+3. types the window's `kickoff` line from the manifest (or `--kickoff`);
+4. checks that the bridge's session map points at the new transcript and
+   repairs it when the agent's hook was lost - without that the fresh session
+   reads the chat but its replies never reach it.
+
+A session cannot clear itself, so the script runs outside it.
+`templates/next.command.md` is the other half: a slash command that makes the
+session write its handoff and then start the script detached, as the last
+action of its turn. One message in the chat replaces the whole routine.
+
+It refuses to start when the window has no agent running, has no kickoff
+line, or is still busy after fifteen minutes; text is always typed before
+Enter; one run per window at a time. A known card on screen is folded away
+first with `dismiss-cards.sh`.
+
+**Added by the kit, not verified.** The script has passed syntax, shellcheck
+and an end-to-end run against a fake terminal with a temporary manifest and
+session map (idle wait, `/clear`, kickoff, map repair), and its busy/idle
+reading was compared with nine live windows. It has **not** yet reset a real
+session.
 
 ## Traps this closes
 

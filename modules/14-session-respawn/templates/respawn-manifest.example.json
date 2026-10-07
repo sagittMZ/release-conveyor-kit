@@ -1,5 +1,5 @@
 {
-  "_doc": "Copy to ~/.ccgram/respawn-manifest.json. Order = tmux window order after a reboot. session_id is never stored: it is resolved from the newest transcript in <config_dir>/projects/<cwd-slug>/. resume: summary | full | fresh. effort: optional, passed as --effort <level>. group: the model-diversity check wants at least two distinct models per group.",
+  "_doc": "Copy to ~/.ccgram/respawn-manifest.json. Order = tmux window order after a reboot. session_id is never stored: it is resolved from the newest transcript in <config_dir>/projects/<cwd-slug>/. resume: summary | full | fresh. effort: optional, passed as --effort <level>. group: the model-diversity check wants at least two distinct models per group. kickoff: optional, the line next-session.sh types into the window after /clear.",
   "tmux_session": "ccgram",
   "claude_command": "claude --settings ~/.ccgram/no-telegram.json --dangerously-skip-permissions",
   "report": {
@@ -7,7 +7,7 @@
     "per_topic_line": true
   },
   "windows": [
-    {"name": "<topic-name>",       "cwd": "~/projects/<repo>",      "thread_id": 0, "model": "<model-a>", "resume": "summary", "group": "default"},
+    {"name": "<topic-name>",       "cwd": "~/projects/<repo>",      "thread_id": 0, "model": "<model-a>", "resume": "summary", "group": "default", "kickoff": "Read <rules-file> and <session-prompt-file>"},
     {"name": "<other-topic-name>", "cwd": "~/projects/<other-repo>", "thread_id": 0, "model": "<model-b>", "effort": "<level>", "resume": "summary", "group": "default"},
     {"name": "<second-topic-name>", "cwd": "~/<second-root>/<repo>", "thread_id": 0, "model": "<model-a>", "resume": "full",    "group": "second", "config_dir": "~/.claude-second"}
   ]

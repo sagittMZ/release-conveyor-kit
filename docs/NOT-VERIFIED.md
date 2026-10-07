@@ -19,7 +19,8 @@ and their READMEs say so:
   of rebinding the one from the manifest.
   The module's card dismisser (`dismiss-cards.sh`) has passed fake screens
   only; the key it presses was tried by hand on real sessions, the script
-  itself has not met a real card yet.
+  itself has not met a real card yet. `next-session.sh` (clear a session and
+  hand it its kickoff line) has run against a fake terminal only.
 - **iOS TestFlight publishing.** The Codemagic bootstrap (generate the iOS
   project, compile unsigned) is from the donor and proven. Signing and
   publishing to TestFlight are a scaffold marked TODO (module 02); the App
