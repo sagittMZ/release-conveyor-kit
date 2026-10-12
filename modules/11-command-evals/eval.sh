@@ -64,7 +64,8 @@ if [ -f "$LIB" ]; then
   mapfile -t _F < <(lt_find_files "$USAGE_DAYS")
   if [ "${#_F[@]}" -gt 0 ]; then
     while read -r n cname; do
-      [ -n "${cname:-}" ] && USE["$cname"]="$n"
+      # a command installed under a group is typed as /group:name
+      [ -n "${cname:-}" ] && USE["${cname##*:}"]=$(( ${USE["${cname##*:}"]:-0} + n ))
     done < <(lt_cmd_counts "${_F[@]}")
   fi
 fi

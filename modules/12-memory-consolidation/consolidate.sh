@@ -111,6 +111,7 @@ OUT="$OUT_DIR/material-$DATE.md"
     # shellcheck source=/dev/null
     source "$LIB"
     mapfile -t F < <(lt_find_files "$DAYS")
+    export LT_DAYS="$DAYS"   # count records inside the window, not whole files
     echo "Sessions in the window: ${#F[@]}"
     if [ "${#F[@]}" -gt 0 ]; then
       echo; echo "Commands:"; lt_cmd_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20

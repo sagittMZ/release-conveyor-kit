@@ -1,10 +1,14 @@
 #!/bin/bash
 # Usage digest: what was actually used over the week in Claude Code sessions.
 # Source of truth - the transcripts (~/.claude/projects/*/*.jsonl):
-#   slash commands   <command-name>/name
-#   skills           "skill":"name"          (Claude invokes these itself)
-#   subagents        "subagent_type":"name"  (Task)
+#   slash commands   a user message carrying <command-name>/name
+#   skills           a Skill tool call        (Claude invokes these itself)
+#   subagents        a Task/Agent tool call
 # It measures command usage, not token spend.
+#
+# More than one Claude Code config dir (CLAUDE_CONFIG_DIR)? List every projects
+# directory in CLAUDE_PROJECTS_DIR, separated by ":" - otherwise only the
+# default one is read and the rest of the work is invisible to the digest.
 #
 # Prints to stdout by default. If TG_BOT_TOKEN and TG_CHAT_ID are set in the
 # environment, it also sends the report to Telegram. Secrets are NOT stored in
@@ -18,6 +22,7 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib-transcripts.sh"
 
 DAYS="${DIGEST_DAYS:-7}"
+export LT_DAYS="$DAYS"   # count records inside the window, not whole files
 
 # The prompt library's commands: whatever sits in commands/ next door, so the
 # list cannot rot when a command is added or renamed. An empty directory just
@@ -42,11 +47,14 @@ CMD_COUNTS="$(lt_cmd_counts "${FILES[@]}")"
 SKILL_COUNTS="$(lt_skill_counts "${FILES[@]}")"
 AGENT_COUNTS="$(lt_agent_counts "${FILES[@]}")"
 
-is_lib() { for c in $LIB_COMMANDS; do [ "$1" = "$c" ] && return 0; done; return 1; }
+# A library command is matched by its own name whatever group it was installed
+# under: /handoff and /kit:handoff are the same command. Its count is every way
+# it ran: typed as a slash command, or picked up by Claude as a skill.
+is_lib() { for c in $LIB_COMMANDS; do [ "${1##*:}" = "$c" ] && return 0; done; return 1; }
 
 LIB_BLOCK=""; LIB_TOTAL=0
 for c in $LIB_COMMANDS; do
-  n="$(printf '%s\n' "$CMD_COUNTS" | awk -v cmd="$c" '$2==cmd {print $1}')"; n="${n:-0}"
+  n="$(printf '%s\n%s\n' "$CMD_COUNTS" "$SKILL_COUNTS" | awk -v cmd="$c" '{ b = $2; sub(/.*:/, "", b) } b == cmd { s += $1 } END { print s + 0 }')"
   LIB_TOTAL=$((LIB_TOTAL + n))
   LIB_BLOCK="${LIB_BLOCK}$(printf '  /%-15s %s' "$c" "$n")"$'\n'
 done
@@ -63,16 +71,28 @@ fmt() { # prints a block of counters, or "(none)"
     printf '%s' "$1" | awk '{printf "  %-18s %s\n",$2,$1}'; fi
 }
 
-REPORT="Prompt Library Usage - $DATE
-Window: last $DAYS day(s), sessions: ${#FILES[@]}
+# With several projects directories, say how many transcripts each one gave.
+SOURCES=""
+IFS=: read -r -a _dirs <<< "$LT_PROJECTS_DIR"
+if [ "${#_dirs[@]}" -gt 1 ]; then
+  for _d in "${_dirs[@]}"; do
+    _r="$(realpath "$_d" 2>/dev/null || printf '%s' "$_d")"
+    _n="$(printf '%s\n' "${FILES[@]}" | grep -c "^${_r}/" || true)"
+    SOURCES="${SOURCES}  ${_d/#$HOME/\~}: ${_n}"$'\n'
+  done
+  SOURCES=$'\n'"${SOURCES%$'\n'}"
+fi
 
-== Library commands (module 09), total: $LIB_TOTAL ==
+REPORT="Prompt Library Usage - $DATE
+Window: last $DAYS day(s), transcripts: ${#FILES[@]}${SOURCES}
+
+== Library commands (module 09), typed or run as a skill, total: $LIB_TOTAL ==
 ${LIB_BLOCK}
 == Other slash commands (built-in + your own) ==
 $([ -n "$(printf '%s' "$OTHER_BLOCK" | tr -d '[:space:]')" ] && printf '%s' "$OTHER_BLOCK" || echo '  (none)')
 == Skills (invoked by Claude itself) ==
 $(fmt "$SKILL_COUNTS")
-== Subagents (Task) ==
+== Subagents ==
 $(fmt "$AGENT_COUNTS")
 --
 Zero for a library command means bad naming or no need. Frequent ones are hook
