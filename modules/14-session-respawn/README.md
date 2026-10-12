@@ -216,10 +216,17 @@ next-session.sh --cwd <project-dir>           # find the window by its project
 1. waits until the agent is idle, then a little longer so the bridge delivers
    the last reply;
 2. types `/clear`;
-3. types the window's `kickoff` line from the manifest (or `--kickoff`);
-4. checks that the bridge's session map points at the new transcript and
-   repairs it when the agent's hook was lost - without that the fresh session
-   reads the chat but its replies never reach it.
+3. points the bridge's session map at the new transcript - repairing it when
+   the agent's hook was lost - and marks the entry `replay_from_start`;
+4. types the window's `kickoff` line from the manifest (or `--kickoff`).
+
+Step 3 comes before the kickoff on purpose. After a clear the bridge can keep
+the previous conversation as the window's session for up to a minute: it
+treats the new one as nested while the old transcript is still fresh. When it
+finally switches, it starts reading the new transcript at its end, and the
+session's first reply - the answer to the kickoff - never reaches the chat.
+With the mark, a bridge that switches late reads the new conversation from its
+first line; a bridge that already follows it ignores the mark.
 
 A session cannot clear itself, so the script runs outside it.
 `templates/next.command.md` is the other half: a slash command that makes the
@@ -235,7 +242,10 @@ first with `dismiss-cards.sh`.
 and an end-to-end run against a fake terminal with a temporary manifest and
 session map (idle wait, `/clear`, kickoff, map repair), and its busy/idle
 reading was compared with nine live windows. It has **not** yet reset a real
-session.
+session. The `replay_from_start` mark is newer still: the function that writes
+it was run against a temporary map, and the bridge's own parser was checked to
+accept the marked entry for this agent, but a late switch has not been caught
+live with the mark in place.
 
 ## Traps this closes
 

@@ -108,8 +108,8 @@ if [ "$DRY" = 1 ]; then
   echo "plan $WINDOW ($T, cwd $W_CWD):"
   echo "  1. wait until idle (up to ${IDLE_TIMEOUT}s), then ${DELIVER_WAIT}s for the last reply to be delivered"
   echo "  2. type: /clear"
-  echo "  3. type: $KICKOFF"
-  echo "  4. point the bridge's session map at the new transcript if it did not follow"
+  echo "  3. point the bridge's session map at the new transcript, marked to be read from the start"
+  echo "  4. type: $KICKOFF"
   agent_running && echo "  agent: running, $(busy && echo busy || echo idle)" || echo "  agent: NOT running - a real run would refuse"
   exit 0
 fi
@@ -127,30 +127,27 @@ wait_idle 120 || { log "refused: busy again after the delivery wait"; exit 1; }
 # a card on screen would swallow nothing but hide the result; fold it away first
 [ -x "$HERE/dismiss-cards.sh" ] && "$HERE/dismiss-cards.sh" --only "$WINDOW" >>"$LOG" 2>&1 || true
 
-before="$(newest_transcript | cut -d' ' -f2-)"
-stamp="$(date +%s)"
-type_line "/clear"
-sleep "$CLEAR_WAIT"
-wait_idle 60 || { log "stopped: the window is busy after /clear, kickoff NOT typed"; exit 1; }
-log "cleared"
-type_line "$KICKOFF"
-log "kickoff typed"
-
-# The bridge follows a new session through the agent's hooks. When the hook is
-# lost, replies stop reaching the chat: point the session map at the new
-# transcript by hand, the way the bridge would have.
-new=""
-for ((i = 0; i < MAP_WAIT; i += 2)); do
-  read -r mtime path < <(newest_transcript) || true
-  if [ -n "${path:-}" ] && [ "$path" != "$before" ] && [ "${mtime%.*}" -ge "$stamp" ]; then new="$path"; break; fi
-  sleep 2
-done
-if [ -z "$new" ]; then
-  log "WARN: no new transcript within ${MAP_WAIT}s - check that the session answers in the chat"
-  exit 0
-fi
-sleep 3   # give the hook its chance first
-fix="$(flock "$CCGRAM_DIR/session_map.lock" python3 - "$SESSION_MAP" "$SESSION:$ID" "$new" <<'PY'
+# The bridge follows a new session through the agent's hooks. Two things go
+# wrong there. The hook can be lost, and then replies stop reaching the chat.
+# Or the bridge keeps the previous conversation as the window's session for a
+# while after the clear (it treats the new one as nested while the old
+# transcript is fresh), then switches and starts reading the new transcript at
+# its end - whatever the session answered in between never reaches the chat.
+# So before the kickoff is typed: point the session map at the new transcript
+# and mark it "read from the start". A bridge that already follows the new
+# session ignores the mark; one that switches late replays the new
+# conversation from its first line instead of skipping it.
+find_new() {  # find_new <seconds> -> path of a transcript that appeared after the clear
+  local i mtime path
+  for ((i = 0; i < $1; i += 2)); do
+    read -r mtime path < <(newest_transcript) || true
+    if [ -n "${path:-}" ] && [ "$path" != "$before" ] && [ "${mtime%.*}" -ge "$stamp" ]; then printf '%s\n' "$path"; return 0; fi
+    sleep 2
+  done
+  return 1
+}
+point_map() {  # point_map <transcript path> -> one line saying what was done
+  flock "$CCGRAM_DIR/session_map.lock" python3 - "$SESSION_MAP" "$SESSION:$ID" "$1" <<'PY'
 import json, os, sys
 p, key, path = sys.argv[1:4]
 sid = os.path.basename(path)[:-len(".jsonl")]
@@ -161,13 +158,35 @@ except Exception:
 e = m.get(key)
 if not isinstance(e, dict):
     print("no entry for " + key); sys.exit(0)
-if e.get("session_id") == sid:
-    print("followed by the hook"); sys.exit(0)
-e["session_id"], e["transcript_path"] = sid, path
+said = "followed by the hook"
+if e.get("session_id") != sid:
+    e["session_id"], e["transcript_path"] = sid, path
+    said = "repaired -> " + sid[:8]
+e["replay_from_start"] = True
 tmp = p + ".tmp"
 json.dump(m, open(tmp, "w"), indent=2); os.replace(tmp, p)
-print("repaired -> " + sid[:8])
+print(said + ", marked to be read from the start")
 PY
-)"
-log "session map: $fix"
+}
+
+before="$(newest_transcript | cut -d' ' -f2-)"
+stamp="$(date +%s)"
+type_line "/clear"
+sleep "$CLEAR_WAIT"
+wait_idle 60 || { log "stopped: the window is busy after /clear, kickoff NOT typed"; exit 1; }
+log "cleared"
+new="$(find_new 10)" || new=""
+[ -n "$new" ] && log "session map: $(point_map "$new")"
+type_line "$KICKOFF"
+log "kickoff typed"
+
+if [ -z "$new" ]; then  # the transcript shows up with the first turn on some builds
+  new="$(find_new "$MAP_WAIT")" || new=""
+  if [ -z "$new" ]; then
+    log "WARN: no new transcript within ${MAP_WAIT}s - check that the session answers in the chat"
+    exit 0
+  fi
+  sleep 3   # give the hook its chance first
+  log "session map: $(point_map "$new")"
+fi
 log "done"
