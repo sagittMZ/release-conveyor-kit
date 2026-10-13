@@ -49,6 +49,7 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `next-session.sh` | clears one session and types its kickoff line; see [Handoff, clear, kickoff](#handoff-clear-kickoff) |
 | `templates/next.command.md` | a slash command that does the handoff and then starts `next-session.sh`; copy to your user commands and fill in the path |
 | `context-meter.sh` | saves each session's context usage to a file a hook can read; see [Context usage for hooks](#context-usage-for-hooks) |
+| `relay.sh` | turns a relay run on and off for a project and keeps its state; see [Relay](#relay) |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -296,6 +297,49 @@ line of a throwaway session across four conversations and of one long-lived
 session: the file matched the footer each time, and a new conversation after
 `/clear` got its own file under its new session id. **Not verified:** a hook
 that reads the file - none exists yet.
+
+## Relay
+
+A relay run is a session working through a plan of several tasks on its own.
+At the end of every turn a hook decides: push the session to the next task,
+let it finish and hand over to a clean conversation because the context has
+filled up, or stop the run and ask a person. The hand-over is the routine
+above - handoff, `/clear`, kickoff - so the next conversation picks the plan up
+where the previous one left it.
+
+**Not finished.** What exists is the switch and the state; the hooks that act
+on them are not written yet, so turning a run on changes nothing in a session
+today.
+
+```bash
+relay.sh on --plan docs/plan.md      # start a run for this project
+relay.sh status                      # where it stands; --all for every project
+relay.sh wait --reason "asked about naming"   # let one end of turn through
+relay.sh off --reason "plan finished"
+```
+
+One run per project directory. The state is one file,
+`~/.ccgram/relay/<project>-<hash>.json` (or `$RELAY_DIR`), mode 600, replaced
+atomically under a lock; `relay.log` next to it records every switch.
+
+| Setting | Default | What it limits |
+|---|---|---|
+| `--soft` | 35 | context %, from which no new task is started: finish, wait for background work, hand over |
+| `--hard` | 45 | context %, from which the session hands over without waiting |
+| `--max-resets` | 6 | hand-overs in one run |
+| `--max-stalls` | 2 | pushes in a row without a new commit - the session is spinning |
+| `--rate-max` | 85 | 5-hour usage %, above which the run stops |
+| `--bg-wait` | 30 | minutes to wait for background work before asking a person |
+
+The thresholds are a share of the session's own context window, read from the
+file `context-meter.sh` writes. Two rules are built into the switch rather
+than left to the caller: the ceiling on hand-overs is always set and cannot be
+zero, and `on` refuses to replace a run that is already on, so a session
+cannot reset its own counters by starting the run again.
+
+**Added by the kit, not verified.** The switch has passed syntax, shellcheck
+and a run of every subcommand and every refusal against a temporary
+directory. No session has been driven by it.
 
 ## Traps this closes
 
