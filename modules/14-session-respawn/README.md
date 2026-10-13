@@ -50,6 +50,7 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `templates/next.command.md` | a slash command that does the handoff and then starts `next-session.sh`; copy to your user commands and fill in the path |
 | `context-meter.sh` | saves each session's context usage to a file a hook can read; see [Context usage for hooks](#context-usage-for-hooks) |
 | `relay.sh` | turns a relay run on and off for a project and keeps its state; see [Relay](#relay) |
+| `relay-stop-hook.sh` | the Stop hook that pushes a relay session to the next task or to a hand-over |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -307,9 +308,13 @@ filled up, or stop the run and ask a person. The hand-over is the routine
 above - handoff, `/clear`, kickoff - so the next conversation picks the plan up
 where the previous one left it.
 
-**Not finished.** What exists is the switch and the state; the hooks that act
-on them are not written yet, so turning a run on changes nothing in a session
-today.
+**Not finished.** What exists: the switch, the state and the Stop hook that
+decides. What does not: the hand-over does not yet tell the run it has started
+or count itself, nothing carries the plan into the new conversation, a reply
+cut off by an API error is not picked up (the agent raises `StopFailure` for
+it, not `Stop`), and background work that never ends is noticed only at the
+next end of turn. Until those exist a run can push a session through tasks
+but cannot take it across a reset on its own.
 
 ```bash
 relay.sh on --plan docs/plan.md      # start a run for this project
@@ -327,9 +332,10 @@ atomically under a lock; `relay.log` next to it records every switch.
 | `--soft` | 35 | context %, from which no new task is started: finish, wait for background work, hand over |
 | `--hard` | 45 | context %, from which the session hands over without waiting |
 | `--max-resets` | 6 | hand-overs in one run |
-| `--max-stalls` | 2 | pushes in a row without a new commit - the session is spinning |
+| `--max-stalls` | 2 | pushes in a row that changed neither the commit nor the plan file - the session is spinning |
 | `--rate-max` | 85 | 5-hour usage %, above which the run stops |
-| `--bg-wait` | 30 | minutes to wait for background work before asking a person |
+| `--bg-wait` | 30 | minutes to wait for background work before handing over anyway |
+| `--handover` | `/next` | the command the session runs to hand over and start clean |
 
 The thresholds are a share of the session's own context window, read from the
 file `context-meter.sh` writes. Two rules are built into the switch rather
@@ -337,9 +343,49 @@ than left to the caller: the ceiling on hand-overs is always set and cannot be
 zero, and `on` refuses to replace a run that is already on, so a session
 cannot reset its own counters by starting the run again.
 
+### What the hook decides
+
+`relay-stop-hook.sh` is installed as a Stop hook of the agent, next to any
+hook already there. It reads its input, the run's state and the meter's file,
+and either lets the turn end or refuses the stop with a reason the session
+reads as its next instruction. It presses nothing and sends nothing.
+
+| At the end of a turn | The hook |
+|---|---|
+| no run is on for this project | says nothing (about 7 ms) |
+| a hand-over is already running | lets the turn end |
+| the session declared `wait` | lets this one turn end |
+| context below the soft limit | "take the next unfinished task of the plan" |
+| between the limits, first time | "start no new task, finish the current one" |
+| between the limits, background work running | lets the turn end: the work wakes the session when it finishes |
+| between the limits, nothing running | "hand over now" |
+| at or above the hard limit | "hand over now", without waiting |
+| a limit is used up | turns the run off and tells the session to report it in one line |
+
+The limits that turn a run off: hand-overs used up, pushes without progress,
+the 5-hour usage ceiling, three requests to hand over that were not followed,
+a plan file that cannot be read, and a context reading that is missing or
+older than fifteen minutes - without the number the hook cannot decide, so it
+stops instead of guessing. The stop is reported by the session itself in its
+own chat, so the hook needs no way to send a message.
+
+Three facts about the agent that shape the table, each observed on a
+throwaway session (Claude Code 2.1.296): a finished background task wakes the
+session and the hook runs again with an empty list; scheduled tasks and
+background shell commands survive `/clear` and keep running in the new
+conversation, so the hook asks for them to be listed in the handoff instead of
+restarted; and `/clear` typed while a turn is running is queued until the turn
+ends. Background agents were not checked.
+
+One run belongs to a project directory, not to a session: every session whose
+working directory is inside the project is driven by it.
+
 **Added by the kit, not verified.** The switch has passed syntax, shellcheck
 and a run of every subcommand and every refusal against a temporary
-directory. No session has been driven by it.
+directory. The hook has passed syntax, shellcheck and a harness of 29 cases on
+made-up input - every row of the table, every limit, a session in a
+subdirectory and in another project, input that is not JSON. No session has
+been driven by either.
 
 ## Traps this closes
 

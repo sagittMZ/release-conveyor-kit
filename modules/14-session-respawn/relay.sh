@@ -30,11 +30,13 @@
 #   --hard N          context %, from which it hands over without waiting
 #                     (default 45)
 #   --max-resets N    hand-overs allowed in one run, 1-50 (default 6)
-#   --max-stalls N    pushes in a row without a new commit before the run
-#                     stops, 1-10 (default 2)
+#   --max-stalls N    pushes in a row that changed neither the commit nor
+#                     the plan file before the run stops, 1-10 (default 2)
 #   --rate-max N      5-hour usage %, above which the run stops (default 85)
 #   --bg-wait MIN     minutes to wait for background work before asking a
 #                     person, 1-1440 (default 30)
+#   --handover TEXT   the command the session runs to hand over and start
+#                     clean (default /next)
 #
 # State: $RELAY_DIR/<project>-<hash>.json (default ~/.ccgram/relay/), mode
 # 600, replaced atomically under a lock. Log: $RELAY_DIR/relay.log.
@@ -45,7 +47,7 @@ set -euo pipefail
 
 RELAY_DIR="${RELAY_DIR:-${CCGRAM_DIR:-$HOME/.ccgram}/relay}"
 
-usage() { sed -n '2,43p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1:-}"
 case "$CMD" in
@@ -56,6 +58,7 @@ esac
 
 CWD=""; PLAN=""; REASON=""; ALL=0; JSON=0
 SOFT=35; HARD=45; MAX_RESETS=6; MAX_STALLS=2; RATE_MAX=85; BG_WAIT=30
+HANDOVER="/next"
 only() {  # only <option> <subcommand>... - the option belongs to these subcommands
   local opt="$1" c; shift
   for c in "$@"; do [ "$c" = "$CMD" ] && return 0; done
@@ -71,6 +74,7 @@ while [ $# -gt 0 ]; do
     --max-stalls) only "$1" on; MAX_STALLS="${2:?--max-stalls needs a number}"; shift 2 ;;
     --rate-max) only "$1" on; RATE_MAX="${2:?--rate-max needs a number}"; shift 2 ;;
     --bg-wait) only "$1" on; BG_WAIT="${2:?--bg-wait needs a number}"; shift 2 ;;
+    --handover) only "$1" on; HANDOVER="${2:?--handover needs a command}"; shift 2 ;;
     --reason) only "$1" off wait; REASON="${2:?--reason needs a text}"; shift 2 ;;
     --all) only "$1" status; ALL=1; shift ;;
     --json) only "$1" status; JSON=1; shift ;;
@@ -91,7 +95,6 @@ num() {  # num <name> <value> <min> <max>
     echo "$1 must be between $3 and $4, got $2" >&2; exit 2
   fi
 }
-HEAD_SHA=""
 if [ "$CMD" = on ]; then
   [ -n "$PLAN" ] || { echo "on needs --plan FILE" >&2; exit 2; }
   [ -f "$PLAN" ] || { echo "no such plan file: $PLAN" >&2; exit 1; }
@@ -103,7 +106,6 @@ if [ "$CMD" = on ]; then
   num --max-stalls "$MAX_STALLS" 1 10
   num --rate-max "$RATE_MAX" 1 100
   num --bg-wait "$BG_WAIT" 1 1440
-  HEAD_SHA="$(git -C "$CWD" rev-parse HEAD 2>/dev/null || true)"
 fi
 
 ( umask 077; mkdir -p "$RELAY_DIR" )
@@ -113,7 +115,7 @@ flock -w 10 9 || { echo "the relay state is locked by another run" >&2; exit 1; 
 RELAY_DIR="$RELAY_DIR" CMD="$CMD" CWD="$CWD" PLAN="$PLAN" REASON="$REASON" \
 ALL="$ALL" JSON="$JSON" SOFT="$SOFT" HARD="$HARD" MAX_RESETS="$MAX_RESETS" \
 MAX_STALLS="$MAX_STALLS" RATE_MAX="$RATE_MAX" BG_WAIT="$BG_WAIT" \
-HEAD_SHA="$HEAD_SHA" python3 - <<'PY'
+HANDOVER="$HANDOVER" python3 - <<'PY'
 import glob, hashlib, json, os, sys, tempfile, time
 
 E = os.environ
@@ -152,9 +154,9 @@ def show(s):
         head = "relay: off for {} ({})".format(s["cwd"], s.get("stopped_reason") or "no reason recorded")
     print(head)
     print("  plan: {}".format(s.get("plan")))
-    print("  hand over from {}% of the context (soft), without waiting from {}% (hard)".format(s.get("soft_pct"), s.get("hard_pct")))
+    print("  hand over ({}) from {}% of the context (soft), without waiting from {}% (hard)".format(s.get("handover"), s.get("soft_pct"), s.get("hard_pct")))
     print("  hand-overs: {} of {}".format(s.get("resets", 0), s.get("max_resets")))
-    print("  pushes without a new commit: {} of {}".format(s.get("stalls", 0), s.get("max_stalls")))
+    print("  pushes without progress: {} of {}".format(s.get("stalls", 0), s.get("max_stalls")))
     print("  stops above {}% of the 5-hour limit; waits for background work up to {} min".format(s.get("rate_5h_max"), s.get("bg_wait_min")))
     if s.get("on") and s.get("wait"):
         print("  waiting for an answer: the next end of turn is not pushed ({})".format(s.get("wait_reason") or "no reason given"))
@@ -187,8 +189,9 @@ if cmd == "on":
         "on": True, "cwd": cwd, "plan": E["PLAN"],
         "soft_pct": int(E["SOFT"]), "hard_pct": int(E["HARD"]),
         "max_resets": int(E["MAX_RESETS"]), "resets": 0,
-        "max_stalls": int(E["MAX_STALLS"]), "stalls": 0,
-        "last_head": E["HEAD_SHA"] or None,
+        "max_stalls": int(E["MAX_STALLS"]), "stalls": 0, "progress": None,
+        "handover": E["HANDOVER"], "nags": 0, "soft_told": False,
+        "reset_pending_since": None,
         "rate_5h_max": int(E["RATE_MAX"]),
         "bg_wait_min": int(E["BG_WAIT"]), "bg_wait_since": None,
         "wait": False, "wait_reason": None,
