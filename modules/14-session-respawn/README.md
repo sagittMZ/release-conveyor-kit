@@ -48,6 +48,7 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `dismiss-cards.sh` | closes keyboard-only cards in the session windows; see [Cards nobody can answer](#cards-nobody-can-answer) |
 | `next-session.sh` | clears one session and types its kickoff line; see [Handoff, clear, kickoff](#handoff-clear-kickoff) |
 | `templates/next.command.md` | a slash command that does the handoff and then starts `next-session.sh`; copy to your user commands and fill in the path |
+| `context-meter.sh` | saves each session's context usage to a file a hook can read; see [Context usage for hooks](#context-usage-for-hooks) |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -246,6 +247,55 @@ session. The `replay_from_start` mark is newer still: the function that writes
 it was run against a temporary map, and the bridge's own parser was checked to
 accept the marked entry for this agent, but a late switch has not been caught
 live with the mark in place.
+
+## Context usage for hooks
+
+The agent tells its status line how full the context window is and tells its
+hooks nothing of the kind. A hook that has to decide whether a session should
+hand over and start clean has no number to decide on.
+
+`context-meter.sh` sits in front of the status line command. It reads the JSON
+the agent pipes in, saves the few numbers a hook needs, and runs the real
+status line with the same input:
+
+```json
+"statusLine": { "type": "command",
+  "command": "context-meter.sh <your status line command>" }
+```
+
+One file per session, `~/.ccgram/context/<session_id>.json` (or
+`$CONTEXT_METER_DIR`), mode 600, replaced atomically:
+
+```json
+{"ts": 1791873102, "session_id": "<id>", "used_percentage": 18,
+ "tokens": 180000, "window_size": 1000000, "rate_5h": 7}
+```
+
+A hook gets the same `session_id` in its own input, so it knows which file is
+its session's. Three things to keep in mind when reading it:
+
+- a value the agent did not send is `null`. Before the first reply of a
+  conversation `used_percentage` is `null` - that is "unknown", not "empty";
+- the file is as fresh as the last redraw of the status line: check `ts`
+  before trusting it;
+- `used_percentage` is a share of that session's own window, so the same
+  percentage means five times more tokens on a 1M window than on a 200k one.
+  `tokens` and `window_size` are there for a rule that needs the size.
+
+The meter never fails the status line: without python3, with an unwritable
+directory or with input that is not JSON it leaves the file as it was and the
+status line still runs. A session id that is not a plain id is not used as a
+file name. Old files are not removed; each is about 120 bytes.
+
+**Added by the kit, proven in part.** The script has passed syntax, shellcheck
+and nine runs on made-up input (full input, `null` percentage, tokens derived
+from the percentage, input that is not JSON, a hostile session id, an
+unwritable directory, the exit code and the output of the wrapped command),
+and costs about 30 ms a call on the owner's machine. It has run as the status
+line of a throwaway session across four conversations and of one long-lived
+session: the file matched the footer each time, and a new conversation after
+`/clear` got its own file under its new session id. **Not verified:** a hook
+that reads the file - none exists yet.
 
 ## Traps this closes
 
