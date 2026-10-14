@@ -101,7 +101,7 @@ type_line() { tmux send-keys -t "$T" C-u; tmux send-keys -t "$T" -l -- "$1"; sle
 newest_transcript() {  # newest top-level transcript of the window's project, with its mtime
   local dir
   dir="$W_CFG/projects/$(printf '%s' "$W_CWD" | sed 's|/|-|g')"
-  find "$dir" -maxdepth 1 -name '*.jsonl' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n 1
+  find "$dir" -maxdepth 1 -name '*.jsonl' -printf '%T@ %p\n' 2>/dev/null | sort -rn | sed -n 1p
 }
 
 if [ "$DRY" = 1 ]; then

@@ -119,7 +119,7 @@ OUT="$OUT_DIR/material-$DATE.md"
       echo; echo "Subagents:"; lt_agent_counts "${F[@]}" | awk '{printf "  %s %s\n",$2,$1}' | head -20
       if [ "$WITH_PROMPTS" -eq 1 ]; then
         echo; echo "## 5. Sample of typed prompts (up to 200 lines, $DAYS day window)"
-        echo '```'; lt_typed_prompts "${F[@]}" | grep -v '^$' | head -200; echo '```'
+        echo '```'; lt_typed_prompts "${F[@]}" | grep -v '^$' | sed -n 1,200p; echo '```'
       fi
     fi
   else
