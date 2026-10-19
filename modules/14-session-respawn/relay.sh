@@ -12,12 +12,17 @@
 #        relay.sh off [--reason TEXT]
 #        relay.sh wait [--reason TEXT]
 #        relay.sh status [--all] [--json]
+#        relay.sh reset --stage start|failed
 #   on      start a run for the project. Refuses when one is already on:
 #           the counters of a run are never reset from inside it.
 #   off     stop the run. The state stays on disk for `status`.
 #   wait    the session has asked something and waits for the answer: the
 #           next end of turn is let through without a push, once.
 #   status  the run of this project, or of every project with --all.
+#   reset   called by next-session.sh, not by hand: `start` marks a hand-over
+#           as running, `failed` takes the mark back when the reset was
+#           refused. The hand-over is counted by relay-start-hook.sh once the
+#           conversation is really new. Silent and a no-op without a run.
 #
 # Options for every subcommand:
 #   --cwd DIR         the project (default: the git top level, else the
@@ -47,16 +52,16 @@ set -euo pipefail
 
 RELAY_DIR="${RELAY_DIR:-${CCGRAM_DIR:-$HOME/.ccgram}/relay}"
 
-usage() { sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1:-}"
 case "$CMD" in
-  on|off|wait|status) shift ;;
+  on|off|wait|status|reset) shift ;;
   -h|--help|"") usage; [ -n "$CMD" ] && exit 0 || exit 2 ;;
-  *) echo "unknown command: $CMD (on, off, wait, status)" >&2; exit 2 ;;
+  *) echo "unknown command: $CMD (on, off, wait, status, reset)" >&2; exit 2 ;;
 esac
 
-CWD=""; PLAN=""; REASON=""; ALL=0; JSON=0
+CWD=""; PLAN=""; REASON=""; ALL=0; JSON=0; STAGE=""
 SOFT=35; HARD=45; MAX_RESETS=6; MAX_STALLS=2; RATE_MAX=85; BG_WAIT=30
 HANDOVER="/next"
 only() {  # only <option> <subcommand>... - the option belongs to these subcommands
@@ -78,6 +83,7 @@ while [ $# -gt 0 ]; do
     --reason) only "$1" off wait; REASON="${2:?--reason needs a text}"; shift 2 ;;
     --all) only "$1" status; ALL=1; shift ;;
     --json) only "$1" status; JSON=1; shift ;;
+    --stage) only "$1" reset; STAGE="${2:?--stage needs start or failed}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -95,6 +101,9 @@ num() {  # num <name> <value> <min> <max>
     echo "$1 must be between $3 and $4, got $2" >&2; exit 2
   fi
 }
+if [ "$CMD" = reset ]; then
+  case "$STAGE" in start|failed) ;; *) echo "reset needs --stage start or --stage failed" >&2; exit 2 ;; esac
+fi
 if [ "$CMD" = on ]; then
   [ -n "$PLAN" ] || { echo "on needs --plan FILE" >&2; exit 2; }
   [ -f "$PLAN" ] || { echo "no such plan file: $PLAN" >&2; exit 1; }
@@ -115,7 +124,7 @@ flock -w 10 9 || { echo "the relay state is locked by another run" >&2; exit 1; 
 RELAY_DIR="$RELAY_DIR" CMD="$CMD" CWD="$CWD" PLAN="$PLAN" REASON="$REASON" \
 ALL="$ALL" JSON="$JSON" SOFT="$SOFT" HARD="$HARD" MAX_RESETS="$MAX_RESETS" \
 MAX_STALLS="$MAX_STALLS" RATE_MAX="$RATE_MAX" BG_WAIT="$BG_WAIT" \
-HANDOVER="$HANDOVER" python3 - <<'PY'
+HANDOVER="$HANDOVER" STAGE="$STAGE" python3 - <<'PY'
 import glob, hashlib, json, os, sys, tempfile, time
 
 E = os.environ
@@ -199,6 +208,17 @@ if cmd == "on":
     }
     save(s); log("on, plan {}, soft {}% hard {}%, max resets {}".format(s["plan"], s["soft_pct"], s["hard_pct"], s["max_resets"]))
     show(s); sys.exit(0)
+
+if cmd == "reset":
+    if not s or not s.get("on"):
+        sys.exit(0)  # a window without a run: nothing to record
+    if E["STAGE"] == "start":
+        s["reset_pending_since"] = now
+        save(s); log("hand-over started")
+    elif s.get("reset_pending_since"):
+        s["reset_pending_since"] = None
+        save(s); log("hand-over refused, the mark is taken back")
+    sys.exit(0)
 
 if not s or not s.get("on"):
     print("relay is not on for {}".format(cwd))

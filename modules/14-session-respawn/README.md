@@ -51,6 +51,7 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `context-meter.sh` | saves each session's context usage to a file a hook can read; see [Context usage for hooks](#context-usage-for-hooks) |
 | `relay.sh` | turns a relay run on and off for a project and keeps its state; see [Relay](#relay) |
 | `relay-stop-hook.sh` | the Stop hook that pushes a relay session to the next task or to a hand-over |
+| `relay-start-hook.sh` | the SessionStart hook that counts a hand-over and carries the run into the new conversation |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -308,13 +309,13 @@ filled up, or stop the run and ask a person. The hand-over is the routine
 above - handoff, `/clear`, kickoff - so the next conversation picks the plan up
 where the previous one left it.
 
-**Not finished.** What exists: the switch, the state and the Stop hook that
-decides. What does not: the hand-over does not yet tell the run it has started
-or count itself, nothing carries the plan into the new conversation, a reply
-cut off by an API error is not picked up (the agent raises `StopFailure` for
-it, not `Stop`), and background work that never ends is noticed only at the
-next end of turn. Until those exist a run can push a session through tasks
-but cannot take it across a reset on its own.
+**Not finished.** What exists: the switch, the state, the Stop hook that
+decides and the hand-over across a reset - `next-session.sh` marks it, the
+SessionStart hook counts it and puts the run into the new conversation. What
+does not: a reply cut off by an API error is not picked up (the agent raises
+`StopFailure` for it, not `Stop`), a reset that `next-session.sh` refuses is
+logged but nobody is told, and background work that never ends is noticed
+only at the next end of turn. No session has been driven through a reset yet.
 
 ```bash
 relay.sh on --plan docs/plan.md      # start a run for this project
@@ -323,7 +324,8 @@ relay.sh wait --reason "asked about naming"   # let one end of turn through
 relay.sh off --reason "plan finished"
 ```
 
-One run per project directory. The state is one file,
+`relay.sh reset` exists for `next-session.sh` and is not meant to be run by
+hand. One run per project directory. The state is one file,
 `~/.ccgram/relay/<project>-<hash>.json` (or `$RELAY_DIR`), mode 600, replaced
 atomically under a lock; `relay.log` next to it records every switch.
 
@@ -380,12 +382,54 @@ ends. Background agents were not checked.
 One run belongs to a project directory, not to a session: every session whose
 working directory is inside the project is driven by it.
 
+### Across a reset
+
+The hand-over is `next-session.sh`, the same as without a run. When a run is
+on for the window's project, three things are added around it:
+
+1. Before anything is typed, `next-session.sh` marks the hand-over as started
+   (`relay.sh reset --stage start`). The turn that launched it is still
+   running, and its Stop hook sees the mark and lets the turn end instead of
+   asking for the hand-over again.
+2. On `/clear` the agent starts a new conversation and runs
+   `relay-start-hook.sh`. The hook finds the mark, counts the hand-over
+   against `--max-resets`, takes the mark away, and adds the run to the new
+   conversation's context: the plan, one task per turn, the two limits, the
+   `wait` and `off` commands, and that the open reviews and the background
+   work that survived the reset are in the handoff - carry them on, do not
+   start the work again.
+3. The kickoff line is typed as before; it only starts the first turn. At the
+   end of that turn the Stop hook pushes the session to the next task.
+
+If `next-session.sh` refuses before `/clear` (no agent, busy past the
+timeout), it takes the mark back. The window then sits idle until something
+ends a turn there; that end of turn asks for the hand-over again, and the
+limit of three unanswered requests applies. A `/clear` typed by
+a person carries no mark: it is not counted, and the new conversation is told
+the run is still on, in case clearing it was meant to stop it. A mark older
+than twenty minutes is ignored by both hooks.
+
+`relay-start-hook.sh` is installed as a SessionStart hook for the `clear`
+source, next to any hook already there:
+
+```json
+"SessionStart": [{"matcher": "clear",
+                  "hooks": [{"type": "command", "command": "relay-start-hook.sh"}]}]
+```
+
+With no run on anywhere it returns in a few milliseconds and prints nothing.
+
 **Added by the kit, not verified.** The switch has passed syntax, shellcheck
 and a run of every subcommand and every refusal against a temporary
 directory. The hook has passed syntax, shellcheck and a harness of 29 cases on
 made-up input - every row of the table, every limit, a session in a
-subdirectory and in another project, input that is not JSON. No session has
-been driven by either.
+subdirectory and in another project, input that is not JSON. The hand-over
+across a reset has passed syntax, shellcheck and a harness of 26 cases: the
+mark and its refusals, the start hook on every source, a stale mark, a session
+in a subdirectory and in another project, the Stop hook letting the
+handing-over turn end, and three end-to-end runs of `next-session.sh` against
+a fake agent on a private tmux server - a window with a run, a window without
+one, and a refusal. No real session has been driven by any of it.
 
 ## Traps this closes
 
