@@ -102,7 +102,8 @@ text = (lead + " The plan is {plan}. First do what the kickoff line asks, if one
         "read the handoff it leads to: reviews still open and background work still running are written there - "
         "carry them on, and do not start the background work again, it survived the reset. "
         "Then work through the plan: one task per turn - its check, a commit, a mark in the "
-        "plan. At the end of every turn a hook says what comes next: from {soft}% of the "
+        "plan. Nothing goes outward under relay: a push, a publication or a message still needs "
+        "the user\x27s word. At the end of every turn a hook says what comes next: from {soft}% of the "
         "context start no new task, at {hard}% hand over with {handover}. To ask the user "
         "something, run `{sh} wait --reason \"<what you asked>\"`, ask, and end your turn. "
         "When the plan is finished, run `{sh} off --reason \"plan finished\"` and say so.").format(

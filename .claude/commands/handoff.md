@@ -10,6 +10,11 @@ with commits), what is deferred and why, which block to take next
 prompt must be self-sufficient - a new agent gets into context without reading
 the whole history.
 
+If reviews cross this boundary, list them: what was sent to whom for review and
+is still waiting, and what came back and is not acted on yet. Leave the line out
+when there are none. A review that falls out at a reset is found once and never
+fixed.
+
 Output the prompt here in chat. Then, if the project has
 docs/NEW_SESSION_PROMPT.md, REWRITE that file with this handoff - do not merely
 offer to. That file is what the next session reads first, and a handoff that

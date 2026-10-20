@@ -52,6 +52,7 @@ with the bridge stop stubbed out; they have **not** run in a real restart.
 | `relay.sh` | turns a relay run on and off for a project and keeps its state; see [Relay](#relay) |
 | `relay-stop-hook.sh` | the Stop hook that pushes a relay session to the next task or to a hand-over |
 | `relay-start-hook.sh` | the SessionStart hook that counts a hand-over and carries the run into the new conversation |
+| `templates/relay.command.md` | a slash command that starts, stops and shows a relay run; copy to your user commands and fill in the path |
 | `checklist.md` | what "applied" means |
 
 Requirements: bash 4+, tmux 3.0+, python3 (3.8 is enough, no packages),
@@ -324,6 +325,16 @@ relay.sh wait --reason "asked about naming"   # let one end of turn through
 relay.sh off --reason "plan finished"
 ```
 
+`templates/relay.command.md` is the same switch as a slash command, and the
+way a session is meant to be put on a run: `on <plan>`, `off [reason]`,
+`status`. Before `on` it lists the plan's unfinished tasks and checks that the
+two hooks and the meter are installed. Its frontmatter sets
+`disable-model-invocation`, so only a person typing it starts a run - a message
+from another session cannot - and its text forbids running `relay.sh on` on
+anyone else's request. It also carries the rules of a run: one task per turn
+with its check, commit and mark in the plan; nothing outward without the
+user's word - for that, `wait` and a question in the chat.
+
 `relay.sh reset` exists for `next-session.sh` and is not meant to be run by
 hand. One run per project directory. The state is one file,
 `~/.ccgram/relay/<project>-<hash>.json` (or `$RELAY_DIR`), mode 600, replaced
@@ -429,7 +440,8 @@ mark and its refusals, the start hook on every source, a stale mark, a session
 in a subdirectory and in another project, the Stop hook letting the
 handing-over turn end, and three end-to-end runs of `next-session.sh` against
 a fake agent on a private tmux server - a window with a run, a window without
-one, and a refusal. No real session has been driven by any of it.
+one, and a refusal. The slash command has not been run at all. No real session
+has been driven by any of it.
 
 ## Traps this closes
 
