@@ -40,7 +40,7 @@ exec 9>"$RELAY_DIR/.lock"
 flock -w 5 9 || exit 0
 
 printf '%s' "$input" | RELAY_DIR="$RELAY_DIR" RELAY_SH="$HERE/relay.sh" python3 -c '
-import glob, json, os, sys, tempfile, time
+import glob, json, os, subprocess, sys, tempfile, time
 
 E = os.environ
 d = E["RELAY_DIR"]
@@ -57,6 +57,20 @@ if not isinstance(inp, dict) or inp.get("source") != "clear":
 # The run of this session: the state whose project holds the session cwd.
 real = os.path.realpath
 here = real(os.environ.get("CLAUDE_PROJECT_DIR") or inp.get("cwd") or os.getcwd())
+# A session inside a repository of its own, nested under the run directory
+# (a workspace that holds several projects), is not part of that run.
+top = []
+def nested(root):
+    if not top:
+        try:
+            r = subprocess.run(["git", "-C", here, "rev-parse", "--show-toplevel"],
+                               capture_output=True, text=True, timeout=5)
+            top.append(real(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else None)
+        except (OSError, subprocess.SubprocessError):
+            top.append(None)
+    t = top[0]
+    return bool(t) and t.startswith(root.rstrip("/") + "/")
+
 path = s = None
 for p in glob.glob(os.path.join(d, "*.json")):
     try:
@@ -67,7 +81,7 @@ for p in glob.glob(os.path.join(d, "*.json")):
     root = x.get("cwd") if isinstance(x, dict) else None
     if not root or not x.get("on"):
         continue
-    if here == root or here.startswith(root.rstrip("/") + "/"):
+    if here == root or (here.startswith(root.rstrip("/") + "/") and not nested(root)):
         if s is None or len(root) > len(s["cwd"]):
             path, s = p, x
 if s is None:
