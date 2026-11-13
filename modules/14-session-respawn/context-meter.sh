@@ -15,8 +15,12 @@
 # The file is $CONTEXT_METER_DIR/<session_id>.json (default
 # ~/.ccgram/context/), mode 600, replaced atomically:
 #   {"ts": <unix time>, "session_id": "...", "used_percentage": 18,
-#    "tokens": 180000, "window_size": 1000000, "rate_5h": 7}
-# A value the agent did not send is null. Before the first reply of a
+#    "tokens": 180000, "window_size": 1000000, "rate_5h": 7,
+#    "rate_5h_reset": 1794600000, "rate_7d": 19, "rate_7d_reset": 1794848400,
+#    "config_dir": "/home/me/.claude-work"}
+# The two limits belong to the account, not the session; config_dir (null for
+# the default one) tells which account a session runs under. A value the agent
+# did not send is null. Before the first reply of a
 # conversation used_percentage is null: read that as "unknown", never as
 # "empty".
 #
@@ -50,7 +54,9 @@ if isinstance(cur, dict):
 if tokens is None and pct is not None and size:
     tokens = int(float(pct) * int(size) / 100.0)
 
-five = (data.get("rate_limits") or {}).get("five_hour") or {}
+rate = data.get("rate_limits") or {}
+five = rate.get("five_hour") or {}
+week = rate.get("seven_day") or {}
 
 record = {
     "ts": int(time.time()),
@@ -59,6 +65,10 @@ record = {
     "tokens": tokens,
     "window_size": size,
     "rate_5h": five.get("used_percentage"),
+    "rate_5h_reset": five.get("resets_at"),
+    "rate_7d": week.get("used_percentage"),
+    "rate_7d_reset": week.get("resets_at"),
+    "config_dir": os.environ.get("CLAUDE_CONFIG_DIR") or None,
 }
 
 out_dir = sys.argv[1]
