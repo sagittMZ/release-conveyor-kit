@@ -38,8 +38,10 @@
 #   --max-stalls N    pushes in a row that changed neither the commit nor
 #                     the plan file before the run stops, 1-10 (default 2)
 #   --rate-max N      5-hour usage %, above which the run stops (default 85)
-#   --bg-wait MIN     minutes to wait for background work before asking a
-#                     person, 1-1440 (default 30)
+#   --week-max N      7-day usage %, above which the run stops (default 90):
+#                     100 minus what the account keeps for work done by hand
+#   --bg-wait MIN     minutes to wait for background work before handing
+#                     over anyway, 1-1440 (default 30)
 #   --handover TEXT   the command the session runs to hand over and start
 #                     clean (default /next)
 #
@@ -52,7 +54,7 @@ set -euo pipefail
 
 RELAY_DIR="${RELAY_DIR:-${CCGRAM_DIR:-$HOME/.ccgram}/relay}"
 
-usage() { sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,52p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1:-}"
 case "$CMD" in
@@ -62,7 +64,7 @@ case "$CMD" in
 esac
 
 CWD=""; PLAN=""; REASON=""; ALL=0; JSON=0; STAGE=""
-SOFT=35; HARD=45; MAX_RESETS=6; MAX_STALLS=2; RATE_MAX=85; BG_WAIT=30
+SOFT=35; HARD=45; MAX_RESETS=6; MAX_STALLS=2; RATE_MAX=85; WEEK_MAX=90; BG_WAIT=30
 HANDOVER="/next"
 only() {  # only <option> <subcommand>... - the option belongs to these subcommands
   local opt="$1" c; shift
@@ -78,6 +80,7 @@ while [ $# -gt 0 ]; do
     --max-resets) only "$1" on; MAX_RESETS="${2:?--max-resets needs a number}"; shift 2 ;;
     --max-stalls) only "$1" on; MAX_STALLS="${2:?--max-stalls needs a number}"; shift 2 ;;
     --rate-max) only "$1" on; RATE_MAX="${2:?--rate-max needs a number}"; shift 2 ;;
+    --week-max) only "$1" on; WEEK_MAX="${2:?--week-max needs a number}"; shift 2 ;;
     --bg-wait) only "$1" on; BG_WAIT="${2:?--bg-wait needs a number}"; shift 2 ;;
     --handover) only "$1" on; HANDOVER="${2:?--handover needs a command}"; shift 2 ;;
     --reason) only "$1" off wait; REASON="${2:?--reason needs a text}"; shift 2 ;;
@@ -114,6 +117,7 @@ if [ "$CMD" = on ]; then
   num --max-resets "$MAX_RESETS" 1 50
   num --max-stalls "$MAX_STALLS" 1 10
   num --rate-max "$RATE_MAX" 1 100
+  num --week-max "$WEEK_MAX" 1 100
   num --bg-wait "$BG_WAIT" 1 1440
 fi
 
@@ -123,7 +127,7 @@ flock -w 10 9 || { echo "the relay state is locked by another run" >&2; exit 1; 
 
 RELAY_DIR="$RELAY_DIR" CMD="$CMD" CWD="$CWD" PLAN="$PLAN" REASON="$REASON" \
 ALL="$ALL" JSON="$JSON" SOFT="$SOFT" HARD="$HARD" MAX_RESETS="$MAX_RESETS" \
-MAX_STALLS="$MAX_STALLS" RATE_MAX="$RATE_MAX" BG_WAIT="$BG_WAIT" \
+MAX_STALLS="$MAX_STALLS" RATE_MAX="$RATE_MAX" WEEK_MAX="$WEEK_MAX" BG_WAIT="$BG_WAIT" \
 HANDOVER="$HANDOVER" STAGE="$STAGE" python3 - <<'PY'
 import glob, hashlib, json, os, sys, tempfile, time
 
@@ -166,7 +170,9 @@ def show(s):
     print("  hand over ({}) from {}% of the context (soft), without waiting from {}% (hard)".format(s.get("handover"), s.get("soft_pct"), s.get("hard_pct")))
     print("  hand-overs: {} of {}".format(s.get("resets", 0), s.get("max_resets")))
     print("  pushes without progress: {} of {}".format(s.get("stalls", 0), s.get("max_stalls")))
-    print("  stops above {}% of the 5-hour limit; waits for background work up to {} min".format(s.get("rate_5h_max"), s.get("bg_wait_min")))
+    week = s.get("rate_7d_max")
+    print("  stops above {}% of the 5-hour limit{}; waits for background work up to {} min".format(
+        s.get("rate_5h_max"), " or {}% of the 7-day limit".format(week) if week is not None else "", s.get("bg_wait_min")))
     if s.get("on") and s.get("wait"):
         print("  waiting for an answer: the next end of turn is not pushed ({})".format(s.get("wait_reason") or "no reason given"))
     if s.get("on") and s.get("bg_wait_since"):
@@ -201,7 +207,7 @@ if cmd == "on":
         "max_stalls": int(E["MAX_STALLS"]), "stalls": 0, "progress": None,
         "handover": E["HANDOVER"], "nags": 0, "soft_told": False,
         "reset_pending_since": None,
-        "rate_5h_max": int(E["RATE_MAX"]),
+        "rate_5h_max": int(E["RATE_MAX"]), "rate_7d_max": int(E["WEEK_MAX"]),
         "bg_wait_min": int(E["BG_WAIT"]), "bg_wait_since": None,
         "wait": False, "wait_reason": None,
         "started_at": now, "stopped_at": None, "stopped_reason": None,

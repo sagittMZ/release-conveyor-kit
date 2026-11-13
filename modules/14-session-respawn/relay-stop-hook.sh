@@ -28,7 +28,7 @@
 #
 # Limits it enforces (set by `relay.sh on`): hand-overs per run, pushes in a
 # row without progress (neither a new commit nor a change in the plan file),
-# the 5-hour usage ceiling, and three requests to hand over that were not
+# the 5-hour and 7-day usage ceilings, and three requests to hand over that were not
 # followed. A reading of the context that is missing or older than
 # METER_MAX_AGE seconds stops the run too: without the number it cannot
 # decide.
@@ -131,7 +131,7 @@ if pending and now - int(pending) < PENDING_MAX:
     allow("a hand-over is running")
 s["reset_pending_since"] = None
 
-# 2. The reading of the context and of the 5-hour limit.
+# 2. The reading of the context and of the usage limits.
 sid = str(inp.get("session_id") or "")
 def reading():
     if not sid or not all(c.isalnum() or c in "_-" for c in sid):
@@ -155,9 +155,13 @@ for _ in range(int(E["METER_TRIES"])):
     meter = reading()
 pct = meter.get("used_percentage") if meter else None
 rate = meter.get("rate_5h") if meter else None
+week = meter.get("rate_7d") if meter else None
 
 if rate is not None and float(rate) > s.get("rate_5h_max", 85):
     stop_run("the 5-hour usage is at {:.0f}%, above the limit of {}%".format(float(rate), s.get("rate_5h_max")))
+# A run started before the weekly ceiling existed has none.
+if week is not None and s.get("rate_7d_max") is not None and float(week) > s["rate_7d_max"]:
+    stop_run("the 7-day usage is at {:.0f}%, above the limit of {}%".format(float(week), s["rate_7d_max"]))
 
 # 3. The session asked something and waits: one turn passes without a push.
 if s.get("wait"):

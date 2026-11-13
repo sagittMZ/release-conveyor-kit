@@ -347,6 +347,7 @@ atomically under a lock; `relay.log` next to it records every switch.
 | `--max-resets` | 6 | hand-overs in one run |
 | `--max-stalls` | 2 | pushes in a row that changed neither the commit nor the plan file - the session is spinning |
 | `--rate-max` | 85 | 5-hour usage %, above which the run stops |
+| `--week-max` | 90 | 7-day usage %, above which the run stops: 100 minus what the account keeps for work done by hand |
 | `--bg-wait` | 30 | minutes to wait for background work before handing over anyway |
 | `--handover` | `/next` | the command the session runs to hand over and start clean |
 
@@ -376,7 +377,7 @@ reads as its next instruction. It presses nothing and sends nothing.
 | a limit is used up | turns the run off and tells the session to report it in one line |
 
 The limits that turn a run off: hand-overs used up, pushes without progress,
-the 5-hour usage ceiling, three requests to hand over that were not followed,
+the 5-hour and 7-day usage ceilings, three requests to hand over that were not followed,
 a plan file that cannot be read, and a context reading that is missing or
 older than fifteen minutes - without the number the hook cannot decide, so it
 stops instead of guessing. The stop is reported by the session itself in its
