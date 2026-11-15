@@ -239,6 +239,8 @@ block("pushed to the next task at {:.0f}%".format(pct),
       "Relay: the run is on, plan {}. Take the next unfinished task of the plan and do it in "
       "this turn: one task, its check, a commit, a mark in the plan. If the plan is finished, "
       "run `{} off --reason \"plan finished\"` and say so. If you need an answer from the user, "
-      "run `{} wait --reason \"<what you asked>\"`, ask, and end your turn.".format(plan, relay_sh, relay_sh))
+      "run `{} wait --reason \"<what you asked>\"`, ask, and end your turn. Do not wait in the "
+      "background for a CI run or another long outside job to finish: put its id in the plan "
+      "and check it at a later task. Scheduled checks are fine.".format(plan, relay_sh, relay_sh))
 ' 2>>"$RELAY_DIR/relay-hook.err"
 exit 0

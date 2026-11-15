@@ -46,6 +46,11 @@ turn:
   step needs that word, or any answer from the user, run `relay.sh wait
   --reason "<what you ask>"`, ask in this chat and end the turn. When the plan
   cannot go on without a decision, run `relay.sh off --reason "<why>"` instead.
+- Do not wait in the background for a CI run or another long outside job to
+  finish - no watcher, no polling loop. Put its id in the plan and check it at
+  a later task. A background job that does not end keeps the session from
+  handing over: the hook waits for it, and nothing wakes an idle session.
+  Scheduled checks (a session cron) are fine - they do not hold the hand-over.
 - When the plan is finished, run `relay.sh off --reason "plan finished"` and
   say so.
 - When a limit stops the run, report it in one line as the hook says. Never

@@ -333,7 +333,12 @@ two hooks and the meter are installed. Its frontmatter sets
 from another session cannot - and its text forbids running `relay.sh on` on
 anyone else's request. It also carries the rules of a run: one task per turn
 with its check, commit and mark in the plan; nothing outward without the
-user's word - for that, `wait` and a question in the chat.
+user's word - for that, `wait` and a question in the chat; and no waiting in
+the background for a CI run or another long outside job - its id goes into
+the plan and is checked at a later task. A job like that keeps the session
+from handing over: past the soft limit the hook waits for background work, and
+an idle session has no end of turn at which the `--bg-wait` limit could fire.
+Scheduled checks do not hold the hand-over.
 
 `relay.sh reset` exists for `next-session.sh` and is not meant to be run by
 hand. One run per project directory. The state is one file,
