@@ -22,6 +22,11 @@
 # Safety: one run per window at a time (flock); text is always typed before
 # Enter, never a bare Enter; refuses to start when the window has no agent
 # running, has no kickoff line, or stays busy past the timeout.
+#
+# Relay: when a relay run is on for the window's project, the reset is marked
+# as a hand-over before anything is typed (relay.sh reset --stage start), so
+# the Stop hook lets the handing-over turn end and relay-start-hook.sh counts
+# it in the new conversation. A refusal before /clear takes the mark back.
 set -euo pipefail
 
 CCGRAM_DIR="${CCGRAM_DIR:-$HOME/.ccgram}"
@@ -47,7 +52,7 @@ while [ $# -gt 0 ]; do
     --cwd) CWD="${2:?--cwd needs a directory}"; shift 2 ;;
     --kickoff) KICKOFF="${2:?--kickoff needs a line}"; shift 2 ;;
     --dry-run) DRY=1; shift ;;
-    -h|--help) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -118,6 +123,16 @@ exec 9>"$CCGRAM_DIR/next-session.$WINDOW.lock"
 flock -n 9 || { echo "another next-session run is active for $WINDOW" >&2; exit 1; }
 
 log "=== requested (kickoff: $KICKOFF)"
+
+# The relay mark goes first: the turn that started this script is still
+# running, and its Stop hook must see the hand-over as started.
+relay_mark() {  # relay_mark start|failed - a no-op for a window without a run
+  [ -x "$HERE/relay.sh" ] || return 0
+  "$HERE/relay.sh" reset --stage "$1" --cwd "$W_CWD" >>"$LOG" 2>&1 || true
+}
+cleared=0
+relay_mark start
+trap '[ "$cleared" = 1 ] || relay_mark failed' EXIT
 agent_running || { log "refused: no agent prompt in the window"; exit 1; }
 sleep 5   # the calling turn is still printing its last line
 wait_idle "$IDLE_TIMEOUT" || { log "refused: still busy after ${IDLE_TIMEOUT}s"; exit 1; }
@@ -172,6 +187,7 @@ PY
 before="$(newest_transcript | cut -d' ' -f2-)"
 stamp="$(date +%s)"
 type_line "/clear"
+cleared=1
 sleep "$CLEAR_WAIT"
 wait_idle 60 || { log "stopped: the window is busy after /clear, kickoff NOT typed"; exit 1; }
 log "cleared"

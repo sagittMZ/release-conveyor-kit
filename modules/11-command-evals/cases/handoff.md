@@ -1,6 +1,6 @@
 # Cases: /handoff
 
-Handing work across a session boundary. Both cases are given as text: what makes
+Handing work across a session boundary. Every case is given as text: what makes
 a handoff good is whether a fresh agent could act on it, and that is visible in
 the prompt itself. The neighbouring commands are the trap - a handoff that turns
 into a state snapshot is `/session-wrap`, and one that turns into a feature plan
@@ -38,3 +38,21 @@ expect:
 avoid:
 - handing over a prompt that leaves the next step unnamed
 - picking a priority and presenting it as though it had been decided
+
+## case: reviews cross the boundary
+
+input: |
+  The same history as in the first case, plus two reviews. Block B was sent to
+  the neighbouring session for review an hour ago and no answer has come yet.
+  An earlier review of block A came back with two findings: one is fixed in
+  commit 8ce0102, the other (a missing test for empty input) is not done.
+
+  Take block B next.
+expect:
+
+- the handoff lists the review of block B as sent and still waiting, with who it was sent to
+- the unfixed finding from the review of block A is carried over as open work, the fixed one is not
+- the rest of the handoff still holds - done, deferred, the named priority
+avoid:
+- dropping the open finding because block A counts as done
+- leaving out the review that has not answered yet
