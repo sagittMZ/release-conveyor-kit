@@ -17,7 +17,7 @@
 #   {"ts": <unix time>, "session_id": "...", "used_percentage": 18,
 #    "tokens": 180000, "window_size": 1000000, "rate_5h": 7,
 #    "rate_5h_reset": 1794600000, "rate_7d": 19, "rate_7d_reset": 1794848400,
-#    "config_dir": "/home/me/.claude-work"}
+#    "config_dir": "~/.claude-work"}
 # The two limits belong to the account, not the session; config_dir (null for
 # the default one) tells which account a session runs under. A value the agent
 # did not send is null. Before the first reply of a
